@@ -108,3 +108,25 @@ button {
 .windows {
   position: absolute;
   inset: 0 0 var(--taskbar) 0;
+}
+.win {
+  position: absolute;
+  min-width: 280px;
+  min-height: 200px;
+  width: 420px;
+  height: 320px;
+  background: var(--panel);
+  border: 1px solid #3d4a60;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+.win.focus {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.win.min {
+  display: none;
+}
+.bar {
+  height: 34px;
