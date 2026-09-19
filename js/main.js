@@ -145,3 +145,65 @@ function escapeHtml(s) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 }
+
+function openApp(id) {
+  const app = apps.find((a) => a.id === id);
+  if (!app) return;
+  if (open.has(id)) {
+    const w = open.get(id);
+    w.el.classList.remove("min");
+    focusWin(id);
+    return;
+  }
+  const el = document.createElement("section");
+  el.className = "win focus";
+  el.style.left = `${120 + open.size * 24}px`;
+  el.style.top = `${40 + open.size * 20}px`;
+  el.style.zIndex = String(++z);
+  el.innerHTML = `
+    <header class="bar">
+      <span>${app.name}</span>
+      <div class="dots">
+        <button type="button" class="m" data-min aria-label="minimize"></button>
+        <button type="button" class="x" data-close aria-label="close"></button>
+      </div>
+    </header>
+    <div class="body">${app.html()}</div>`;
+  wins.append(el);
+  app.bind(el.querySelector(".body"));
+  el.querySelector("[data-close]").onclick = () => closeApp(id);
+  el.querySelector("[data-min]").onclick = () => {
+    el.classList.add("min");
+  };
+  el.addEventListener("mousedown", () => focusWin(id));
+  drag(el);
+
+  const tab = document.createElement("button");
+  tab.type = "button";
+  tab.className = "task on";
+  tab.textContent = app.name;
+  tab.onclick = () => {
+    if (el.classList.contains("min")) el.classList.remove("min");
+    focusWin(id);
+  };
+  tasks.append(tab);
+
+  open.set(id, { el, tab, app });
+  focusWin(id);
+}
+
+function focusWin(id) {
+  open.forEach((w, key) => {
+    w.el.classList.toggle("focus", key === id);
+    w.tab.classList.toggle("on", key === id);
+    if (key === id) w.el.style.zIndex = String(++z);
+  });
+}
+
+function closeApp(id) {
+  const w = open.get(id);
+  if (!w) return;
+  w.el.remove();
+  w.tab.remove();
+  open.delete(id);
+}
