@@ -45,3 +45,45 @@ const apps = [
       const mm = String(Math.floor(left / 60)).padStart(2, "0");
       const ss = String(left % 60).padStart(2, "0");
       return `
+        <p style="margin:0;color:var(--muted);font-size:13px">Pomodoro for deep work on your ship.</p>
+        <div class="timer" id="timer">${mm}:${ss}</div>
+        <div class="row">
+          <button type="button" class="btn primary" data-focus-start>Start 25m</button>
+          <button type="button" class="btn" data-focus-pause>Pause</button>
+          <button type="button" class="btn" data-focus-reset>Reset</button>
+        </div>`;
+    },
+    bind(root) {
+      let left = window.__focusLeft ?? data.focusMin * 60;
+      let tick = null;
+      const label = () => root.querySelector("#timer");
+      const paint = () => {
+        const mm = String(Math.floor(left / 60)).padStart(2, "0");
+        const ss = String(left % 60).padStart(2, "0");
+        if (label()) label().textContent = `${mm}:${ss}`;
+        window.__focusLeft = left;
+      };
+      root.querySelector("[data-focus-start]").onclick = () => {
+        if (tick) return;
+        tick = setInterval(() => {
+          if (left <= 0) {
+            clearInterval(tick);
+            tick = null;
+            return;
+          }
+          left -= 1;
+          paint();
+        }, 1000);
+      };
+      root.querySelector("[data-focus-pause]").onclick = () => {
+        clearInterval(tick);
+        tick = null;
+      };
+      root.querySelector("[data-focus-reset]").onclick = () => {
+        clearInterval(tick);
+        tick = null;
+        left = data.focusMin * 60;
+        paint();
+      };
+    },
+  },
