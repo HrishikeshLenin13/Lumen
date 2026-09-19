@@ -1,4 +1,13 @@
 const KEY = "lumen-desk-v1";
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 const load = () => {
   try {
     return JSON.parse(localStorage.getItem(KEY) || "{}");
@@ -24,15 +33,22 @@ const apps = [
     name: "Notes",
     glyph: "N",
     html: () => `
-      <p style="margin:0 0 8px;color:var(--muted);font-size:13px">Saved on this device only.</p>
-      <textarea id="notesArea">${escapeHtml(data.notes)}</textarea>
-      <div class="row" style="margin-top:8px">
+      <p class="hint">Saved on this device only.</p>
+      <textarea id="notesArea" aria-label="Project notes">${escapeHtml(data.notes)}</textarea>
+      <div class="row row--actions">
         <button type="button" class="btn primary" data-save-notes>Save note</button>
+        <span class="hint hint--flush" data-notes-status hidden aria-live="polite">Saved</span>
       </div>`,
     bind(root) {
+      const status = root.querySelector("[data-notes-status]");
       root.querySelector("[data-save-notes]").onclick = () => {
         data.notes = root.querySelector("#notesArea").value;
         save(data);
+        status.hidden = false;
+        clearTimeout(status._t);
+        status._t = setTimeout(() => {
+          status.hidden = true;
+        }, 1600);
       };
     },
   },
@@ -45,10 +61,10 @@ const apps = [
       const mm = String(Math.floor(left / 60)).padStart(2, "0");
       const ss = String(left % 60).padStart(2, "0");
       return `
-        <p style="margin:0;color:var(--muted);font-size:13px">Pomodoro for deep work on your ship.</p>
-        <div class="timer" id="timer">${mm}:${ss}</div>
+        <p class="hint hint--flush">Pomodoro for deep work on your ship.</p>
+        <div class="timer" id="timer" aria-live="polite">${mm}:${ss}</div>
         <div class="row">
-          <button type="button" class="btn primary" data-focus-start>Start 25m</button>
+          <button type="button" class="btn primary" data-focus-start>Start ${data.focusMin}m</button>
           <button type="button" class="btn" data-focus-pause>Pause</button>
           <button type="button" class="btn" data-focus-reset>Reset</button>
         </div>`;
@@ -100,14 +116,14 @@ const apps = [
         )
         .join("");
       return `
-        <p style="margin:0 0 8px">Total logged: <strong style="color:var(--accent)">${total}h</strong></p>
-        <input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" />
-        <input class="field" type="text" placeholder="What did you ship?" id="logText" />
+        <p class="hint">Total logged: <strong class="stat-strong">${total}h</strong></p>
+        <input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" aria-label="Hours shipped" />
+        <input class="field" type="text" placeholder="What did you ship?" id="logText" aria-label="Ship description" />
         <button type="button" class="btn primary" data-add-log>Add entry</button>
-        <div style="margin-top:12px">${list || "<p style='color:var(--muted)'>No entries yet.</p>"}</div>`;
+        <div class="log-list">${list || '<p class="hint hint--flush">No entries yet.</p>'}</div>`;
     },
     bind(root) {
-      root.querySelector("[data-add-log]").onclick = () => {
+      const add = () => {
         const h = Number(root.querySelector("#logH").value);
         const text = root.querySelector("#logText").value.trim();
         if (!text) return;
@@ -119,6 +135,10 @@ const apps = [
         save(data);
         openApp("shiplog");
       };
+      root.querySelector("[data-add-log]").onclick = add;
+      root.querySelector("#logText").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") add();
+      });
     },
   },
   {
@@ -126,9 +146,9 @@ const apps = [
     name: "About",
     glyph: "i",
     html: () => `
-      <h2 style="margin:0 0 8px;font-family:var(--mono);color:var(--accent)">LUMEN</h2>
+      <h2 class="about-title">LUMEN</h2>
       <p>Offline builder desk: notes, focus timer, and ship log in one page.</p>
-      <p style="color:var(--muted);font-size:13px">Built for Hack Club. Data stays in your browser.</p>`,
+      <p class="hint hint--flush">Built for Hack Club. Data stays in your browser.</p>`,
     bind() {},
   },
 ];
@@ -137,14 +157,6 @@ const wins = document.getElementById("wins");
 const tasks = document.getElementById("tasks");
 const open = new Map();
 let z = 10;
-
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
 
 function openApp(id) {
   const app = apps.find((a) => a.id === id);
@@ -157,6 +169,8 @@ function openApp(id) {
   }
   const el = document.createElement("section");
   el.className = "win focus";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", app.name);
   el.style.left = `${120 + open.size * 24}px`;
   el.style.top = `${40 + open.size * 20}px`;
   el.style.zIndex = String(++z);
@@ -181,6 +195,8 @@ function openApp(id) {
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on";
+  tab.setAttribute("role", "tab");
+  tab.setAttribute("aria-selected", "true");
   tab.textContent = app.name;
   tab.onclick = () => {
     if (el.classList.contains("min")) el.classList.remove("min");
@@ -194,8 +210,10 @@ function openApp(id) {
 
 function focusWin(id) {
   open.forEach((w, key) => {
-    w.el.classList.toggle("focus", key === id);
-    w.tab.classList.toggle("on", key === id);
+    const on = key === id;
+    w.el.classList.toggle("focus", on);
+    w.tab.classList.toggle("on", on);
+    w.tab.setAttribute("aria-selected", on ? "true" : "false");
     if (key === id) w.el.style.zIndex = String(++z);
   });
 }
@@ -228,17 +246,23 @@ apps.forEach((app) => {
   const b = document.createElement("button");
   b.type = "button";
   b.className = "icon";
-  b.innerHTML = `<div class="g">${app.glyph}</div><span>${app.name}</span>`;
+  b.setAttribute("aria-label", `Open ${app.name}`);
+  b.innerHTML = `<div class="g" aria-hidden="true">${app.glyph}</div><span>${app.name}</span>`;
   b.onclick = () => openApp(app.id);
   icons.append(b);
 });
 
+document.getElementById("startBtn")?.addEventListener("click", () => openApp("about"));
+
 function tickClock() {
-  document.getElementById("clock").textContent = new Date().toLocaleString(undefined, {
+  const now = new Date();
+  const clock = document.getElementById("clock");
+  clock.textContent = now.toLocaleString(undefined, {
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
   });
+  clock.dateTime = now.toISOString();
 }
 tickClock();
 setInterval(tickClock, 30_000);
