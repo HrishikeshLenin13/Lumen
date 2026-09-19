@@ -1,0 +1,22 @@
+:root {
+  --bg: #07090f;
+  --panel: #10141e;
+  --panel2: #161c28;
+  --border: #2a3344;
+  --text: #d7e0ea;
+  --muted: #8b97a8;
+  --accent: #7dffc3;
+  --danger: #ff5d6c;
+  --taskbar: 44px;
+  --font: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
