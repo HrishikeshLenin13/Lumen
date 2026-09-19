@@ -174,3 +174,25 @@ button {
   padding: 10px;
 }
 .row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.btn {
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.btn.primary {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.timer {
+  font-family: var(--mono);
+  font-size: 2.5rem;
+  color: var(--accent);
+  margin: 0.5rem 0;
+}
+.log-item {
