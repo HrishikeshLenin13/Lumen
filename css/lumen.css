@@ -218,3 +218,25 @@ button {
   bottom: 0;
   height: var(--taskbar);
   display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  background: rgba(16, 20, 30, 0.95);
+  border-top: 1px solid var(--border);
+  z-index: 5;
+}
+.start {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+.tasks {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  overflow: auto;
