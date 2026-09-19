@@ -3,3 +3,4 @@
 .vscode/
 .idea/
 graphify-out/
+.slow-css-lines.txt
