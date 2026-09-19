@@ -87,3 +87,16 @@ const apps = [
       };
     },
   },
+  {
+    id: "shiplog",
+    name: "Ship Log",
+    glyph: "H",
+    html: () => {
+      const total = data.logs.reduce((s, r) => s + Number(r.h || 0), 0).toFixed(1);
+      const list = data.logs
+        .map(
+          (r) =>
+            `<div class="log-item"><strong>${r.h}h</strong> — ${escapeHtml(r.text)}<br><small>${escapeHtml(r.at)}</small></div>`
+        )
+        .join("");
+      return `
