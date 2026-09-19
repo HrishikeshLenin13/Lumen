@@ -11,3 +11,37 @@ const save = (patch) => {
   localStorage.setItem(KEY, JSON.stringify(next));
   return next;
 };
+
+let data = load();
+if (!data.notes) data.notes = "Project notes…\n\nWhat are you building today?";
+if (!data.logs) data.logs = [];
+if (!data.focusMin) data.focusMin = 25;
+save(data);
+
+const apps = [
+  {
+    id: "notes",
+    name: "Notes",
+    glyph: "N",
+    html: () => `
+      <p style="margin:0 0 8px;color:var(--muted);font-size:13px">Saved on this device only.</p>
+      <textarea id="notesArea">${escapeHtml(data.notes)}</textarea>
+      <div class="row" style="margin-top:8px">
+        <button type="button" class="btn primary" data-save-notes>Save note</button>
+      </div>`,
+    bind(root) {
+      root.querySelector("[data-save-notes]").onclick = () => {
+        data.notes = root.querySelector("#notesArea").value;
+        save(data);
+      };
+    },
+  },
+  {
+    id: "focus",
+    name: "Focus",
+    glyph: "F",
+    html: () => {
+      const left = window.__focusLeft || data.focusMin * 60;
+      const mm = String(Math.floor(left / 60)).padStart(2, "0");
+      const ss = String(left % 60).padStart(2, "0");
+      return `
