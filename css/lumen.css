@@ -240,3 +240,20 @@ button {
   gap: 6px;
   flex: 1;
   overflow: auto;
+}
+.task {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.task.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tray {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
