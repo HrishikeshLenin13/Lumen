@@ -207,3 +207,48 @@ function closeApp(id) {
   w.tab.remove();
   open.delete(id);
 }
+
+function drag(node) {
+  const bar = node.querySelector(".bar");
+  bar.addEventListener("mousedown", (e) => {
+    if (e.target.closest("button")) return;
+    const ox = e.clientX - node.offsetLeft;
+    const oy = e.clientY - node.offsetTop;
+    const move = (ev) => {
+      node.style.left = `${Math.max(0, ev.clientX - ox)}px`;
+      node.style.top = `${Math.max(0, ev.clientY - oy)}px`;
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", () => window.removeEventListener("mousemove", move), { once: true });
+  });
+}
+
+const icons = document.getElementById("icons");
+apps.forEach((app) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "icon";
+  b.innerHTML = `<div class="g">${app.glyph}</div><span>${app.name}</span>`;
+  b.onclick = () => openApp(app.id);
+  icons.append(b);
+});
+
+function tickClock() {
+  document.getElementById("clock").textContent = new Date().toLocaleString(undefined, {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+tickClock();
+setInterval(tickClock, 30_000);
+
+async function boot() {
+  await new Promise((r) => setTimeout(r, 900));
+  document.getElementById("boot").classList.add("fade");
+  document.getElementById("desk").classList.remove("hidden");
+  await new Promise((r) => setTimeout(r, 400));
+  document.getElementById("boot").remove();
+  openApp("about");
+}
+boot();
