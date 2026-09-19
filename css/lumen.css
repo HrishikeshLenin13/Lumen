@@ -32,6 +32,12 @@ textarea {
 button {
   cursor: pointer;
 }
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
 .hidden {
   display: none !important;
 }
@@ -49,6 +55,11 @@ button {
 .boot.fade {
   opacity: 0;
   transition: opacity 0.4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot.fade {
+    transition: none;
+  }
 }
 
 .desktop {
@@ -209,6 +220,30 @@ button {
   border-radius: 6px;
   padding: 8px;
   margin-bottom: 8px;
+}
+
+.hint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.hint--flush {
+  margin: 0;
+}
+.about-title {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  color: var(--accent);
+}
+.stat-strong {
+  color: var(--accent);
+}
+.log-list {
+  margin-top: 12px;
+}
+.row--actions {
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .taskbar {
