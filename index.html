@@ -3,42 +3,544 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LUMEN</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <title>LUMEN — builder desk</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/variables.css" />
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="css/boot.css" />
-    <link rel="stylesheet" href="css/desktop.css" />
-    <link rel="stylesheet" href="css/windows.css" />
-    <link rel="stylesheet" href="css/apps.css" />
-    <link rel="stylesheet" href="css/crt.css" />
+    <style>
+      :root {
+        --bg: #07090f;
+        --panel: #10141e;
+        --panel2: #161c28;
+        --border: #2a3344;
+        --text: #d7e0ea;
+        --muted: #8b97a8;
+        --accent: #7dffc3;
+        --danger: #ff5d6c;
+        --taskbar: 44px;
+        --font: "IBM Plex Sans", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        overflow: hidden;
+      }
+      button,
+      input,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: #000;
+        color: var(--accent);
+        font-family: var(--mono);
+        padding: 2rem;
+        font-size: 14px;
+      }
+      .boot.fade {
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+
+      .desktop {
+        height: 100%;
+        position: relative;
+        background: radial-gradient(900px 500px at 15% 0%, #142033, transparent 60%), var(--bg);
+      }
+      .desktop::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(125, 255, 195, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(125, 255, 195, 0.04) 1px, transparent 1px);
+        background-size: 32px 32px;
+        pointer-events: none;
+      }
+      .icons {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 2;
+      }
+      .icon {
+        width: 5.5rem;
+        border: 1px solid transparent;
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.4rem;
+        display: grid;
+        gap: 0.35rem;
+        justify-items: center;
+        color: var(--text);
+      }
+      .icon:hover {
+        background: rgba(16, 20, 30, 0.85);
+        border-color: var(--border);
+      }
+      .icon .g {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: grid;
+        place-items: center;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: var(--mono);
+        color: var(--accent);
+        font-size: 13px;
+      }
+      .icon span {
+        font-size: 11px;
+      }
+
+      .windows {
+        position: absolute;
+        inset: 0 0 var(--taskbar) 0;
+      }
+      .win {
+        position: absolute;
+        min-width: 280px;
+        min-height: 200px;
+        width: 420px;
+        height: 320px;
+        background: var(--panel);
+        border: 1px solid #3d4a60;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      }
+      .win.focus {
+        border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+      }
+      .win.min {
+        display: none;
+      }
+      .bar {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--border);
+        cursor: grab;
+        user-select: none;
+        font-size: 13px;
+      }
+      .dots {
+        display: flex;
+        gap: 5px;
+      }
+      .dots button {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+        padding: 0;
+      }
+      .dots .x {
+        background: var(--danger);
+      }
+      .dots .m {
+        background: #3d4a60;
+      }
+      .body {
+        flex: 1;
+        overflow: auto;
+        padding: 12px;
+        background: #0c111b;
+      }
+      .body textarea {
+        width: 100%;
+        height: 100%;
+        min-height: 180px;
+        resize: none;
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        border-radius: 6px;
+        padding: 6px 10px;
+      }
+      .btn.primary {
+        color: var(--accent);
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+      }
+      .timer {
+        font-family: var(--mono);
+        font-size: 2.5rem;
+        color: var(--accent);
+        margin: 0.5rem 0;
+      }
+      .log-item {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+      .field {
+        width: 100%;
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+
+      .taskbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--taskbar);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px;
+        background: rgba(16, 20, 30, 0.95);
+        border-top: 1px solid var(--border);
+        z-index: 5;
+      }
+      .start {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        border-radius: 6px;
+        padding: 4px 10px;
+      }
+      .tasks {
+        display: flex;
+        gap: 6px;
+        flex: 1;
+        overflow: auto;
+      }
+      .task {
+        font-size: 12px;
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+      }
+      .task.on {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .tray {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
   </head>
   <body>
-    <div id="boot" class="boot" aria-live="polite"></div>
+    <div id="boot" class="boot">LUMEN — loading builder desk…</div>
 
-    <div id="desktop" class="desktop hidden">
-      <div id="wallpaper" class="wallpaper" data-style="grid"></div>
-      <div id="icons" class="icon-rail"></div>
-      <div id="windows" class="window-layer"></div>
+    <div id="desk" class="desktop hidden">
+      <div class="icons" id="icons"></div>
+      <div class="windows" id="wins"></div>
 
-      <div id="start-menu" class="start-menu hidden"></div>
-
-      <footer id="taskbar" class="taskbar">
-        <button id="start-btn" class="start-btn" type="button">LUMEN</button>
-        <div id="task-buttons" class="task-buttons"></div>
-        <div class="tray">
-          <span id="net-pill" class="tray-pill">online</span>
-          <time id="clock" class="clock"></time>
-        </div>
+      <footer class="taskbar">
+        <button type="button" class="start" id="startBtn">LUMEN</button>
+        <div class="tasks" id="tasks"></div>
+        <div class="tray" id="clock"></div>
       </footer>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <script>
+      const KEY = "lumen-desk-v1";
+      const load = () => {
+        try {
+          return JSON.parse(localStorage.getItem(KEY) || "{}");
+        } catch {
+          return {};
+        }
+      };
+      const save = (patch) => {
+        const next = { ...load(), ...patch };
+        localStorage.setItem(KEY, JSON.stringify(next));
+        return next;
+      };
+
+      let data = load();
+      if (!data.notes) data.notes = "Project notes…\n\nWhat are you building today?";
+      if (!data.logs) data.logs = [];
+      if (!data.focusMin) data.focusMin = 25;
+      save(data);
+
+      const apps = [
+        {
+          id: "notes",
+          name: "Notes",
+          glyph: "N",
+          html: () => `
+            <p style="margin:0 0 8px;color:var(--muted);font-size:13px">Saved on this device only.</p>
+            <textarea id="notesArea">${escapeHtml(data.notes)}</textarea>
+            <div class="row" style="margin-top:8px">
+              <button type="button" class="btn primary" data-save-notes>Save note</button>
+            </div>`,
+          bind(root) {
+            root.querySelector("[data-save-notes]").onclick = () => {
+              data.notes = root.querySelector("#notesArea").value;
+              save(data);
+            };
+          },
+        },
+        {
+          id: "focus",
+          name: "Focus",
+          glyph: "F",
+          html: () => {
+            const left = window.__focusLeft || data.focusMin * 60;
+            const mm = String(Math.floor(left / 60)).padStart(2, "0");
+            const ss = String(left % 60).padStart(2, "0");
+            return `
+              <p style="margin:0;color:var(--muted);font-size:13px">Pomodoro for deep work on your ship.</p>
+              <div class="timer" id="timer">${mm}:${ss}</div>
+              <div class="row">
+                <button type="button" class="btn primary" data-focus-start>Start 25m</button>
+                <button type="button" class="btn" data-focus-pause>Pause</button>
+                <button type="button" class="btn" data-focus-reset>Reset</button>
+              </div>`;
+          },
+          bind(root) {
+            let left = window.__focusLeft ?? data.focusMin * 60;
+            let tick = null;
+            const label = () => root.querySelector("#timer");
+            const paint = () => {
+              const mm = String(Math.floor(left / 60)).padStart(2, "0");
+              const ss = String(left % 60).padStart(2, "0");
+              if (label()) label().textContent = `${mm}:${ss}`;
+              window.__focusLeft = left;
+            };
+            root.querySelector("[data-focus-start]").onclick = () => {
+              if (tick) return;
+              tick = setInterval(() => {
+                if (left <= 0) {
+                  clearInterval(tick);
+                  tick = null;
+                  return;
+                }
+                left -= 1;
+                paint();
+              }, 1000);
+            };
+            root.querySelector("[data-focus-pause]").onclick = () => {
+              clearInterval(tick);
+              tick = null;
+            };
+            root.querySelector("[data-focus-reset]").onclick = () => {
+              clearInterval(tick);
+              tick = null;
+              left = data.focusMin * 60;
+              paint();
+            };
+          },
+        },
+        {
+          id: "shiplog",
+          name: "Ship Log",
+          glyph: "H",
+          html: () => {
+            const total = data.logs.reduce((s, r) => s + Number(r.h || 0), 0).toFixed(1);
+            const list = data.logs
+              .map(
+                (r) =>
+                  `<div class="log-item"><strong>${r.h}h</strong> — ${escapeHtml(r.text)}<br><small>${escapeHtml(r.at)}</small></div>`
+              )
+              .join("");
+            return `
+              <p style="margin:0 0 8px">Total logged: <strong style="color:var(--accent)">${total}h</strong></p>
+              <input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" />
+              <input class="field" type="text" placeholder="What did you ship?" id="logText" />
+              <button type="button" class="btn primary" data-add-log>Add entry</button>
+              <div style="margin-top:12px">${list || "<p style='color:var(--muted)'>No entries yet.</p>"}</div>`;
+          },
+          bind(root) {
+            root.querySelector("[data-add-log]").onclick = () => {
+              const h = Number(root.querySelector("#logH").value);
+              const text = root.querySelector("#logText").value.trim();
+              if (!text) return;
+              data.logs.unshift({
+                h,
+                text,
+                at: new Date().toLocaleString(),
+              });
+              save(data);
+              openApp("shiplog");
+            };
+          },
+        },
+        {
+          id: "about",
+          name: "About",
+          glyph: "i",
+          html: () => `
+            <h2 style="margin:0 0 8px;font-family:var(--mono);color:var(--accent)">LUMEN</h2>
+            <p>Offline builder desk: notes, focus timer, and ship log in one page.</p>
+            <p style="color:var(--muted);font-size:13px">Built for Hack Club. Data stays in your browser.</p>`,
+          bind() {},
+        },
+      ];
+
+      const wins = document.getElementById("wins");
+      const tasks = document.getElementById("tasks");
+      const open = new Map();
+      let z = 10;
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function openApp(id) {
+        const app = apps.find((a) => a.id === id);
+        if (!app) return;
+        if (open.has(id)) {
+          const w = open.get(id);
+          w.el.classList.remove("min");
+          focusWin(id);
+          return;
+        }
+        const el = document.createElement("section");
+        el.className = "win focus";
+        el.style.left = `${120 + open.size * 24}px`;
+        el.style.top = `${40 + open.size * 20}px`;
+        el.style.zIndex = String(++z);
+        el.innerHTML = `
+          <header class="bar">
+            <span>${app.name}</span>
+            <div class="dots">
+              <button type="button" class="m" data-min aria-label="minimize"></button>
+              <button type="button" class="x" data-close aria-label="close"></button>
+            </div>
+          </header>
+          <div class="body">${app.html()}</div>`;
+        wins.append(el);
+        app.bind(el.querySelector(".body"));
+        el.querySelector("[data-close]").onclick = () => closeApp(id);
+        el.querySelector("[data-min]").onclick = () => {
+          el.classList.add("min");
+        };
+        el.addEventListener("mousedown", () => focusWin(id));
+        drag(el);
+
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "task on";
+        tab.textContent = app.name;
+        tab.onclick = () => {
+          if (el.classList.contains("min")) el.classList.remove("min");
+          focusWin(id);
+        };
+        tasks.append(tab);
+
+        open.set(id, { el, tab, app });
+        focusWin(id);
+      }
+
+      function focusWin(id) {
+        open.forEach((w, key) => {
+          w.el.classList.toggle("focus", key === id);
+          w.tab.classList.toggle("on", key === id);
+          if (key === id) w.el.style.zIndex = String(++z);
+        });
+      }
+
+      function closeApp(id) {
+        const w = open.get(id);
+        if (!w) return;
+        w.el.remove();
+        w.tab.remove();
+        open.delete(id);
+      }
+
+      function drag(node) {
+        const bar = node.querySelector(".bar");
+        bar.addEventListener("mousedown", (e) => {
+          if (e.target.closest("button")) return;
+          const ox = e.clientX - node.offsetLeft;
+          const oy = e.clientY - node.offsetTop;
+          const move = (ev) => {
+            node.style.left = `${Math.max(0, ev.clientX - ox)}px`;
+            node.style.top = `${Math.max(0, ev.clientY - oy)}px`;
+          };
+          window.addEventListener("mousemove", move);
+          window.addEventListener("mouseup", () => window.removeEventListener("mousemove", move), { once: true });
+        });
+      }
+
+      const icons = document.getElementById("icons");
+      apps.forEach((app) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "icon";
+        b.innerHTML = `<div class="g">${app.glyph}</div><span>${app.name}</span>`;
+        b.onclick = () => openApp(app.id);
+        icons.append(b);
+      });
+
+      function tickClock() {
+        document.getElementById("clock").textContent = new Date().toLocaleString(undefined, {
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      tickClock();
+      setInterval(tickClock, 30_000);
+
+      async function boot() {
+        await new Promise((r) => setTimeout(r, 900));
+        document.getElementById("boot").classList.add("fade");
+        document.getElementById("desk").classList.remove("hidden");
+        await new Promise((r) => setTimeout(r, 400));
+        document.getElementById("boot").remove();
+        openApp("about");
+      }
+      boot();
+    </script>
   </body>
 </html>
