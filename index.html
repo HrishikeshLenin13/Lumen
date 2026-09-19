@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="LUMEN — offline builder desk for notes, focus timer, and ship log. Hack Club."
+    />
+    <meta name="theme-color" content="#07090f" />
     <title>LUMEN — builder desk</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,18 +18,18 @@
     <link rel="stylesheet" href="css/lumen.css" />
   </head>
   <body>
-    <div id="boot" class="boot">LUMEN — loading builder desk…</div>
+    <div id="boot" class="boot" role="status" aria-live="polite">LUMEN — loading builder desk…</div>
 
-    <div id="desk" class="desktop hidden">
-      <div class="icons" id="icons"></div>
-      <div class="windows" id="wins"></div>
+    <main id="desk" class="desktop hidden">
+      <nav class="icons" id="icons" aria-label="Applications"></nav>
+      <div class="windows" id="wins" aria-live="polite"></div>
 
       <footer class="taskbar">
-        <button type="button" class="start" id="startBtn">LUMEN</button>
-        <div class="tasks" id="tasks"></div>
-        <div class="tray" id="clock"></div>
+        <button type="button" class="start" id="startBtn" aria-label="Open About LUMEN">LUMEN</button>
+        <div class="tasks" id="tasks" role="tablist" aria-label="Open windows"></div>
+        <time class="tray" id="clock" aria-label="Current time"></time>
       </footer>
-    </div>
+    </main>
 
     <script src="js/main.js"></script>
   </body>
