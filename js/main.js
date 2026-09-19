@@ -132,3 +132,16 @@ const apps = [
     bind() {},
   },
 ];
+
+const wins = document.getElementById("wins");
+const tasks = document.getElementById("tasks");
+const open = new Map();
+let z = 10;
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
