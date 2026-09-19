@@ -130,3 +130,25 @@ button {
 }
 .bar {
   height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+  font-size: 13px;
+}
+.dots {
+  display: flex;
+  gap: 5px;
+}
+.dots button {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  padding: 0;
+}
+.dots .x {
