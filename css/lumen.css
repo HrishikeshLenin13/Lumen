@@ -42,3 +42,25 @@ button {
   z-index: 50;
   background: #000;
   color: var(--accent);
+  font-family: var(--mono);
+  padding: 2rem;
+  font-size: 14px;
+}
+.boot.fade {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.desktop {
+  height: 100%;
+  position: relative;
+  background: radial-gradient(900px 500px at 15% 0%, #142033, transparent 60%), var(--bg);
+}
+.desktop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(125, 255, 195, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 255, 195, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
