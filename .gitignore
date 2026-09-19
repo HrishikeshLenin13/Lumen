@@ -4,3 +4,4 @@
 .idea/
 graphify-out/
 .slow-css-lines.txt
+.slow-js-lines.txt
