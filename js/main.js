@@ -121,3 +121,14 @@ const apps = [
       };
     },
   },
+  {
+    id: "about",
+    name: "About",
+    glyph: "i",
+    html: () => `
+      <h2 style="margin:0 0 8px;font-family:var(--mono);color:var(--accent)">LUMEN</h2>
+      <p>Offline builder desk: notes, focus timer, and ship log in one page.</p>
+      <p style="color:var(--muted);font-size:13px">Built for Hack Club. Data stays in your browser.</p>`,
+    bind() {},
+  },
+];
