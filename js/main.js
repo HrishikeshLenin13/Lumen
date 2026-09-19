@@ -100,3 +100,24 @@ const apps = [
         )
         .join("");
       return `
+        <p style="margin:0 0 8px">Total logged: <strong style="color:var(--accent)">${total}h</strong></p>
+        <input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" />
+        <input class="field" type="text" placeholder="What did you ship?" id="logText" />
+        <button type="button" class="btn primary" data-add-log>Add entry</button>
+        <div style="margin-top:12px">${list || "<p style='color:var(--muted)'>No entries yet.</p>"}</div>`;
+    },
+    bind(root) {
+      root.querySelector("[data-add-log]").onclick = () => {
+        const h = Number(root.querySelector("#logH").value);
+        const text = root.querySelector("#logText").value.trim();
+        if (!text) return;
+        data.logs.unshift({
+          h,
+          text,
+          at: new Date().toLocaleString(),
+        });
+        save(data);
+        openApp("shiplog");
+      };
+    },
+  },
