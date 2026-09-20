@@ -35,6 +35,5 @@ class Main {
       } catch (NumberFormatException e) {
         System.out.println("Invalid number.");
       } catch (ArithmeticException | IllegalArgumentException e) {
-        System.out.println("Error: " + e.getMessage());
-      }
-    
+        System.out.println("Error: " + e.getMe
+      
