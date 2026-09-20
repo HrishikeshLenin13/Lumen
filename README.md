@@ -1,82 +1,57 @@
 # LUMEN
 
-LUMEN is a one-page, offline builder desk: a small desktop-style UI in the browser for project notes, a Pomodoro focus timer, and a ship log. No account or server—data stays on your device.
+LUMEN is a one-page, offline **builder desk**: a small desktop-style UI in the browser for project notes, a Pomodoro focus timer, and a ship log. No install, no account, no server—everything stays in **localStorage** on your device.
 
-## Repo
+**Repository:** https://github.com/HrishikeshLenin13/Lumen
 
-https://github.com/HrishikeshLenin13/Lumen
+## Quick start
 
-## Setup and run
-
-No install or build step.
-
-1. Clone the repo (or download the folder).
-2. Open the project directory.
-
-**Option A — open the file**
-
-Open `index.html` in a modern browser (Chrome, Firefox, Safari, Edge).
-
-**Option B — local server (recommended)**
-
-Some browsers behave more predictably over HTTP than with `file://`:
+1. Clone or download this repo.
+2. Open `index.html` in a modern browser, **or** run a static server (recommended):
 
 ```bash
-cd /path/to/Lumen
+cd Lumen
 python3 -m http.server 8080
 ```
 
-Then visit http://localhost:8080
+Open http://localhost:8080
 
-## How to use
+## Using LUMEN
 
-After the short boot screen, you see a desktop with app icons on the left and a taskbar at the bottom.
+After the boot screen you get a desktop (icons on the left, taskbar at the bottom).
 
-**Notes** — Write what you are building. Click **Save note** to store text on this device. A brief “Saved” confirmation appears after saving.
+| App | What it does |
+|-----|----------------|
+| **Notes** | Project scratch pad. Click **Save note** to persist on this device (brief “Saved” confirmation). |
+| **Focus** | Pomodoro timer—**Start**, **Pause**, **Reset**. Default length is 25 minutes (`focusMin` in storage; no settings UI yet). |
+| **Ship Log** | Log hours and what you shipped. **Add entry** or press **Enter** in the description field. Newest entries first; total hours at the top. |
+| **About** | Short overview of LUMEN. |
 
-**Focus** — Pomodoro-style timer. Use **Start**, **Pause**, and **Reset**. The default session length is 25 minutes (stored in app data; there is no settings screen yet).
+**Windows:** drag the title bar; minimize or close with the dots; taskbar tabs focus or restore windows.
 
-**Ship Log** — Enter hours and a short description of what you shipped, then **Add entry** (or press **Enter** in the description field). The total hours update at the top; entries list newest first.
+**Taskbar:** **LUMEN** opens About; the clock shows local time.
 
-**About** — Short description of LUMEN.
+## Project layout
 
-**Windows** — Drag by the title bar. Use the colored dots to minimize or close. Open apps also appear as tabs on the taskbar; click a tab to bring that window forward or restore it from minimized.
-
-**LUMEN button** (taskbar) — Opens the About window.
-
-The clock in the taskbar shows the current local time.
+```
+index.html      HTML shell (desk + taskbar)
+css/lumen.css   Theme, windows, apps
+js/main.js      Storage, apps, window manager, boot
+LICENSE         MIT
+```
 
 ## How it works
 
-**Files**
+- **Apps** — Each app is an object with `html()` (window body markup) and `bind(root)` (event wiring after open).
+- **Windows** — `openApp` creates a window, taskbar tab, and focus stack; timer state can live on `window.__focusLeft` until reload.
+- **Storage key** — `lumen-desk-v1` with fields: `notes` (string), `logs` (`{ h, text, at }[]`), `focusMin` (number, default 25).
 
-- `index.html` — Page shell: boot screen, desktop layout, taskbar, script tag.
-- `css/lumen.css` — Colors, layout, windows, and app styling.
-- `js/main.js` — Loads and saves data, defines each “app” (HTML + behavior), opens and manages windows, builds dock icons, runs the boot sequence and clock.
-
-**Data**
-
-All persistent state is in **localStorage** under the key `lumen-desk-v1`:
-
-- `notes` — note text
-- `logs` — array of `{ h, text, at }` ship log entries
-- `focusMin` — focus session length in minutes (default 25)
-
-Clearing site data for this origin deletes your notes and log. Nothing is uploaded to a backend.
-
-**Apps**
-
-Each app is a small object: id, name, icon letter, a function that returns inner HTML for the window body, and a `bind` function that wires buttons and inputs after the window opens.
-
-**Windows**
-
-Opening an app creates a window element, runs `bind` on its body, adds a taskbar tab, and tracks open windows in memory. Focus timer remaining time can persist on `window.__focusLeft` while the page stays open.
+Clearing site data for this site deletes your notes and log. Nothing is sent to a backend.
 
 ## Stack
 
-- HTML, CSS, JavaScript (no framework)
-- IBM Plex Sans and IBM Plex Mono via Google Fonts
+HTML, CSS, and vanilla JavaScript; IBM Plex Sans / Mono via Google Fonts.
 
 ## License
 
-MIT — see LICENSE.
+MIT — see [LICENSE](LICENSE).

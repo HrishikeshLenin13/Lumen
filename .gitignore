@@ -1,7 +1,6 @@
 .DS_Store
 *.log
+*.class
 .vscode/
 .idea/
 graphify-out/
-.slow-css-lines.txt
-.slow-js-lines.txt

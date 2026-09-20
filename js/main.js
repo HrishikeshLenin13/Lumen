@@ -85,6 +85,7 @@ const apps = [
           if (left <= 0) {
             clearInterval(tick);
             tick = null;
+            paint();
             return;
           }
           left -= 1;
@@ -126,7 +127,7 @@ const apps = [
       const add = () => {
         const h = Number(root.querySelector("#logH").value);
         const text = root.querySelector("#logText").value.trim();
-        if (!text) return;
+        if (!text || !Number.isFinite(h) || h <= 0) return;
         data.logs.unshift({
           h,
           text,
@@ -148,7 +149,7 @@ const apps = [
     html: () => `
       <h2 class="about-title">LUMEN</h2>
       <p>Offline builder desk: notes, focus timer, and ship log in one page.</p>
-      <p class="hint hint--flush">Built for Hack Club. Data stays in your browser.</p>`,
+      <p class="hint hint--flush">Data stays in your browser.</p>`,
     bind() {},
   },
 ];
