@@ -37,5 +37,4 @@ class Main {
       } catch (ArithmeticException | IllegalArgumentException e) {
         System.out.println("Error: " + e.getMessage());
       }
-    }
-    scan.clos(
+    
