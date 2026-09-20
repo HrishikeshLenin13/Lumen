@@ -21,3 +21,23 @@ class Main {
         double a = Double.parseDouble(parts[0]);
         double b = Double.parseDouble(parts[2]);
         String op = parts[1];
+        double r = switch (op) {
+          case "+" -> a + b;
+          case "-" -> a - b;
+          case "*" -> a * b;
+          case "/" -> {
+            if (b == 0) throw new ArithmeticException("divide by zero");
+            yield a / b;
+          }
+          default -> throw new IllegalArgumentException("bad op: " + op);
+        };
+        System.out.println("= " + r);
+      } catch (NumberFormatException e) {
+        System.out.println("Invalid number.");
+      } catch (ArithmeticException | IllegalArgumentException e) {
+        System.out.println("Error: " + e.getMessage());
+      }
+    }
+    scan.close();
+  }
+}
