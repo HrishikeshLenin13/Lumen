@@ -3,7 +3,7 @@ import java.util.Scanner;
 class Main {
   public static void main(String[] args) {
     Scanner scan = new Scanner(System.in);
-    System.out.println("Calculator — <a> <op> <b>  (+ - * /)  or q");
+    System.out.println("Calculator — <a> <op> <b>  (+ - * /)  |  prime N  |  q");
     while (true) {
       System.out.print("> ");
       String line = scan.nextLine().trim();
@@ -12,7 +12,10 @@ class Main {
         System.out.println("Goodbye.");
         break;
       }
-      String[] parts = line.split("\\s+");
+      if (line.toLowerCase().startsWith("prime ")) {
+        try {
+          long n = Long.parseLong(line.substring(6).trim());
+
       if (parts.length != 3) {
         System.out.println("Use: number operator number");
         continue;
@@ -47,3 +50,9 @@ class PrimeHelper {
     if (n < 2) return false;
     if (n == 2) return true;
     if (n % 2 == 0) return false;
+    for (long d = 3; d * d <= n; d += 2) {
+      if (n % d == 0) return false;
+    }
+    return true;
+  }
+}
