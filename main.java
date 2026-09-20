@@ -38,6 +38,4 @@ class Main {
         System.out.println("Error: " + e.getMessage());
       }
     }
-    scan.close();
-  }
-}
+    scan.clos(
