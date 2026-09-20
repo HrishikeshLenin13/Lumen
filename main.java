@@ -15,6 +15,13 @@ class Main {
       if (line.toLowerCase().startsWith("prime ")) {
         try {
           long n = Long.parseLong(line.substring(6).trim());
+          System.out.println(PrimeHelper.isPrime(n) ? "yes, prime" : "not prime");
+        } catch (NumberFormatException e) {
+          System.out.println("Use: prime 17");
+        }
+        continue;
+      }
+      String[] parts = line.split("\\s+");
 
       if (parts.length != 3) {
         System.out.println("Use: number operator number");
