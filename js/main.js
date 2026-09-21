@@ -199,7 +199,7 @@ function finishTimer() {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? "Time for a break." : "Ready for another focus session?",
-      icon: "icons/lumen.svg?v=8",
+      icon: "icons/l.png?v=12",
     });
   }
 }
@@ -253,6 +253,7 @@ document.addEventListener("visibilitychange", () => {
 });
 let shipFilter = "";
 let editingLogId = null;
+const selectedLogIds = new Set();
 function formatLogDate(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
@@ -269,14 +270,18 @@ function filteredLogs() {
 }
 function logListHtml() {
   const rows = filteredLogs();
+  const selectedCount = selectedLogIds.size;
+  const toolbar = data.logs.length ? '<div class="log-selection-bar"><label class="log-select-all"><input type="checkbox" data-select-visible> Select shown</label><span class="log-selection-count">' + selectedCount + ' selected</span><button type="button" class="btn danger" data-log-action="delete-selected"' + (selectedCount ? "" : " disabled") + '>Delete selected</button><button type="button" class="btn" data-log-action="clear-selection"' + (selectedCount ? "" : " disabled") + '>Clear</button></div>' : "";
   if (!rows.length) {
-    return '<p class="hint hint--flush">' + (shipFilter ? "No entries match this filter." : "No entries yet.") + "</p>";
+    return toolbar + '<p class="hint hint--flush">' + (shipFilter ? "No entries match this filter." : "No entries yet.") + "</p>";
   }
-  return rows.map((entry) => {
+  return toolbar + rows.map((entry) => {
+    const checked = selectedLogIds.has(entry.id) ? " checked" : "";
+    const selectedClass = selectedLogIds.has(entry.id) ? " selected" : "";
     if (entry.id === editingLogId) {
-      return '<article class="log-item" data-log-row="' + escapeHtml(entry.id) + '"><label class="form-label">Hours<input class="field" type="number" min="0.25" step="0.25" value="' + escapeHtml(entry.h) + '" data-edit-hours></label><label class="form-label">What did you ship?<input class="field" type="text" value="' + escapeHtml(entry.text) + '" data-edit-text></label><div class="row row--actions"><button type="button" class="btn primary" data-log-action="save" data-log-id="' + escapeHtml(entry.id) + '">Save changes</button><button type="button" class="btn" data-log-action="cancel" data-log-id="' + escapeHtml(entry.id) + '">Cancel</button></div></article>';
+      return '<article class="log-item' + selectedClass + '" data-log-row="' + escapeHtml(entry.id) + '"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select entry</label><label class="form-label">Hours<input class="field" type="number" min="0.25" step="0.25" value="' + escapeHtml(entry.h) + '" data-edit-hours></label><label class="form-label">What did you ship?<input class="field" type="text" value="' + escapeHtml(entry.text) + '" data-edit-text></label><div class="row row--actions"><button type="button" class="btn primary" data-log-action="save" data-log-id="' + escapeHtml(entry.id) + '">Save changes</button><button type="button" class="btn" data-log-action="cancel" data-log-id="' + escapeHtml(entry.id) + '">Cancel</button></div></article>';
     }
-    return '<article class="log-item"><div class="log-item__header"><strong>' + escapeHtml(formatHours(entry.h)) + 'h</strong><small>' + escapeHtml(formatLogDate(entry.at)) + '</small></div><p>' + escapeHtml(entry.text) + '</p><div class="row row--actions"><button type="button" class="btn" data-log-action="edit" data-log-id="' + escapeHtml(entry.id) + '">Edit</button><button type="button" class="btn danger" data-log-action="delete" data-log-id="' + escapeHtml(entry.id) + '">Delete</button></div></article>';
+    return '<article class="log-item' + selectedClass + '"><div class="log-item__header"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select</label><strong>' + escapeHtml(formatHours(entry.h)) + 'h</strong><small>' + escapeHtml(formatLogDate(entry.at)) + '</small></div><p>' + escapeHtml(entry.text) + '</p><div class="row row--actions"><button type="button" class="btn" data-log-action="edit" data-log-id="' + escapeHtml(entry.id) + '">Edit</button><button type="button" class="btn danger" data-log-action="delete" data-log-id="' + escapeHtml(entry.id) + '">Delete</button></div></article>';
   }).join("");
 }
 function totalLoggedHours() {
@@ -314,6 +319,7 @@ async function importBackup(file) {
     data = normalizeData(imported);
     shipFilter = "";
     editingLogId = null;
+    selectedLogIds.clear();
     persistData();
     applyTheme();
     resetTimer("focus");
@@ -335,6 +341,7 @@ function clearAllData() {
   data = defaultData();
   shipFilter = "";
   editingLogId = null;
+  selectedLogIds.clear();
   persistData();
   applyTheme();
   resetTimer("focus");
@@ -347,7 +354,7 @@ const apps = [
     id: "notes",
     name: "Notes",
     glyph: "N",
-    icon: "icons/notes.png?v=8",
+    icon: "icons/notes.png?v=12",
     html() {
       return '<p class="hint">Saved automatically on this device.</p><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
     },
@@ -373,7 +380,7 @@ const apps = [
     id: "focus",
     name: "Focus",
     glyph: "F",
-    icon: "icons/timer.png?v=8",
+    icon: "icons/timer.png?v=12",
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div>';
     },
@@ -391,7 +398,7 @@ const apps = [
     id: "shiplog",
     name: "Ship Log",
     glyph: "H",
-    icon: "icons/logs.png?v=8",
+    icon: "icons/logs.png?v=12",
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" placeholder="What did you ship?" id="logText" aria-label="Ship description"><button type="button" class="btn primary" data-add-log>Add entry</button></div><label class="form-label log-filter">Filter old entries<input class="field" type="search" placeholder="Search description, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
@@ -402,8 +409,19 @@ const apps = [
       const list = root.querySelector("[data-log-list]");
       const total = root.querySelector("[data-log-total]");
       const render = () => {
+        const validIds = new Set(data.logs.map((entry) => entry.id));
+        selectedLogIds.forEach((id) => {
+          if (!validIds.has(id)) selectedLogIds.delete(id);
+        });
         list.innerHTML = logListHtml();
         total.textContent = totalLoggedHours() + "h";
+        const visibleIds = filteredLogs().map((entry) => entry.id);
+        const visibleSelected = visibleIds.filter((id) => selectedLogIds.has(id)).length;
+        const selectVisible = list.querySelector("[data-select-visible]");
+        if (selectVisible) {
+          selectVisible.checked = visibleIds.length > 0 && visibleSelected === visibleIds.length;
+          selectVisible.indeterminate = visibleSelected > 0 && visibleSelected < visibleIds.length;
+        }
       };
       const addEntry = () => {
         const hours = Number(hoursInput.value);
@@ -437,11 +455,43 @@ const apps = [
         shipFilter = filterInput.value;
         render();
       });
+      list.addEventListener("change", (event) => {
+        const entryCheckbox = event.target.closest("[data-log-select]");
+        if (entryCheckbox) {
+          if (entryCheckbox.checked) selectedLogIds.add(entryCheckbox.dataset.logSelect);
+          else selectedLogIds.delete(entryCheckbox.dataset.logSelect);
+          render();
+          return;
+        }
+        if (event.target.matches("[data-select-visible]")) {
+          filteredLogs().forEach((entry) => {
+            if (event.target.checked) selectedLogIds.add(entry.id);
+            else selectedLogIds.delete(entry.id);
+          });
+          render();
+        }
+      });
       list.addEventListener("click", (event) => {
         const button = event.target.closest("[data-log-action]");
         if (!button) return;
         const action = button.dataset.logAction;
         const id = button.dataset.logId;
+        if (action === "clear-selection") {
+          selectedLogIds.clear();
+          render();
+          return;
+        }
+        if (action === "delete-selected") {
+          const count = selectedLogIds.size;
+          if (!count || !window.confirm("Delete " + count + " selected ship log " + (count === 1 ? "entry" : "entries") + "?")) return;
+          data.logs = data.logs.filter((item) => !selectedLogIds.has(item.id));
+          if (editingLogId && selectedLogIds.has(editingLogId)) editingLogId = null;
+          selectedLogIds.clear();
+          persistData();
+          render();
+          showToast(count + " ship log " + (count === 1 ? "entry deleted." : "entries deleted."));
+          return;
+        }
         const entry = data.logs.find((item) => item.id === id);
         if (action === "cancel") {
           editingLogId = null;
@@ -458,6 +508,7 @@ const apps = [
         if (action === "delete") {
           if (!window.confirm("Delete this ship log entry?")) return;
           data.logs = data.logs.filter((item) => item.id !== id);
+          selectedLogIds.delete(id);
           if (editingLogId === id) editingLogId = null;
           persistData();
           render();
@@ -486,7 +537,7 @@ const apps = [
     id: "settings",
     name: "Settings",
     glyph: "S",
-    icon: "icons/help.png?v=8",
+    icon: "icons/help.png?v=12",
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
       const lightSelected = data.theme === "light" ? " selected" : "";
@@ -523,7 +574,7 @@ const apps = [
     id: "about",
     name: "About",
     glyph: "i",
-    icon: "icons/info.png?v=8",
+    icon: "icons/info.png?v=12",
     html() {
       return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> — Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> — Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> — Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> — Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> — About</li><li><kbd>Esc</kbd> — close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
     },
@@ -593,6 +644,7 @@ function openApp(id) {
   const element = document.createElement("section");
   const offset = open.size * 24;
   element.className = "win focus opening";
+  element.dataset.appId = id;
   element.setAttribute("role", "dialog");
   element.setAttribute("aria-modal", "false");
   element.setAttribute("aria-label", app.name);
@@ -604,11 +656,12 @@ function openApp(id) {
   element.addEventListener("animationend", () => element.classList.remove("opening"), { once: true });
   const tab = document.createElement("button");
   tab.type = "button";
-  tab.className = "task on";
+  tab.className = "task on opening";
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-selected", "true");
   tab.innerHTML = '<img src="' + app.icon + '" alt="">' + escapeHtml(app.name);
   tasks.append(tab);
+  tab.addEventListener("animationend", () => tab.classList.remove("opening"), { once: true });
   const entry = { el: element, tab, app, resizeObserver: null };
   open.set(id, entry);
   app.bind(element.querySelector(".body"));
@@ -674,26 +727,38 @@ function closeAllWindows() {
 
 function drag(node) {
   const bar = node.querySelector(".bar");
-  bar.addEventListener("mousedown", (event) => {
+  bar.addEventListener("pointerdown", (event) => {
     if (event.button !== 0 || event.target.closest("button") || node.classList.contains("max")) return;
     event.preventDefault();
-    const bounds = wins.getBoundingClientRect();
-    const offsetX = event.clientX - bounds.left - node.offsetLeft;
-    const offsetY = event.clientY - bounds.top - node.offsetTop;
+    focusWin(node.dataset.appId);
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startLeft = node.offsetLeft;
+    const startTop = node.offsetTop;
+    bar.setPointerCapture(pointerId);
+    document.body.classList.add("dragging");
     const move = (moveEvent) => {
-      const desiredLeft = moveEvent.clientX - bounds.left - offsetX;
-      const desiredTop = moveEvent.clientY - bounds.top - offsetY;
+      if (moveEvent.pointerId !== pointerId) return;
+      const desiredLeft = startLeft + moveEvent.clientX - startX;
+      const desiredTop = startTop + moveEvent.clientY - startY;
       const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
       const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
       node.style.left = Math.min(maximumLeft, Math.max(0, desiredLeft)) + "px";
       node.style.top = Math.min(maximumTop, Math.max(0, desiredTop)) + "px";
     };
-    const stop = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", stop);
+    const stop = (stopEvent) => {
+      if (stopEvent.pointerId !== pointerId) return;
+      if (bar.hasPointerCapture(pointerId)) bar.releasePointerCapture(pointerId);
+      document.body.classList.remove("dragging");
+      bar.removeEventListener("pointermove", move);
+      bar.removeEventListener("pointerup", stop);
+      bar.removeEventListener("pointercancel", stop);
+      constrainWindow(node);
     };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", stop);
+    bar.addEventListener("pointermove", move);
+    bar.addEventListener("pointerup", stop);
+    bar.addEventListener("pointercancel", stop);
   });
 }
 
@@ -715,7 +780,7 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=8" alt="">Install LUMEN...</button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt="">Install LUMEN...</button>';
 
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
@@ -821,12 +886,15 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=8", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js?v=13", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
 }
 
 const smoothCursor = document.getElementById("smoothCursor");
 if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
+  const cursorImage = new Image();
+  cursorImage.addEventListener("load", () => document.documentElement.classList.add("custom-cursor"), { once: true });
+  cursorImage.src = "icons/cursor.png?v=12";
   let cursorFrame = 0;
   document.addEventListener("pointermove", (event) => {
     const x = event.clientX;

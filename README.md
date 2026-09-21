@@ -29,7 +29,7 @@ Keyboard shortcuts: `Alt+1` Notes, `Alt+2` Focus, `Alt+3` Ship Log, `Alt+4` Sett
 ## Files
 
 - `index.html` — page shell  
-- `css/lumen.css` — look and layout  
+- `css/lumen-vintage.css` — look and layout
 - `js/main.js` — apps, windows, saving, boot  
 - `manifest.webmanifest` — installable app metadata
 - `sw.js` — offline application cache
