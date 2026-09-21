@@ -1,6 +1,6 @@
 # LUMEN
 
-LUMEN is a tiny fake desktop in your browser—a builder desk for notes, a focus timer, and a log of what you shipped. It runs offline, saves everything on your machine, and doesn’t need a login or backend.
+LUMEN is a Windows XP-inspired desktop in your browser—a builder desk for notes, a focus timer, and a log of what you shipped. It runs offline, saves everything on your machine, and doesn’t need a login or backend.
 
 https://github.com/HrishikeshLenin13/Lumen
 
@@ -34,5 +34,6 @@ Keyboard shortcuts: `Alt+1` Notes, `Alt+2` Focus, `Alt+3` Ship Log, `Alt+4` Sett
 - `manifest.webmanifest` — installable app metadata
 - `sw.js` — offline application cache
 - `icons/lumen.svg` — application icon
+- `icons/*.png` — pixel-art desktop and window-control icons
 
 MIT license (see LICENSE).

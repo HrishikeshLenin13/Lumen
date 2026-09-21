@@ -308,6 +308,564 @@ textarea:focus-visible {
   }
 }
 
+/* Windows XP-inspired visual layer */
+:root {
+  color-scheme: light;
+  --bg: #3a6ea5;
+  --panel: #ece9d8;
+  --panel2: #f7f5e9;
+  --border: #7f9db9;
+  --text: #000000;
+  --muted: #555555;
+  --accent: #245edb;
+  --danger: #d83b2d;
+  --taskbar: 34px;
+  --font: Tahoma, "Segoe UI", sans-serif;
+  --mono: "Lucida Console", "Courier New", monospace;
+  --title-start: #0058ee;
+  --title-mid: #3b8cff;
+  --title-end: #0054e3;
+  --task-start: #245edb;
+  --task-mid: #1f67d8;
+  --task-end: #1941a5;
+}
+
+html[data-theme="light"] {
+  --bg: #7793b8;
+  --panel: #ece9d8;
+  --panel2: #ffffff;
+  --border: #7f9db9;
+  --text: #000000;
+  --muted: #555555;
+  --accent: #6f84a9;
+  --danger: #d83b2d;
+  --title-start: #6f84a9;
+  --title-mid: #9babca;
+  --title-end: #657a9d;
+  --task-start: #788eaf;
+  --task-mid: #687fa2;
+  --task-end: #506783;
+}
+
+html,
+body {
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: url("../icons/cursor.png") 0 0, default;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+button,
+.bar,
+.icon {
+  cursor: url("../icons/cursor.png") 0 0, default;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.boot {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 0;
+  background: #000;
+  color: #fff;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+}
+
+.boot-logo {
+  font-size: 42px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: -3px;
+  text-shadow: 2px 2px #174ca6;
+}
+
+.boot-copy {
+  color: #c6c6c6;
+  font-size: 11px;
+}
+
+.boot-track {
+  width: 132px;
+  height: 12px;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid #888;
+  border-radius: 3px;
+}
+
+.boot-track span {
+  display: block;
+  width: 34px;
+  height: 6px;
+  background: linear-gradient(90deg, #123a91, #4f92f7, #123a91);
+  animation: xp-load 1.1s linear infinite;
+}
+
+@keyframes xp-load {
+  from { transform: translateX(-40px); }
+  to { transform: translateX(136px); }
+}
+
+.desktop {
+  background:
+    radial-gradient(90% 46% at 84% 103%, #51a83b 0 52%, transparent 53%),
+    radial-gradient(100% 54% at 20% 106%, #62b947 0 55%, transparent 56%),
+    linear-gradient(#2c8ee8 0%, #66b6ef 54%, #b9ddf2 63%, #53a83c 64%, #2f8c2d 100%);
+}
+
+.desktop::after {
+  background-image:
+    radial-gradient(ellipse at 18% 14%, rgba(255, 255, 255, 0.92) 0 2.4%, transparent 2.7%),
+    radial-gradient(ellipse at 23% 14%, rgba(255, 255, 255, 0.88) 0 3.2%, transparent 3.5%),
+    radial-gradient(ellipse at 73% 22%, rgba(255, 255, 255, 0.76) 0 2.5%, transparent 2.8%);
+  background-size: 100% 100%;
+  opacity: 1;
+}
+
+.icons {
+  top: 10px;
+  left: 8px;
+  gap: 4px;
+}
+
+.icon {
+  width: 88px;
+  min-height: 68px;
+  padding: 4px 3px;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.icon:hover,
+.icon:focus-visible {
+  background: rgba(11, 78, 165, 0.55);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.desktop-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.55));
+}
+
+.icon span {
+  max-width: 82px;
+  padding: 1px 3px;
+  font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.win {
+  min-width: 280px;
+  min-height: 200px;
+  background: #ece9d8;
+  border: 3px solid var(--title-end);
+  border-radius: 8px 8px 1px 1px;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.42);
+}
+
+.win.focus {
+  border-color: var(--title-end);
+}
+
+.win:not(.focus) {
+  border-color: #7697c5;
+}
+
+.bar {
+  height: 28px;
+  padding: 2px 3px 2px 5px;
+  background: linear-gradient(180deg, var(--title-mid) 0%, var(--title-start) 48%, var(--title-end) 100%);
+  border-bottom: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 1px 1px #0b286f;
+}
+
+.win:not(.focus) .bar {
+  background: linear-gradient(#a9bdd8, #7697c5);
+  text-shadow: 1px 1px #596d8c;
+}
+
+.bar-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+
+.bar-title img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.dots {
+  gap: 2px;
+}
+
+.dots button {
+  width: 21px;
+  height: 21px;
+  padding: 0;
+  border: 1px solid #fff;
+  border-radius: 3px;
+  background-color: #1f62d0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.45), inset -1px -1px rgba(0, 0, 80, 0.55), 0 0 0 1px #0b368b;
+  image-rendering: pixelated;
+}
+
+.dots .m {
+  background-color: #1f62d0;
+  background-image: url("../icons/minimize.png");
+}
+
+.dots .q {
+  background-color: #1f62d0;
+  background-image: url("../icons/up.png");
+}
+
+.dots .q[aria-pressed="true"] {
+  background-image: url("../icons/down.png");
+}
+
+.dots .x {
+  margin-left: 1px;
+  background-color: #e34b35;
+  background-image: url("../icons/x.png");
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px rgba(100, 0, 0, 0.6), 0 0 0 1px #8a1c12;
+}
+
+.body {
+  padding: 10px;
+  background: #ece9d8;
+  color: #fff;
+}
+
+.body textarea,
+.field,
+select.field {
+  color: #000;
+  background: #fff;
+  border: 1px solid #7f9db9;
+  border-radius: 0;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.body textarea {
+  padding: 5px;
+}
+
+.field {
+  padding: 4px 5px;
+  margin-bottom: 7px;
+}
+
+.btn {
+  min-height: 23px;
+  padding: 3px 12px;
+  color: #000;
+  background: linear-gradient(#fff 0%, #f5f2df 42%, #e7e2c8 100%);
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #aca899;
+}
+
+.btn:hover {
+  box-shadow: inset 0 0 0 2px #f2c14e, inset 1px 1px #fff, inset -1px -1px #aca899;
+}
+
+.btn:active,
+.btn.active {
+  padding-top: 4px;
+  padding-bottom: 2px;
+  background: #e3dfcf;
+  box-shadow: inset 1px 1px #aca899;
+}
+
+.btn.primary {
+  color: #000;
+  border-color: #003c74;
+}
+
+.btn.danger {
+  color: #8b0000;
+  border-color: #8b0000;
+}
+
+.timer {
+  color: #003399;
+  font-family: "Lucida Console", "Courier New", monospace;
+  text-shadow: 1px 1px #fff;
+}
+
+.timer.done {
+  color: #c00;
+}
+
+.timer-modes .active {
+  color: #000;
+  border-color: #003c74;
+  background: #e3dfcf;
+}
+
+.hint,
+.form-label,
+.log-item__header small {
+  color: #555;
+}
+
+.about-title,
+.section-title,
+.stat-strong {
+  color: #003399;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+}
+
+.log-item {
+  background: #f7f5e9;
+  border: 1px solid #aca899;
+  border-radius: 0;
+  box-shadow: inset 1px 1px #fff;
+}
+
+.separator {
+  background: #aca899;
+  box-shadow: 0 1px #fff;
+}
+
+kbd {
+  background: #f4f1df;
+  border-color: #7f7f7f;
+  border-radius: 2px;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+}
+
+.taskbar {
+  height: 34px;
+  gap: 3px;
+  padding: 0 4px 0 0;
+  background: linear-gradient(180deg, #3d95f5 0%, var(--task-start) 12%, var(--task-mid) 52%, var(--task-end) 100%);
+  border-top: 1px solid #72b5ff;
+}
+
+.start {
+  position: relative;
+  height: 32px;
+  min-width: 92px;
+  padding: 0 14px 0 30px;
+  color: #fff;
+  background: linear-gradient(180deg, #70c66a 0%, #3aab3b 12%, #218b2b 62%, #166c20 100%);
+  border: 0;
+  border-right: 2px solid #0c5617;
+  border-radius: 0 14px 14px 0;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.65), 1px 0 2px rgba(0, 0, 0, 0.4);
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 700;
+  text-shadow: 1px 1px #174b19;
+}
+
+.start::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  width: 16px;
+  height: 16px;
+  background: url("../icons/circle.png") center / 16px 16px no-repeat;
+  image-rendering: pixelated;
+}
+
+.tasks {
+  gap: 3px;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+  height: 26px;
+  padding: 2px 8px;
+  overflow: hidden;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: linear-gradient(#3e8ee9, #1b62c9);
+  border: 1px solid #164d9b;
+  border-radius: 2px;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.22);
+  font-size: 11px;
+  text-align: left;
+}
+
+.task img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.task.on {
+  color: #fff;
+  background: #164eab;
+  border-color: #0f3f90;
+  box-shadow: inset 1px 1px rgba(0, 0, 70, 0.4);
+}
+
+.tray {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #fff;
+  background: linear-gradient(#1bb3e9, #0c8ed3);
+  border-left: 1px solid #0b74b7;
+  box-shadow: inset 1px 0 rgba(255, 255, 255, 0.3);
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 11px;
+}
+
+.start-menu {
+  bottom: 34px;
+  left: 0;
+  width: 288px;
+  padding: 0 3px 5px;
+  overflow: hidden;
+  background: #fff;
+  border: 2px solid var(--title-start);
+  border-radius: 7px 7px 0 0;
+  box-shadow: 3px 4px 8px rgba(0, 0, 0, 0.45);
+}
+
+.start-menu__banner {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -3px 4px;
+  padding: 10px 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--title-start), var(--title-mid));
+  border-bottom: 2px solid #f3a640;
+  text-shadow: 1px 1px #123b7a;
+}
+
+.start-menu__banner strong {
+  font-size: 18px;
+}
+
+.start-menu__banner span {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.start-menu__title {
+  padding: 4px 8px;
+  color: #777;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.start-menu button {
+  min-height: 38px;
+  gap: 9px;
+  padding: 4px 8px;
+  color: #111;
+  border-radius: 0;
+}
+
+.start-menu button:hover,
+.start-menu button:focus-visible {
+  color: #fff;
+  background: #316ac5;
+  outline: none;
+}
+
+.start-menu__glyph {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+.menu-separator {
+  margin: 4px 6px;
+  background: #aca899;
+  box-shadow: 0 1px #fff;
+}
+
+.toast {
+  right: 8px;
+  bottom: 42px;
+  max-width: 320px;
+  padding: 9px 12px;
+  color: #000;
+  background: #ffffe1;
+  border: 1px solid #000;
+  border-radius: 5px;
+  box-shadow: 2px 3px 5px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+}
+
+*::-webkit-scrollbar {
+  width: 17px;
+  height: 17px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1efe2;
+  border: 1px solid #aca899;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #c6c2b2;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px #fff;
+}
+
+@media (max-width: 640px) {
+  .task {
+    min-width: 80px;
+  }
+  .start-menu {
+    width: min(288px, calc(100vw - 8px));
+  }
+}
+
 :root {
   color-scheme: dark;
   --desktop-glow: #142033;
@@ -550,4 +1108,63 @@ kbd {
   .tray {
     display: none;
   }
+}
+
+/* Keep the XP title-bar controls compact after the legacy component rules. */
+.bar {
+  flex: 0 0 28px;
+  min-height: 28px;
+  max-height: 28px;
+}
+
+.bar-title {
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dots {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  height: 21px;
+}
+
+.dots button {
+  display: block;
+  flex: 0 0 21px;
+  width: 21px;
+  min-width: 21px;
+  max-width: 21px;
+  height: 21px;
+  min-height: 21px;
+  max-height: 21px;
+  margin: 0;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
+  appearance: none;
+}
+
+.dots .m {
+  background-color: #1f62d0;
+  background-image: url("../icons/minimize.png");
+}
+
+.dots .q {
+  background-color: #1f62d0;
+  background-image: url("../icons/up.png");
+}
+
+.dots .q[aria-pressed="true"] {
+  background-image: url("../icons/down.png");
+}
+
+.dots .x {
+  margin-left: 1px;
+  background-color: #e34b35;
+  background-image: url("../icons/x.png");
 }

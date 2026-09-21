@@ -1,5 +1,5 @@
-const CACHE_NAME = "lumen-app-v2";
-const APP_SHELL = ["./", "./index.html", "./css/lumen.css", "./js/main.js", "./manifest.webmanifest", "./icons/lumen.svg"];
+const CACHE_NAME = "lumen-app-v3";
+const APP_SHELL = ["./", "./index.html", "./css/lumen.css", "./js/main.js", "./manifest.webmanifest", "./icons/lumen.svg", "./icons/notes.png", "./icons/timer.png", "./icons/logs.png", "./icons/help.png", "./icons/info.png", "./icons/minimize.png", "./icons/up.png", "./icons/down.png", "./icons/x.png", "./icons/circle.png", "./icons/cursor.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

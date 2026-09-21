@@ -98,7 +98,7 @@ function persistData() {
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = data.theme === "light" ? "#edf3f4" : "#07090f";
+  if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
 }
 persistData();
 applyTheme();
@@ -347,6 +347,7 @@ const apps = [
     id: "notes",
     name: "Notes",
     glyph: "N",
+    icon: "icons/notes.png",
     html() {
       return '<p class="hint">Saved automatically on this device.</p><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
     },
@@ -372,6 +373,7 @@ const apps = [
     id: "focus",
     name: "Focus",
     glyph: "F",
+    icon: "icons/timer.png",
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div>';
     },
@@ -389,6 +391,7 @@ const apps = [
     id: "shiplog",
     name: "Ship Log",
     glyph: "H",
+    icon: "icons/logs.png",
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" placeholder="What did you ship?" id="logText" aria-label="Ship description"><button type="button" class="btn primary" data-add-log>Add entry</button></div><label class="form-label log-filter">Filter old entries<input class="field" type="search" placeholder="Search description, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
@@ -483,10 +486,11 @@ const apps = [
     id: "settings",
     name: "Settings",
     glyph: "S",
+    icon: "icons/help.png",
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
       const lightSelected = data.theme === "light" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Theme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Dark</option><option value="light"' + lightSelected + '>Light</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply settings</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup</button><button type="button" class="btn" data-import-backup>Import backup</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install</h3><button type="button" class="btn" data-install-app>Install LUMEN</button><hr class="separator"><h3 class="section-title">Danger zone</h3><button type="button" class="btn danger" data-clear-data>Clear all data</button>';
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app>Install...</button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -519,6 +523,7 @@ const apps = [
     id: "about",
     name: "About",
     glyph: "i",
+    icon: "icons/info.png",
     html() {
       return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> — Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> — Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> — Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> — Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> — About</li><li><kbd>Esc</kbd> — close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
     },
@@ -594,14 +599,14 @@ function openApp(id) {
   element.style.left = 120 + offset + "px";
   element.style.top = 40 + offset + "px";
   element.style.zIndex = String(++z);
-  element.innerHTML = '<header class="bar"><span>' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
+  element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on";
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-selected", "true");
-  tab.textContent = app.name;
+  tab.innerHTML = '<img src="' + app.icon + '" alt="">' + escapeHtml(app.name);
   tasks.append(tab);
   const entry = { el: element, tab, app, resizeObserver: null };
   open.set(id, entry);
@@ -695,12 +700,12 @@ apps.forEach((app) => {
   button.type = "button";
   button.className = "icon";
   button.setAttribute("aria-label", "Open " + app.name);
-  button.innerHTML = '<div class="g" aria-hidden="true">' + escapeHtml(app.glyph) + '</div><span>' + escapeHtml(app.name) + '</span>';
+  button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
   button.addEventListener("click", () => openApp(app.id));
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__title">Applications</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><span class="start-menu__glyph" aria-hidden="true">' + escapeHtml(app.glyph) + '</span>' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app>Install LUMEN</button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png" alt="">Install LUMEN...</button>';
 
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
