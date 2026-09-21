@@ -13,11 +13,12 @@
     <meta name="apple-mobile-web-app-title" content="LUMEN">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/lumen.svg" type="image/svg+xml">
+    <title>LUMEN — builder desk</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;600&amp;display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/lumen.css" />
@@ -39,10 +40,12 @@
             aria-haspopup="menu"
             aria-expanded="false"
           >
-          LUMEN
+            LUMEN
           </button>
           <div class="start-menu hidden" id="startMenu" role="menu" aria-label="LUMEN menu"></div>
-          <time class="tray" id="clock" aria-label="Current time"></time>
+        </div>
+        <div class="tasks" id="tasks" role="tablist" aria-label="Open windows"></div>
+        <time class="tray" id="clock" aria-label="Current time"></time>
       </footer>
 
       <div class="toast hidden" id="toast" role="status" aria-live="assertive"></div>

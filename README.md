@@ -6,7 +6,7 @@ https://github.com/HrishikeshLenin13/Lumen
 
 ## Run it
 
-Clone the repo, then either open `index.html` in your browser or:
+Clone the repo, then run a local server:
 
 ```bash
 python3 -m http.server 8080
@@ -16,14 +16,23 @@ and go to http://localhost:8080
 
 ## What you get
 
-Notes, Focus (Pomodoro-style start/pause/reset), Ship Log (hours + what you built), and About. Icons on the left open apps; windows drag, minimize, and close like a real desktop. The LUMEN button on the taskbar opens About. Hit Enter in Ship Log to add a line fast.
+LUMEN includes autosaved notes, separate focus and break timers, completion alerts, editable and filterable ship-log entries, light and dark themes, backup import/export, a full Start menu, keyboard shortcuts, and resizable or maximizable windows.
 
-Your data lives in localStorage under `lumen-desk-v1`. Clear site data and it’s gone—nothing leaves your browser.
+Your data lives in localStorage under `lumen-desk-v1`. It stays on the current device unless you export a JSON backup. Accounts and cloud sync are intentionally not included.
+
+## Install it
+
+Open LUMEN through localhost or HTTPS, then choose **Install LUMEN** from the Start menu or Settings. Direct `file://` pages cannot register the offline service worker.
+
+Keyboard shortcuts: `Alt+1` Notes, `Alt+2` Focus, `Alt+3` Ship Log, `Alt+4` Settings, `Alt+5` About, and `Esc` to close the active window.
 
 ## Files
 
 - `index.html` — page shell  
 - `css/lumen.css` — look and layout  
 - `js/main.js` — apps, windows, saving, boot  
+- `manifest.webmanifest` — installable app metadata
+- `sw.js` — offline application cache
+- `icons/lumen.svg` — application icon
 
 MIT license (see LICENSE).

@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "LUMEN — Builder Desk",
+  "short_name": "LUMEN",
+  "description": "An offline builder desk for notes, focus sessions, and a ship log.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07090f",
+  "theme_color": "#07090f",
+  "icons": [
+    {
+      "src": "icons/lumen.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Notes", "url": "./#notes" },
+    { "name": "Focus timer", "url": "./#focus" },
+    { "name": "Ship Log", "url": "./#shiplog" }
+  ]
+}
