@@ -7,8 +7,13 @@
       name="description"
       content="LUMEN — offline builder desk for notes, focus timer, and ship log."
     />
-    <meta name="theme-color" content="#07090f" />
-    <title>LUMEN — builder desk</title>
+    <meta name="theme-color" content="#07090f">
+    <meta name="application-name" content="LUMEN">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="LUMEN">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/lumen.svg" type="image/svg+xml">
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,10 +30,22 @@
       <div class="windows" id="wins" aria-live="polite"></div>
 
       <footer class="taskbar">
-        <button type="button" class="start" id="startBtn" aria-label="Open About LUMEN">LUMEN</button>
-        <div class="tasks" id="tasks" role="tablist" aria-label="Open windows"></div>
-        <time class="tray" id="clock" aria-label="Current time"></time>
+        <div class="start-wrap">
+          <button
+            type="button"
+            class="start"
+            id="startBtn"
+            aria-label="Open LUMEN menu"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+          LUMEN
+          </button>
+          <div class="start-menu hidden" id="startMenu" role="menu" aria-label="LUMEN menu"></div>
+          <time class="tray" id="clock" aria-label="Current time"></time>
       </footer>
+
+      <div class="toast hidden" id="toast" role="status" aria-live="assertive"></div>
     </main>
 
     <script src="js/main.js"></script>
