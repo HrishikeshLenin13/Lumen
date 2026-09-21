@@ -308,7 +308,6 @@ textarea:focus-visible {
   }
 }
 
-/* Windows XP-inspired visual layer */
 :root {
   color-scheme: light;
   --bg: #3a6ea5;
@@ -1110,7 +1109,6 @@ kbd {
   }
 }
 
-/* Keep the XP title-bar controls compact after the legacy component rules. */
 .bar {
   flex: 0 0 28px;
   min-height: 28px;
@@ -1167,4 +1165,190 @@ kbd {
   margin-left: 1px;
   background-color: #e34b35;
   background-image: url("../icons/x.png");
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select,
+.bar,
+.icon {
+  cursor: none !important;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+body::before {
+  z-index: 9998;
+  opacity: 0.32;
+  background: repeating-linear-gradient(180deg, transparent 0, transparent 3px, rgba(4, 10, 24, 0.12) 4px);
+  mix-blend-mode: multiply;
+}
+
+body::after {
+  z-index: 9997;
+  background: radial-gradient(ellipse at center, transparent 70%, rgba(4, 10, 24, 0.05) 88%, rgba(1, 4, 12, 0.18) 100%);
+  box-shadow: inset 1px 0 rgba(255, 35, 35, 0.08), inset -1px 0 rgba(35, 125, 255, 0.09), inset 0 0 14px rgba(0, 0, 0, 0.12);
+}
+
+.desktop {
+  inset: 0;
+  width: 100%;
+  transform: scale(1.002);
+  transform-origin: center;
+  border-radius: 0.6% / 0.4%;
+  filter: saturate(1.015) contrast(1.008);
+}
+
+.smooth-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  opacity: 0;
+  background: url("../icons/cursor.png?v=8") 0 0 / 18px 18px no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.7));
+  transition: opacity 70ms linear;
+  will-change: transform;
+}
+
+.smooth-cursor.visible {
+  opacity: 1;
+}
+
+.dots button {
+  position: relative;
+  overflow: hidden;
+  background-image: none !important;
+}
+
+.dots button::before,
+.dots button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  pointer-events: none;
+}
+
+.dots .m::after {
+  width: 9px;
+  height: 2px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #123e8f;
+  transform: translate(-50%, 2px);
+}
+
+.dots .q::after {
+  width: 8px;
+  height: 7px;
+  border: 2px solid #fff;
+  border-top-width: 3px;
+  box-shadow: 1px 1px 0 #123e8f;
+  transform: translate(-50%, -50%);
+}
+
+.dots .q[aria-pressed="true"]::before,
+.dots .q[aria-pressed="true"]::after {
+  width: 7px;
+  height: 6px;
+  border: 1px solid #fff;
+  border-top-width: 2px;
+  background: transparent;
+  box-shadow: 1px 1px 0 #123e8f;
+}
+
+.dots .q[aria-pressed="true"]::before {
+  transform: translate(-25%, -67%);
+}
+
+.dots .q[aria-pressed="true"]::after {
+  transform: translate(-70%, -25%);
+}
+
+.dots .x::before,
+.dots .x::after {
+  width: 11px;
+  height: 2px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #8c251b;
+}
+
+.dots .x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.dots .x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+kbd {
+  color: #000;
+  text-shadow: none;
+}
+
+.win.opening {
+  transform-origin: 50% 100%;
+  animation: window-open 170ms cubic-bezier(0.2, 0.82, 0.25, 1) both;
+}
+
+.win.closing {
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: window-close 150ms cubic-bezier(0.55, 0, 0.9, 0.35) both;
+}
+
+.task.closing {
+  animation: task-close 150ms ease-in both;
+}
+
+@keyframes window-open {
+  from { opacity: 0; transform: translateY(18px) scale(0.86); filter: brightness(1.5) saturate(0.7); }
+  70% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: none; }
+}
+
+@keyframes window-close {
+  from { opacity: 1; transform: translateY(0) scale(1); filter: none; }
+  to { opacity: 0; transform: translateY(20px) scale(0.82); filter: brightness(1.35) saturate(0.65); }
+}
+
+@keyframes task-close {
+  to { opacity: 0; max-width: 0; min-width: 0; padding-inline: 0; }
+}
+
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+  html,
+  body,
+  button,
+  input,
+  textarea,
+  select,
+  .bar,
+  .icon {
+    cursor: auto !important;
+  }
+
+  .smooth-cursor {
+    display: none;
+  }
+
+  .win.opening,
+  .win.closing,
+  .task.closing {
+    animation-duration: 1ms;
+  }
 }

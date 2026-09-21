@@ -3,14 +3,14 @@
   "name": "LUMEN — Builder Desk",
   "short_name": "LUMEN",
   "description": "An offline builder desk for notes, focus sessions, and a ship log.",
-  "start_url": "./",
+  "start_url": "./?v=8",
   "scope": "./",
   "display": "standalone",
   "background_color": "#3a6ea5",
   "theme_color": "#245edb",
   "icons": [
     {
-      "src": "icons/lumen.svg",
+      "src": "icons/lumen.svg?v=8",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

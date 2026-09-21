@@ -199,7 +199,7 @@ function finishTimer() {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? "Time for a break." : "Ready for another focus session?",
-      icon: "icons/lumen.svg",
+      icon: "icons/lumen.svg?v=8",
     });
   }
 }
@@ -347,7 +347,7 @@ const apps = [
     id: "notes",
     name: "Notes",
     glyph: "N",
-    icon: "icons/notes.png",
+    icon: "icons/notes.png?v=8",
     html() {
       return '<p class="hint">Saved automatically on this device.</p><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
     },
@@ -373,7 +373,7 @@ const apps = [
     id: "focus",
     name: "Focus",
     glyph: "F",
-    icon: "icons/timer.png",
+    icon: "icons/timer.png?v=8",
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div>';
     },
@@ -391,7 +391,7 @@ const apps = [
     id: "shiplog",
     name: "Ship Log",
     glyph: "H",
-    icon: "icons/logs.png",
+    icon: "icons/logs.png?v=8",
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" placeholder="What did you ship?" id="logText" aria-label="Ship description"><button type="button" class="btn primary" data-add-log>Add entry</button></div><label class="form-label log-filter">Filter old entries<input class="field" type="search" placeholder="Search description, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
@@ -486,7 +486,7 @@ const apps = [
     id: "settings",
     name: "Settings",
     glyph: "S",
-    icon: "icons/help.png",
+    icon: "icons/help.png?v=8",
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
       const lightSelected = data.theme === "light" ? " selected" : "";
@@ -523,7 +523,7 @@ const apps = [
     id: "about",
     name: "About",
     glyph: "i",
-    icon: "icons/info.png",
+    icon: "icons/info.png?v=8",
     html() {
       return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> — Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> — Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> — Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> — Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> — About</li><li><kbd>Esc</kbd> — close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
     },
@@ -592,7 +592,7 @@ function openApp(id) {
   }
   const element = document.createElement("section");
   const offset = open.size * 24;
-  element.className = "win focus";
+  element.className = "win focus opening";
   element.setAttribute("role", "dialog");
   element.setAttribute("aria-modal", "false");
   element.setAttribute("aria-label", app.name);
@@ -601,6 +601,7 @@ function openApp(id) {
   element.style.zIndex = String(++z);
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
+  element.addEventListener("animationend", () => element.classList.remove("opening"), { once: true });
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on";
@@ -647,15 +648,24 @@ function focusWin(id) {
 
 function closeApp(id) {
   const entry = open.get(id);
-  if (!entry) return;
+  if (!entry || entry.el.classList.contains("closing")) return;
   entry.resizeObserver?.disconnect();
-  entry.el.remove();
-  entry.tab.remove();
-  open.delete(id);
-  if (activeId === id) {
-    activeId = null;
-    activateTopWindow();
-  }
+  entry.el.classList.remove("opening");
+  entry.el.classList.add("closing");
+  entry.tab.classList.add("closing");
+  const finish = () => {
+    entry.el.remove();
+    entry.tab.remove();
+    open.delete(id);
+    if (activeId === id) {
+      activeId = null;
+      activateTopWindow();
+    }
+  };
+  entry.el.addEventListener("animationend", finish, { once: true });
+  window.setTimeout(() => {
+    if (open.get(id) === entry) finish();
+  }, 220);
 }
 
 function closeAllWindows() {
@@ -705,7 +715,7 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png" alt="">Install LUMEN...</button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=8" alt="">Install LUMEN...</button>';
 
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
@@ -811,7 +821,22 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js?v=8", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
+}
+
+const smoothCursor = document.getElementById("smoothCursor");
+if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
+  let cursorFrame = 0;
+  document.addEventListener("pointermove", (event) => {
+    const x = event.clientX;
+    const y = event.clientY;
+    cancelAnimationFrame(cursorFrame);
+    cursorFrame = requestAnimationFrame(() => {
+      smoothCursor.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+    });
+    smoothCursor.classList.add("visible");
+  });
+  document.documentElement.addEventListener("mouseleave", () => smoothCursor.classList.remove("visible"));
 }
 boot();
