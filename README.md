@@ -16,3 +16,14 @@ Sure, other projects may have similar features. After all, it's everyone and the
 So what do we bring to the table? What's unique about Lumen?
 
 Well, we bring a sleek design to our idea. Relive the golden days of retro, vintage Windows. You get a nice, sleek, and well-optimized UI that wraps the apps functionality up nicely.
+
+# Anything else?
+Yep! What's cool is that you can actually INSTALL our app! It's not just a dingy local app. Even thouogh I really didn't say that before LOL
+
+All you gotta do is click the Lumen title/logo in the corner when you launch the app. There'll be an option to INSTALL, and after clicking that, it'll let you use Lumen as a desktop app! Nice and handy.
+
+# Who made this?
+Hrishikesh Lenin and Sandeep Shenoy.
+
+Coding assistance/MVP iterations helped with by Codex. :O
+All art and creative direction by humans. :D
