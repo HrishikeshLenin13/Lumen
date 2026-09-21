@@ -1,39 +1,18 @@
 # LUMEN
+Lumen is the Swiss army knife of your browser.
 
-LUMEN is a Windows XP-inspired desktop in your browser - a builder desk for notes, a focus timer, and a log of what you shipped. It runs offline, saves everything on your machine, and doesn’t need a login or backend.
+Wanting an effective pomodoro timer? Or a notepad that can track your activities? Or even a shipping log that allows you to effectively track hours on that project you're working on?
 
-https://github.com/HrishikeshLenin13/Lumen
+We've got your back. And more than just your back, at that. 
 
-## Run it
+Alongside these great features comes our promise of security. Nothing leaves your browser. After all, no backend calls are made. Every setting, every datapoint, and every timer set stays completely within your browser, without leaving to enter a bad actor's servers.
 
-Clone the repo, then run a local server:
+# How to use it
+Simply clone the repository and localhost the app on your computer. Then, simply open `index.html` on your browser of choice. With this, you're able to open the local app on your computer. 
 
-```bash
-python3 -m http.server 8080
-```
+# What's unique to our project
+Sure, other projects may have similar features. After all, it's everyone and their mother's first project to make a notepad.
 
-and go to http://localhost:8080
+So what do we bring to the table? What's unique about Lumen?
 
-## What you get
-
-LUMEN includes autosaved notes, separate focus and break timers, completion alerts, editable and filterable ship-log entries, light and dark themes, backup import/export, a full Start menu, keyboard shortcuts, and resizable or maximizable windows.
-
-Your data lives in localStorage under `lumen-desk-v1`. It stays on the current device unless you export a JSON backup. Accounts and cloud sync are intentionally not included.
-
-## Install it
-
-Open LUMEN through localhost or HTTPS, then choose **Install LUMEN** from the Start menu or Settings. Direct `file://` pages cannot register the offline service worker.
-
-Keyboard shortcuts: `Alt+1` Notes, `Alt+2` Focus, `Alt+3` Ship Log, `Alt+4` Settings, `Alt+5` About, and `Esc` to close the active window.
-
-## Files
-
-- `index.html` - page shell
-- `css/lumen-vintage.css` - look and layout
-- `js/main.js` - apps, windows, saving, boot
-- `manifest.webmanifest` - installable app metadata
-- `sw.js` - offline application cache
-- `icons/lumen.svg` - application icon
-- `icons/*.png` - pixel-art desktop and window-control icons
-
-MIT license (see LICENSE).
+Well, we bring a sleek design to our idea. Relive the golden days of retro, vintage Windows. You get a nice, sleek, and well-optimized UI that wraps the apps functionality up nicely.

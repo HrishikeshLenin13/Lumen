@@ -3,20 +3,18 @@ const APP_TITLE = "LUMEN - Builder Desk";
 
 function escapeHtml(value) {
   return String(value)
-  .replace(/&/g, "&amp;")
-  .replace(/</g, "&lt;")
-  .replace(/>/g, "&gt;")
-  .replace(/"/g, "&quot;")
-  .replace(/'/g, "&#039;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function makeId() {
   if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
   }
-
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
 }
 
 function clampNumber(value, minimum, maximum, fallback) {
@@ -36,6 +34,7 @@ function defaultData() {
     focusMin: 25,
     breakMin: 5,
     theme: "dark",
+    effects: "full",
   };
 }
 
@@ -43,32 +42,32 @@ function normalizeData(value) {
   const defaults = defaultData();
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
 
-  const logs = Array.isArray(source.logs) ? source.logs
-  .map((entry) => {
-    const hours = Number(entry?.h);
-    const text = typeof entry?.text === "string" ? entry.text.trim() : "";
-
-    if (!Number.isFinite(hours) || hours <= 0 || !text) {
-      return null;
-    }
-    
-    return {
-      id: typeof entry?.id === "string" && entry.id ? entry.id : makeId(),
-      h: hours,
-      text,
-      at: typeof entry.at === "string" ? entry.at : new Date().toISOString(),
-    };
-  })
-  .filter(Boolean) : [];
+  const logs = Array.isArray(source.logs)
+    ? source.logs
+        .map((entry) => {
+          const hours = Number(entry?.h);
+          const text = typeof entry?.text === "string" ? entry.text.trim() : "";
+          if (!Number.isFinite(hours) || hours <= 0 || !text) return null;
+          return {
+            id: typeof entry?.id === "string" && entry.id ? entry.id : makeId(),
+            h: hours,
+            text,
+            at: typeof entry.at === "string" ? entry.at : new Date().toISOString(),
+          };
+        })
+        .filter(Boolean)
+    : [];
 
   return {
     notes: typeof source.notes === "string" ? source.notes : defaults.notes,
     focusMin: clampNumber(source.focusMin, 1, 180, defaults.focusMin),
     breakMin: clampNumber(source.breakMin, 1, 60, defaults.breakMin),
     theme: source.theme === "light" ? "light" : "dark",
+    effects: ["full", "subtle", "off"].includes(source.effects) ? source.effects : defaults.effects,
     logs,
   };
 }
+
 function loadData() {
   try {
     return JSON.parse(localStorage.getItem(KEY) || "{}");
@@ -97,6 +96,7 @@ function persistData() {
 }
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
+  document.documentElement.dataset.effects = data.effects;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
 }
@@ -541,7 +541,10 @@ const apps = [
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
       const lightSelected = data.theme === "light" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app>Install...</button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
+      const fullEffectsSelected = data.effects === "full" ? " selected" : "";
+      const subtleEffectsSelected = data.effects === "subtle" ? " selected" : "";
+      const offEffectsSelected = data.effects === "off" ? " selected" : "";
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Full CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle</option><option value="off"' + offEffectsSelected + '>Off</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -553,6 +556,7 @@ const apps = [
         data.focusMin = clampNumber(root.querySelector("#focusMinutes").value, 1, 180, data.focusMin);
         data.breakMin = clampNumber(root.querySelector("#breakMinutes").value, 1, 60, data.breakMin);
         data.theme = root.querySelector("#themeChoice").value;
+        data.effects = root.querySelector("#effectsChoice").value;
         persistData();
         applyTheme();
         resetTimer(timer.mode);
@@ -592,6 +596,15 @@ function visibleWindowsByZ() {
   return Array.from(open.entries())
     .filter(([, entry]) => !entry.el.classList.contains("min"))
     .sort((a, b) => Number(b[1].el.style.zIndex) - Number(a[1].el.style.zIndex));
+}
+
+function onOwnAnimationEnd(element, callback) {
+  const handleAnimationEnd = (event) => {
+    if (event.target !== element) return;
+    element.removeEventListener("animationend", handleAnimationEnd);
+    callback();
+  };
+  element.addEventListener("animationend", handleAnimationEnd);
 }
 
 function activateTopWindow() {
@@ -653,7 +666,7 @@ function openApp(id) {
   element.style.zIndex = String(++z);
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
-  element.addEventListener("animationend", () => element.classList.remove("opening"), { once: true });
+  onOwnAnimationEnd(element, () => element.classList.remove("opening"));
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on opening";
@@ -661,7 +674,7 @@ function openApp(id) {
   tab.setAttribute("aria-selected", "true");
   tab.innerHTML = '<img src="' + app.icon + '" alt="">' + escapeHtml(app.name);
   tasks.append(tab);
-  tab.addEventListener("animationend", () => tab.classList.remove("opening"), { once: true });
+  onOwnAnimationEnd(tab, () => tab.classList.remove("opening"));
   const entry = { el: element, tab, app, resizeObserver: null };
   open.set(id, entry);
   app.bind(element.querySelector(".body"));
@@ -706,7 +719,10 @@ function closeApp(id) {
   entry.el.classList.remove("opening");
   entry.el.classList.add("closing");
   entry.tab.classList.add("closing");
+  let finished = false;
   const finish = () => {
+    if (finished || open.get(id) !== entry) return;
+    finished = true;
     entry.el.remove();
     entry.tab.remove();
     open.delete(id);
@@ -715,14 +731,20 @@ function closeApp(id) {
       activateTopWindow();
     }
   };
-  entry.el.addEventListener("animationend", finish, { once: true });
+  onOwnAnimationEnd(entry.el, finish);
   window.setTimeout(() => {
     if (open.get(id) === entry) finish();
   }, 220);
 }
 
 function closeAllWindows() {
-  Array.from(open.keys()).forEach(closeApp);
+  open.forEach((entry) => {
+    entry.resizeObserver?.disconnect();
+    entry.el.remove();
+    entry.tab.remove();
+  });
+  open.clear();
+  activeId = null;
 }
 
 function drag(node) {
@@ -780,7 +802,7 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt="">Install LUMEN...</button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt=""><span data-install-label>Install LUMEN...</span></button>';
 
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
@@ -829,9 +851,13 @@ function isInstalled() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
 function refreshInstallControls() {
+  const installed = isInstalled();
   document.querySelectorAll("[data-install-app]").forEach((button) => {
-    button.disabled = isInstalled();
-    button.textContent = isInstalled() ? "LUMEN is installed" : "Install LUMEN";
+    button.disabled = installed;
+    const label = button.querySelector("[data-install-label]");
+    const text = installed ? "LUMEN is installed" : "Install LUMEN";
+    if (label) label.textContent = text;
+    else button.textContent = text;
   });
 }
 async function installApp() {
@@ -886,7 +912,7 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=14", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js?v=19", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
 }
 
