@@ -1,5 +1,5 @@
-const CACHE_NAME = "lumen-app-v13";
-const APP_SHELL = ["./", "./index.html", "./css/lumen-vintage.css?v=13", "./js/main.js?v=13", "./manifest.webmanifest?v=12", "./icons/l.png?v=12", "./icons/favicon.png?v=12", "./icons/app-icon.png?v=12", "./icons/notes.png?v=12", "./icons/timer.png?v=12", "./icons/logs.png?v=12", "./icons/help.png?v=12", "./icons/info.png?v=12", "./icons/cursor.png?v=12", "./icons/wallpaper.png?v=12"];
+const CACHE_NAME = "lumen-app-v14";
+const APP_SHELL = ["./", "./index.html", "./css/lumen-vintage.css?v=14", "./js/main.js?v=14", "./manifest.webmanifest?v=14", "./icons/l.png?v=12", "./icons/favicon.png?v=12", "./icons/app-icon.png?v=12", "./icons/notes.png?v=12", "./icons/timer.png?v=12", "./icons/logs.png?v=12", "./icons/help.png?v=12", "./icons/info.png?v=12", "./icons/cursor.png?v=12", "./icons/wallpaper.png?v=12"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

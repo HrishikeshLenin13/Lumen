@@ -192,7 +192,7 @@ function finishTimer() {
   timer.secondsLeft = 0;
   timer.endAt = null;
   const message = timerLabel() + " timer finished.";
-  document.title = "✓ " + message + " — LUMEN";
+  document.title = "✓ " + message + " - LUMEN";
   paintTimer();
   playFinishedSound();
   showToast(message);
@@ -576,7 +576,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=12",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> — Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> — Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> — Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> — Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> — About</li><li><kbd>Esc</kbd> — close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
+      return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
     },
     bind() {},
   },
@@ -886,7 +886,7 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=13", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js?v=14", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
 }
 
