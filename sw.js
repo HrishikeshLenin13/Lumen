@@ -1,4 +1,4 @@
-const CACHE_NAME = "lumen-app-v19";
+const CACHE_NAME = "lumen-app-v20";
 const APP_SHELL = ["./", "./index.html", "./css/lumen-vintage.css?v=18", "./js/main.js?v=19", "./manifest.webmanifest?v=14", "./icons/l.png?v=12", "./icons/favicon.png?v=12", "./icons/app-icon.png?v=12", "./icons/notes.png?v=12", "./icons/timer.png?v=12", "./icons/logs.png?v=12", "./icons/help.png?v=12", "./icons/info.png?v=12", "./icons/cursor.png?v=12", "./icons/wallpaper.png?v=12"];
 
 self.addEventListener("install", (event) => {
@@ -10,13 +10,26 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names.filter((name) => name.startsWith("lumen-app-") && name !== CACHE_NAME).map((name) => caches.delete(name)))).then(() => self.clients.claim()));
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(fetch(new Request(event.request, { cache: "no-store" })).then((response) => {
-    if (response.ok || response.type === "opaque") {
-      const copy = response.clone();
-      event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
+self.addEventListener("fetch", event => {
+  const request = event.request;
+  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const response = await fetch(new Request(request, { cache: "no-store" }));
+      if (response.ok && response.type !== "opaque") {
+        event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
+      }
+      return response;
+    } catch {
+      const cached = await cache.match(request, { ignoreSearch: true });
+      if (cached) return cached;
+      if (request.mode === "navigate") {
+        const shell = await cache.match("./index.html", { ignoreSearch: true });
+        if (shell) return shell;
+      }
+      return Response.error();
     }
-    return response;
-  }).catch(() => caches.match(event.request, { ignoreSearch: true }).then((cached) => cached || caches.match("./index.html", { ignoreSearch: true }))));
+  })());
 });
