@@ -4,6 +4,11 @@ const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
 const TIMER_TICK_MS = 1000;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" });
+const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
+const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
+const logDateFormat = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+const clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
 function escapeHtml(value) {
   return String(value)
@@ -259,7 +264,7 @@ let editingLogId = null;
 const selectedLogIds = new Set();
 function formatLogDate(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? value : logDateFormat.format(date);
 }
 function formatHours(value) {
   return Number(value).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
@@ -1050,9 +1055,9 @@ const apps = [
       const input = root.querySelector("[data-cal-input]");
       const render = () => {
         const busy = new Set(data.events.map((event) => event.date));
-        writeText(root.querySelector("[data-cal-title]"), new Date(year, month, 1).toLocaleString(undefined, { month: "long", year: "numeric" }));
-        grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(new Date(cell.date + "T12:00").toLocaleDateString(undefined, { dateStyle: "full" })) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
-        writeText(root.querySelector("[data-cal-selected]"), new Date(selected + "T12:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }));
+        writeText(root.querySelector("[data-cal-title]"), monthTitleFormat.format(new Date(year, month, 1)));
+        grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(fullDateFormat.format(new Date(cell.date + "T12:00"))) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
+        writeText(root.querySelector("[data-cal-selected]"), dayHeadingFormat.format(new Date(selected + "T12:00")));
         const events = data.events.filter((event) => event.date === selected);
         list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
       };
@@ -1981,7 +1986,7 @@ window.addEventListener("appinstalled", () => {
 function tickClock() {
   const now = new Date();
   const clock = document.querySelector("[data-clock-time]");
-  const label = now.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  const label = clockFormat.format(now);
   writeText(clock, label);
   clock.dateTime = now.toISOString().slice(0, 16);
   window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
