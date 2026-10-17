@@ -226,6 +226,13 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
 }
 .icon:focus-visible { outline: none; }
 .marquee { position: absolute; z-index: 2; pointer-events: none; background: rgba(49, 106, 197, 0.32); border: 1px solid #316ac5; }
+.context-menu { position: absolute; z-index: 100000; min-width: 172px; padding: 2px; background: #fff; border: 1px solid #aca899; box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4); }
+.context-menu button { display: block; width: 100%; padding: 3px 18px; color: #000; background: transparent; border: 0; text-align: left; white-space: nowrap; }
+.context-menu button:hover:not(:disabled), .context-menu button:focus-visible { color: #fff; background: #316ac5; outline: none; }
+.context-menu button:focus:not(:focus-visible):not(:hover) { color: #000; background: transparent; }
+.context-menu button:disabled { color: #aca899; }
+.icons.refreshing .icon { animation: icon-refresh 240ms steps(2, end); }
+@keyframes icon-refresh { from { visibility: hidden; } to { visibility: visible; } }
 .icon:focus .desktop-icon, .icon.selected .desktop-icon { filter: brightness(0.75) sepia(1) hue-rotate(185deg) saturate(5); }
 
 .desktop-icon {

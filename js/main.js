@@ -1485,6 +1485,13 @@ function openApp(id) {
   element.querySelector(".bar").addEventListener("dblclick", (event) => {
     if (!event.target.closest("button")) toggleMaximize(id);
   });
+  const openWindowMenu = (event) => {
+    event.preventDefault();
+    focusWin(id);
+    showMenu(event.clientX, event.clientY, windowMenu(id));
+  };
+  element.querySelector(".bar").addEventListener("contextmenu", openWindowMenu);
+  tab.addEventListener("contextmenu", openWindowMenu);
   element.addEventListener("mousedown", () => focusWin(id));
   tab.addEventListener("click", () => {
     if (restoreApp(id)) return;
@@ -1722,6 +1729,88 @@ desk.addEventListener("pointerdown", (event) => {
   desk.addEventListener("pointerup", stop);
   desk.addEventListener("pointercancel", stop);
 });
+const contextMenu = document.createElement("div");
+contextMenu.className = "context-menu hidden";
+contextMenu.setAttribute("role", "menu");
+desk.append(contextMenu);
+let menuItems = [];
+let iconsByName = false;
+function hideMenu() {
+  contextMenu.classList.add("hidden");
+  menuItems = [];
+}
+function showMenu(x, y, items) {
+  menuItems = items;
+  contextMenu.innerHTML = items.map((item, index) => item ? '<button type="button" role="menuitem" data-menu-index="' + index + '"' + (item.disabled ? " disabled" : "") + ">" + escapeHtml(item.label) + "</button>" : '<div class="menu-separator" role="separator"></div>').join("");
+  contextMenu.classList.remove("hidden");
+  contextMenu.style.left = Math.max(0, Math.min(Math.round(x), desk.clientWidth - contextMenu.offsetWidth - 2)) + "px";
+  contextMenu.style.top = Math.max(0, Math.min(Math.round(y), desk.clientHeight - contextMenu.offsetHeight - 2)) + "px";
+  contextMenu.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
+}
+function windowMenu(id) {
+  const maximized = open.get(id)?.el.classList.contains("max");
+  return [{ label: "Restore", disabled: !maximized, run: () => toggleMaximize(id) }, { label: "Minimize", run: () => minimizeApp(id) }, { label: "Maximize", disabled: maximized, run: () => toggleMaximize(id) }, null, { label: "Close", run: () => closeApp(id) }];
+}
+function desktopMenu() {
+  const effects = { full: "Realistic CRT", subtle: "Subtle scanlines", grid: "Gridlines", off: "Off" };
+  const nextEffect = { full: "subtle", subtle: "grid", grid: "off", off: "full" }[data.effects];
+  return [
+    { label: iconsByName ? "Arrange icons by type" : "Arrange icons by name", run: () => {
+      iconsByName = !iconsByName;
+      const order = Array.from(iconButtons.values());
+      if (iconsByName) order.sort((a, b) => a.textContent.localeCompare(b.textContent));
+      order.forEach((button) => icons.append(button));
+    } },
+    { label: "Refresh", run: () => {
+      icons.classList.remove("refreshing");
+      void icons.offsetWidth;
+      icons.classList.add("refreshing");
+    } },
+    null,
+    { label: "New task", run: () => {
+      openApp("checklist");
+      open.get("checklist")?.el.querySelector("[data-task-input]")?.focus();
+    } },
+    { label: "New event today", run: () => openApp("calendar") },
+    null,
+    { label: "Next screen effect: " + effects[nextEffect], run: () => {
+      data.effects = nextEffect;
+      persistData();
+      applyTheme();
+    } },
+    { label: "Degauss", run: degauss },
+    null,
+    { label: "Properties", run: () => openApp("settings") },
+  ];
+}
+contextMenu.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-menu-index]");
+  if (!button) return;
+  const item = menuItems[Number(button.dataset.menuIndex)];
+  hideMenu();
+  item?.run();
+});
+contextMenu.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  event.preventDefault();
+  const buttons = Array.from(contextMenu.querySelectorAll("button:not(:disabled)"));
+  const index = buttons.indexOf(document.activeElement);
+  buttons[(index + (event.key === "ArrowDown" ? 1 : buttons.length - 1)) % buttons.length]?.focus();
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!event.target.closest(".context-menu")) hideMenu();
+});
+desk.addEventListener("contextmenu", (event) => {
+  const icon = event.target.closest(".icon");
+  if (!icon && event.target !== desk && event.target !== icons) return;
+  event.preventDefault();
+  if (icon) {
+    const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
+    selectIcons(new Set([id]));
+    return showMenu(event.clientX, event.clientY, [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => openApp("settings") }]);
+  }
+  showMenu(event.clientX, event.clientY, desktopMenu());
+});
 startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
@@ -1783,6 +1872,10 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.key === "Escape") {
+    if (!contextMenu.classList.contains("hidden")) {
+      hideMenu();
+      return;
+    }
     selectIcons(new Set());
     if (!startMenu.classList.contains("hidden")) {
       setStartMenu(false);
