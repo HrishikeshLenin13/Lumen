@@ -347,8 +347,7 @@ function exportShipLog() {
   setTimeout(() => URL.revokeObjectURL(url), 0);
   showToast("Filtered ship log exported.");
 }
-function logListHtml() {
-  const rows = filteredLogs();
+function logListHtml(rows = filteredLogs()) {
   const selectedCount = selectedLogIds.size;
   const toolbar = data.logs.length ? '<div class="log-selection-bar"><label class="log-select-all"><input type="checkbox" data-select-visible> Select shown</label><span class="log-selection-count">' + selectedCount + ' selected</span><button type="button" class="btn danger" data-log-action="delete-selected"' + (selectedCount ? "" : " disabled") + '>Delete selected</button><button type="button" class="btn" data-log-action="clear-selection"' + (selectedCount ? "" : " disabled") + '>Clear</button></div>' : "";
   if (!rows.length) {
@@ -630,13 +629,14 @@ const apps = [
       const list = root.querySelector("[data-log-list]");
       const total = root.querySelector("[data-log-total]");
       const render = () => {
+        const rows = filteredLogs();
         const validIds = new Set(data.logs.map((entry) => entry.id));
         selectedLogIds.forEach((id) => {
           if (!validIds.has(id)) selectedLogIds.delete(id);
         });
-        list.innerHTML = logListHtml();
+        list.innerHTML = logListHtml(rows);
         total.textContent = totalLoggedHours() + "h";
-        const visibleIds = filteredLogs().map((entry) => entry.id);
+        const visibleIds = rows.map((entry) => entry.id);
         const visibleSelected = visibleIds.filter((id) => selectedLogIds.has(id)).length;
         const selectVisible = list.querySelector("[data-select-visible]");
         if (selectVisible) {
