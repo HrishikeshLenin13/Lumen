@@ -1716,6 +1716,9 @@ function openApp(id, geometry) {
     showMenu(...toScene(event.clientX, event.clientY), windowMenu(id));
   };
   element.querySelector(".bar").addEventListener("contextmenu", openWindowMenu);
+  const barIcon = element.querySelector(".bar-title img");
+  barIcon.addEventListener("click", (event) => { event.stopPropagation(); focusWin(id); const box = barIcon.getBoundingClientRect(); showMenu(Math.round(box.left), Math.round(box.bottom) + 4, windowMenu(id)); });
+  barIcon.addEventListener("dblclick", (event) => { event.stopPropagation(); hideMenu(); closeApp(id); });
   tab.addEventListener("contextmenu", openWindowMenu);
   element.addEventListener("mousedown", () => focusWin(id));
   tab.addEventListener("click", () => {
@@ -2108,7 +2111,7 @@ function showMenu(x, y, items) {
   contextMenu.innerHTML = items.map((item, index) => item ? '<button type="button" role="menuitem" data-menu-index="' + index + '"' + (item.disabled ? " disabled" : "") + ">" + escapeHtml(item.label) + "</button>" : '<div class="menu-separator" role="separator"></div>').join("");
   contextMenu.classList.remove("hidden");
   contextMenu.style.left = Math.max(0, Math.min(Math.round(x), desk.clientWidth - contextMenu.offsetWidth - 2)) + "px";
-  contextMenu.style.top = Math.max(0, Math.min(Math.round(y), desk.clientHeight - contextMenu.offsetHeight - 2)) + "px";
+  contextMenu.style.top = Math.max(0, Math.min(Math.round(y) - desk.offsetTop, desk.clientHeight - document.querySelector(".taskbar").offsetHeight - contextMenu.offsetHeight)) + "px";
   contextMenu.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
 }
 function windowMenu(id) {
@@ -2285,6 +2288,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.target.closest("input, textarea, select, button, a") && selectedIconIds().length) {
     event.preventDefault();
     selectedIconIds().forEach((id) => openApp(id));
+    return;
+  }
+  if (event.key === "Escape" && event.ctrlKey) {
+    event.preventDefault();
+    setStartMenu(startMenu.classList.contains("hidden"));
     return;
   }
   if (event.key === "Escape") {
