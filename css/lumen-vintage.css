@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  --taskbar-height: 34px;
+  --taskbar-height: 30px;
   --font: Tahoma, "Segoe UI", sans-serif;
   --mono: "Lucida Console", "Courier New", monospace;
   --title-start: #075ce6;
@@ -216,15 +216,15 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0;
-  text-shadow: 1px 1px 2px #000;
-  transition: background-color 90ms linear, border-color 90ms linear;
+  text-shadow: 1px 1px #000;
 }
 
-.icon:hover,
-.icon:focus-visible {
-  background: rgba(11, 78, 165, 0.58);
-  border-color: rgba(255, 255, 255, 0.72);
+.icon:focus span {
+  background: #0b61ff;
+  outline: 1px dotted #fff;
 }
+.icon:focus-visible { outline: none; }
+.icon:focus .desktop-icon { filter: brightness(0.75) sepia(1) hue-rotate(185deg) saturate(5); }
 
 .desktop-icon {
   width: 32px;
@@ -903,8 +903,7 @@ kbd {
   height: var(--taskbar-height);
   gap: 3px;
   padding-right: 4px;
-  background: linear-gradient(#3d95f5, var(--task-start) 12%, var(--task-mid) 52%, var(--task-end));
-  border-top: 1px solid #72b5ff;
+  background: linear-gradient(180deg, #1f2f86 0, #3165c4 3%, #3682e5 6%, #4490e6 10%, #3883e5 12%, #2b71e0 15%, #2663da 18%, #235bd6 20%, #2258d5 23%, #2157d6 38%, #245ddb 54%, #2562df 86%, #245fdc 89%, #2158d4 92%, #1d4ec0 95%, #1941a5 98%);
 }
 
 .start-wrap {
@@ -914,15 +913,14 @@ kbd {
 
 .start {
   position: relative;
-  height: 32px;
+  height: 30px;
   min-width: 92px;
   padding: 0 14px 0 30px;
   color: #fff;
-  background: linear-gradient(#70c66a, #3aab3b 12%, #218b2b 62%, #166c20);
+  background: linear-gradient(180deg, #5eac56 0, #3c9a3c 10%, #2f8c2f 45%, #3a9a3a 85%, #2b7a2b 100%);
   border: 0;
-  border-right: 2px solid #0c5617;
-  border-radius: 0 14px 14px 0;
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.65), 1px 0 2px rgba(0, 0, 0, 0.4);
+  border-radius: 0 10px 10px 0;
+  box-shadow: inset 0 1px #8fd97f, inset -2px 0 #1d6a1d, 2px 0 3px rgba(0, 0, 0, 0.35);
   font-size: 14px;
   font-style: italic;
   font-weight: 700;
@@ -932,7 +930,7 @@ kbd {
 .start::before {
   content: "";
   position: absolute;
-  top: 8px;
+  top: 7px;
   left: 9px;
   width: 16px;
   height: 16px;
@@ -956,24 +954,23 @@ kbd {
   align-items: center;
   min-width: 120px;
   max-width: 190px;
-  height: 26px;
+  height: 24px;
   padding: 2px 8px;
   gap: 4px;
   overflow: hidden;
   color: #fff;
   white-space: nowrap;
   text-overflow: ellipsis;
-  background: linear-gradient(#3e8ee9, #1b62c9);
-  border: 1px solid #164d9b;
+  background: #3c81f3;
+  border: 0;
   border-radius: 2px;
-  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.22);
+  box-shadow: inset -1px 0 rgba(0, 0, 0, 0.3), inset 1px 1px rgba(255, 255, 255, 0.2);
   font-size: 11px;
   text-align: left;
-  transition: filter 90ms linear, background-color 90ms linear;
 }
 
 .task:hover {
-  filter: brightness(1.1);
+  background: #53a3ff;
 }
 
 .task img {
@@ -985,9 +982,8 @@ kbd {
 }
 
 .task.on {
-  background: #164eab;
-  border-color: #0f3f90;
-  box-shadow: inset 1px 1px rgba(0, 0, 70, 0.4);
+  background: #1e52b7;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .tray {
@@ -996,15 +992,15 @@ kbd {
   align-items: center;
   padding: 0 10px;
   color: #fff;
-  background: linear-gradient(#1bb3e9, #0c8ed3);
-  border-left: 1px solid #0b74b7;
-  box-shadow: inset 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(180deg, #0c59b9 1%, #139ee9 6%, #18b5f2 10%, #139beb 14%, #1290e8 19%, #0d8dea 63%, #0d9ff1 81%, #0f9eed 88%, #119be9 91%, #1392e2 94%, #137ed7 97%, #095bc9 100%);
+  border-left: 1px solid #1042af;
+  box-shadow: inset 1px 0 #18bbff;
   font-size: 11px;
 }
 
 .start-menu {
   position: absolute;
-  bottom: 34px;
+  bottom: var(--taskbar-height);
   left: 0;
   width: 288px;
   padding: 0 3px 5px;
