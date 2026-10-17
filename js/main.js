@@ -1,5 +1,8 @@
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "./data-core.mjs";
+
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
+const TIMER_TICK_MS = 1000;
 
 function escapeHtml(value) {
   return String(value)
@@ -17,56 +20,7 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function clampNumber(value, minimum, maximum, fallback) {
-  const number = Number(value);
-
-  if (!Number.isFinite(number)) {
-    return fallback;
-  }
-  
-  return Math.min(maximum, Math.max(minimum, Math.round(number)));
-}
-
-function defaultData() {
-  return {
-    notes: "Project notes...\nWhat are you building today?",
-    logs: [],
-    focusMin: 25,
-    breakMin: 5,
-    theme: "dark",
-    effects: "full",
-  };
-}
-
-function normalizeData(value) {
-  const defaults = defaultData();
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-
-  const logs = Array.isArray(source.logs)
-    ? source.logs
-        .map((entry) => {
-          const hours = Number(entry?.h);
-          const text = typeof entry?.text === "string" ? entry.text.trim() : "";
-          if (!Number.isFinite(hours) || hours <= 0 || !text) return null;
-          return {
-            id: typeof entry?.id === "string" && entry.id ? entry.id : makeId(),
-            h: hours,
-            text,
-            at: typeof entry.at === "string" ? entry.at : new Date().toISOString(),
-          };
-        })
-        .filter(Boolean)
-    : [];
-
-  return {
-    notes: typeof source.notes === "string" ? source.notes : defaults.notes,
-    focusMin: clampNumber(source.focusMin, 1, 180, defaults.focusMin),
-    breakMin: clampNumber(source.breakMin, 1, 60, defaults.breakMin),
-    theme: source.theme === "light" ? "light" : "dark",
-    effects: ["full", "subtle", "off"].includes(source.effects) ? source.effects : defaults.effects,
-    logs,
-  };
-}
+const defaultData = makeDefaultData;
 
 function loadData() {
   try {
@@ -75,7 +29,7 @@ function loadData() {
     return {};
   }
 }
-let data = normalizeData(loadData());
+let data = normalizeData(loadData(), makeId);
 let toastTimer = null;
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -102,14 +56,28 @@ function applyTheme() {
 }
 persistData();
 applyTheme();
+// Store an absolute deadline so a running timer can resume accurately after reload.
 const timer = {
-  mode: "focus",
-  secondsLeft: data.focusMin * 60,
-  running: false,
-  finished: false,
-  endAt: null,
+  ...restoreTimerState(data.timerState, data.focusMin),
   intervalId: null,
 };
+function saveTimerState() {
+  data.timerState = { mode: timer.mode, secondsLeft: timer.secondsLeft, running: timer.running, finished: timer.finished, endAt: timer.endAt };
+  persistData();
+}
+// Keep a small, newest-first history; a finished focus block adds one record.
+function recordCompletedSession() {
+  if (timer.mode !== "focus") return;
+  data.sessions = appendCompletedSession(data.sessions, timer.mode, timerMinutes("focus"));
+}
+function renderSessionHistory(root = open.get("focus")?.el.querySelector(".body")) {
+  const history = root?.querySelector("[data-session-history]");
+  if (!history) return;
+  const sessions = data.sessions.slice(0, 5);
+  history.innerHTML = sessions.length
+    ? "<h3>Recent focus sessions</h3><ul>" + sessions.map((session) => "<li>" + escapeHtml(session.minutes) + "m · " + escapeHtml(formatLogDate(session.at)) + "</li>").join("") + "</ul>"
+    : "<p class=\"hint\">Completed focus sessions will appear here.</p>";
+}
 let audioContext = null;
 function timerMinutes(mode = timer.mode) {
   return mode === "break" ? data.breakMin : data.focusMin;
@@ -191,9 +159,12 @@ function finishTimer() {
   timer.finished = true;
   timer.secondsLeft = 0;
   timer.endAt = null;
+  recordCompletedSession();
+  saveTimerState();
   const message = timerLabel() + " timer finished.";
   document.title = "✓ " + message + " - LUMEN";
   paintTimer();
+  renderSessionHistory();
   playFinishedSound();
   showToast(message);
   if ("Notification" in window && Notification.permission === "granted") {
@@ -204,7 +175,7 @@ function finishTimer() {
   }
 }
 function updateTimer() {
-  if (!timer.running || !timer.endAt) return;
+  if (!timer.running || !Number.isFinite(timer.endAt)) return;
   timer.secondsLeft = Math.max(0, Math.ceil((timer.endAt - Date.now()) / 1000));
   if (timer.secondsLeft <= 0) {
     finishTimer();
@@ -222,7 +193,8 @@ function startTimer() {
   primeAudio();
   requestNotificationPermission();
   stopTimerInterval();
-  timer.intervalId = setInterval(updateTimer, 250);
+  timer.intervalId = setInterval(updateTimer, TIMER_TICK_MS);
+  saveTimerState();
   paintTimer();
 }
 function pauseTimer() {
@@ -232,6 +204,7 @@ function pauseTimer() {
   stopTimerInterval();
   timer.running = false;
   timer.endAt = null;
+  saveTimerState();
   paintTimer();
 }
 function resetTimer(mode = timer.mode) {
@@ -241,6 +214,7 @@ function resetTimer(mode = timer.mode) {
   timer.running = false;
   timer.finished = false;
   timer.endAt = null;
+  saveTimerState();
   document.title = APP_TITLE;
   paintTimer();
 }
@@ -252,6 +226,7 @@ document.addEventListener("visibilitychange", () => {
   if (timer.running) updateTimer();
 });
 let shipFilter = "";
+let shipDateRange = "all";
 let editingLogId = null;
 const selectedLogIds = new Set();
 function formatLogDate(value) {
@@ -261,27 +236,46 @@ function formatLogDate(value) {
 function formatHours(value) {
   return Number(value).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
+function renderNoteOutline(nav, notes) {
+  if (!nav) return;
+  const headings = extractNoteHeadings(notes);
+  nav.innerHTML = headings.length
+    ? '<h3 class="notes-outline__title">In this note</h3><ol>' + headings.map((heading, index) => '<li><button type="button" class="btn notes-outline__item" data-note-heading="' + index + '" style="--heading-indent:' + ((heading.level - 1) * 8) + 'px" aria-label="Go to ' + escapeHtml(heading.title) + ', line ' + heading.line + '"><span>' + escapeHtml(heading.title) + '</span><small>' + heading.line + '</small></button></li>').join("") + '</ol>'
+    : '<p class="hint">Add Markdown headings like <code># Today</code> to build an outline.</p>';
+}
+// Search, date presets, the visible list, and CSV all use this one result set.
 function filteredLogs() {
-  const query = shipFilter.trim().toLowerCase();
-  if (!query) return data.logs;
-  return data.logs.filter((entry) => {
-    return [entry.text, entry.h, formatLogDate(entry.at)].join(" ").toLowerCase().includes(query);
-  });
+  const days = shipDateRange === "7" || shipDateRange === "30" ? Number(shipDateRange) : 0;
+  return filterLogs(data.logs, { query: shipFilter, days });
+}
+function exportShipLog() {
+  const blob = new Blob([logsToCsv(filteredLogs())], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "lumen-ship-log-" + new Date().toISOString().slice(0, 10) + ".csv";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast("Filtered ship log exported.");
 }
 function logListHtml() {
   const rows = filteredLogs();
   const selectedCount = selectedLogIds.size;
   const toolbar = data.logs.length ? '<div class="log-selection-bar"><label class="log-select-all"><input type="checkbox" data-select-visible> Select shown</label><span class="log-selection-count">' + selectedCount + ' selected</span><button type="button" class="btn danger" data-log-action="delete-selected"' + (selectedCount ? "" : " disabled") + '>Delete selected</button><button type="button" class="btn" data-log-action="clear-selection"' + (selectedCount ? "" : " disabled") + '>Clear</button></div>' : "";
   if (!rows.length) {
-    return toolbar + '<p class="hint hint--flush">' + (shipFilter ? "No entries match this filter." : "No entries yet.") + "</p>";
+    const hasActiveFilter = shipFilter.trim() || shipDateRange !== "all";
+    return toolbar + '<p class="hint hint--flush">' + (hasActiveFilter ? "No entries match this filter." : "No entries yet.") + "</p>";
   }
   return toolbar + rows.map((entry) => {
     const checked = selectedLogIds.has(entry.id) ? " checked" : "";
     const selectedClass = selectedLogIds.has(entry.id) ? " selected" : "";
     if (entry.id === editingLogId) {
-      return '<article class="log-item' + selectedClass + '" data-log-row="' + escapeHtml(entry.id) + '"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select entry</label><label class="form-label">Hours<input class="field" type="number" min="0.25" step="0.25" value="' + escapeHtml(entry.h) + '" data-edit-hours></label><label class="form-label">What did you ship?<input class="field" type="text" value="' + escapeHtml(entry.text) + '" data-edit-text></label><div class="row row--actions"><button type="button" class="btn primary" data-log-action="save" data-log-id="' + escapeHtml(entry.id) + '">Save changes</button><button type="button" class="btn" data-log-action="cancel" data-log-id="' + escapeHtml(entry.id) + '">Cancel</button></div></article>';
+      return '<article class="log-item' + selectedClass + '" data-log-row="' + escapeHtml(entry.id) + '"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select entry</label><label class="form-label">Hours<input class="field" type="number" min="0.25" max="24" step="0.25" value="' + escapeHtml(entry.h) + '" data-edit-hours></label><label class="form-label">What did you ship?<input class="field" type="text" maxlength="240" value="' + escapeHtml(entry.text) + '" data-edit-text></label><label class="form-label">Project<input class="field" type="text" maxlength="48" value="' + escapeHtml(entry.project || "") + '" data-edit-project></label><label class="form-label">Tags<input class="field" type="text" value="' + escapeHtml(normalizeTags(entry.tags).join(", ")) + '" data-edit-tags></label><div class="row row--actions"><button type="button" class="btn primary" data-log-action="save" data-log-id="' + escapeHtml(entry.id) + '">Save changes</button><button type="button" class="btn" data-log-action="cancel" data-log-id="' + escapeHtml(entry.id) + '">Cancel</button></div></article>';
     }
-    return '<article class="log-item' + selectedClass + '"><div class="log-item__header"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select</label><strong>' + escapeHtml(formatHours(entry.h)) + 'h</strong><small>' + escapeHtml(formatLogDate(entry.at)) + '</small></div><p>' + escapeHtml(entry.text) + '</p><div class="row row--actions"><button type="button" class="btn" data-log-action="edit" data-log-id="' + escapeHtml(entry.id) + '">Edit</button><button type="button" class="btn danger" data-log-action="delete" data-log-id="' + escapeHtml(entry.id) + '">Delete</button></div></article>';
+    const metadata = [entry.project, ...normalizeTags(entry.tags).map((tag) => "#" + tag)].filter(Boolean).map(escapeHtml).join(" · ");
+    return '<article class="log-item' + selectedClass + '"><div class="log-item__header"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select</label><strong>' + escapeHtml(formatHours(entry.h)) + 'h</strong><small>' + escapeHtml(formatLogDate(entry.at)) + '</small></div>' + (metadata ? '<p class="log-meta">' + metadata + '</p>' : '') + '<p>' + escapeHtml(entry.text) + '</p><div class="row row--actions"><button type="button" class="btn" data-log-action="edit" data-log-id="' + escapeHtml(entry.id) + '">Edit</button><button type="button" class="btn danger" data-log-action="delete" data-log-id="' + escapeHtml(entry.id) + '">Delete</button></div></article>';
   }).join("");
 }
 function totalLoggedHours() {
@@ -356,12 +350,14 @@ const apps = [
     glyph: "N",
     icon: "icons/notes.png?v=12",
     html() {
-      return '<p class="hint">Saved automatically on this device.</p><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
+      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav></div><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
     },
     bind(root) {
       const area = root.querySelector("#notesArea");
       const status = root.querySelector("[data-notes-status]");
+      const outline = root.querySelector("[data-note-outline]");
       let saveTimer = null;
+      renderNoteOutline(outline, area.value);
       const commit = () => {
         clearTimeout(saveTimer);
         data.notes = area.value;
@@ -370,10 +366,19 @@ const apps = [
       area.addEventListener("input", () => {
         data.notes = area.value;
         status.textContent = "Saving…";
+        renderNoteOutline(outline, area.value);
         clearTimeout(saveTimer);
         saveTimer = setTimeout(commit, 450);
       });
       area.addEventListener("blur", commit);
+      outline.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-note-heading]");
+        if (!button) return;
+        const heading = extractNoteHeadings(area.value)[Number(button.dataset.noteHeading)];
+        if (!heading) return;
+        area.focus();
+        area.setSelectionRange(heading.start, heading.end);
+      });
     },
   },
   {
@@ -382,7 +387,7 @@ const apps = [
     glyph: "F",
     icon: "icons/timer.png?v=12",
     html() {
-      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div>';
+      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
     },
     bind(root) {
       root.querySelectorAll("[data-timer-mode]").forEach((button) => {
@@ -392,6 +397,7 @@ const apps = [
       root.querySelector("[data-focus-pause]").addEventListener("click", pauseTimer);
       root.querySelector("[data-focus-reset]").addEventListener("click", () => resetTimer());
       paintTimer(root);
+      renderSessionHistory(root);
     },
   },
   {
@@ -400,12 +406,15 @@ const apps = [
     glyph: "H",
     icon: "icons/logs.png?v=12",
     html() {
-      return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" placeholder="What did you ship?" id="logText" aria-label="Ship description"><button type="button" class="btn primary" data-add-log>Add entry</button></div><label class="form-label log-filter">Filter old entries<input class="field" type="search" placeholder="Search description, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><div class="log-list" data-log-list>' + logListHtml() + '</div>';
+      return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" max="24" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" maxlength="240" placeholder="What did you ship?" id="logText" aria-label="Ship description"><input class="field" type="text" maxlength="48" placeholder="Project (optional)" id="logProject" aria-label="Project"><input class="field" type="text" placeholder="Tags, comma separated" id="logTags" aria-label="Tags"><button type="button" class="btn primary" data-add-log>Add entry</button></div><div class="log-tools"><label class="form-label log-filter">Search entries<input class="field" type="search" placeholder="Description, project, tag, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><label class="form-label">Date range<select class="field" data-log-range><option value="all"' + (shipDateRange === "all" ? " selected" : "") + '>All time</option><option value="7"' + (shipDateRange === "7" ? " selected" : "") + '>Last 7 days</option><option value="30"' + (shipDateRange === "30" ? " selected" : "") + '>Last 30 days</option></select></label><button type="button" class="btn" data-export-log>Export filtered CSV</button></div><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
     bind(root) {
       const hoursInput = root.querySelector("#logH");
       const textInput = root.querySelector("#logText");
+      const projectInput = root.querySelector("#logProject");
+      const tagsInput = root.querySelector("#logTags");
       const filterInput = root.querySelector("[data-log-filter]");
+      const rangeInput = root.querySelector("[data-log-range]");
       const list = root.querySelector("[data-log-list]");
       const total = root.querySelector("[data-log-total]");
       const render = () => {
@@ -424,22 +433,22 @@ const apps = [
         }
       };
       const addEntry = () => {
-        const hours = Number(hoursInput.value);
-        const text = textInput.value.trim();
-        if (!text || !Number.isFinite(hours) || hours <= 0) {
-          showToast("Enter positive hours and a ship description.");
+        const validated = validateLogEntry({ hours: hoursInput.value, description: textInput.value, project: projectInput.value, tags: tagsInput.value });
+        if (!validated.ok) {
+          showToast(validated.error);
           return;
         }
         data.logs.unshift({
           id: makeId(),
-          h: hours,
-          text,
+          ...validated.value,
           at: new Date().toISOString(),
         });
         editingLogId = null;
         persistData();
         hoursInput.value = "1";
         textInput.value = "";
+        projectInput.value = "";
+        tagsInput.value = "";
         render();
         textInput.focus();
         showToast("Ship log entry added.");
@@ -455,6 +464,8 @@ const apps = [
         shipFilter = filterInput.value;
         render();
       });
+      rangeInput.addEventListener("change", () => { shipDateRange = rangeInput.value; render(); });
+      root.querySelector("[data-export-log]").addEventListener("click", exportShipLog);
       list.addEventListener("change", (event) => {
         const entryCheckbox = event.target.closest("[data-log-select]");
         if (entryCheckbox) {
@@ -517,14 +528,18 @@ const apps = [
         }
         if (action === "save") {
           const row = button.closest("[data-log-row]");
-          const hours = Number(row.querySelector("[data-edit-hours]").value);
-          const text = row.querySelector("[data-edit-text]").value.trim();
-          if (!text || !Number.isFinite(hours) || hours <= 0) {
-            showToast("Enter positive hours and a description.");
+          const validated = validateLogEntry({
+            hours: row.querySelector("[data-edit-hours]").value,
+            description: row.querySelector("[data-edit-text]").value,
+            project: row.querySelector("[data-edit-project]").value,
+            tags: row.querySelector("[data-edit-tags]").value,
+            existingHours: entry.h,
+          });
+          if (!validated.ok) {
+            showToast(validated.error);
             return;
           }
-          entry.h = hours;
-          entry.text = text;
+          Object.assign(entry, validated.value);
           editingLogId = null;
           persistData();
           render();
@@ -589,6 +604,11 @@ const apps = [
 const wins = document.getElementById("wins");
 const tasks = document.getElementById("tasks");
 const open = new Map();
+// Start a restored deadline only after window state exists for timer rendering.
+if (timer.running) {
+  if (timer.secondsLeft <= 0) updateTimer();
+  else timer.intervalId = setInterval(updateTimer, TIMER_TICK_MS);
+}
 let activeId = null;
 let z = 10;
 
@@ -912,7 +932,7 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=19", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js?v=20", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
 }
 

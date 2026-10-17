@@ -432,7 +432,64 @@ select.field:focus {
 }
 
 #notesArea {
+  height: 100%;
+}
+
+.notes-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 200px);
+  gap: 12px;
   height: calc(100% - 44px);
+  min-height: 220px;
+}
+
+.notes-layout #notesArea {
+  min-height: 0;
+  resize: vertical;
+}
+
+.notes-outline {
+  min-width: 0;
+  overflow: auto;
+  padding-left: 10px;
+  border-left: 1px solid var(--card-border);
+}
+
+.notes-outline__title {
+  margin: 0 0 8px;
+  color: var(--window-heading);
+  font-size: 0.9rem;
+}
+
+.notes-outline ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes-outline li + li {
+  margin-top: 4px;
+}
+
+.notes-outline__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding-left: calc(6px + var(--heading-indent, 0px));
+  overflow: hidden;
+  text-align: left;
+}
+
+.notes-outline__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-outline__item small {
+  flex: none;
+  color: var(--window-muted);
 }
 
 .field {
@@ -548,12 +605,66 @@ select.field:focus {
   color: #ff5d6c;
 }
 
+.session-history {
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid var(--card-border);
+}
+
+.session-history h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.session-history ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--window-text);
+}
+
+.session-history li + li {
+  margin-top: 4px;
+}
+
 .log-entry-form {
   display: grid;
-  grid-template-columns: 86px minmax(150px, 1fr) auto;
+  grid-template-columns: 82px repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 8px;
   margin-bottom: 14px;
+}
+
+.log-entry-form .field {
+  min-width: 0;
+}
+
+.log-entry-form #logText {
+  grid-column: span 2;
+}
+
+.log-entry-form [data-add-log] {
+  grid-column: 2 / 4;
+}
+
+.log-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, auto);
+  align-items: end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.log-tools .log-filter {
+  grid-column: 1 / -1;
+}
+
+.log-tools .form-label {
+  margin: 0;
+}
+
+.log-meta {
+  color: var(--window-heading);
+  font-size: 0.88rem;
 }
 
 .log-entry-form .field {
@@ -1030,6 +1141,27 @@ html[data-effects="off"] body::after {
 
   .log-entry-form {
     grid-template-columns: 1fr;
+  }
+
+  .log-entry-form #logText,
+  .log-entry-form [data-add-log] {
+    grid-column: auto;
+  }
+
+  .log-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .notes-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(180px, 1fr) minmax(80px, 24%);
+    height: auto;
+  }
+
+  .notes-outline {
+    padding: 10px 0 0;
+    border-top: 1px solid var(--card-border);
+    border-left: 0;
   }
 
   .settings-grid .form-label:last-child {
