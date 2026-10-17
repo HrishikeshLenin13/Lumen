@@ -260,6 +260,7 @@ document.addEventListener("visibilitychange", () => {
 });
 let shipFilter = "";
 let shipDateRange = "all";
+let logLimit = 100;
 let editingLogId = null;
 const selectedLogIds = new Set();
 function formatLogDate(value) {
@@ -321,7 +322,7 @@ function logListHtml() {
     const hasActiveFilter = shipFilter.trim() || shipDateRange !== "all";
     return toolbar + '<p class="hint hint--flush">' + (hasActiveFilter ? "No entries match this filter." : "No entries yet.") + "</p>";
   }
-  return toolbar + rows.map((entry) => {
+  return toolbar + rows.slice(0, logLimit).map((entry) => {
     const checked = selectedLogIds.has(entry.id) ? " checked" : "";
     const selectedClass = selectedLogIds.has(entry.id) ? " selected" : "";
     if (entry.id === editingLogId) {
@@ -329,7 +330,7 @@ function logListHtml() {
     }
     const metadata = [entry.project, ...normalizeTags(entry.tags).map((tag) => "#" + tag)].filter(Boolean).map(escapeHtml).join(" · ");
     return '<article class="log-item' + selectedClass + '"><div class="log-item__header"><label class="log-select"><input type="checkbox" data-log-select="' + escapeHtml(entry.id) + '"' + checked + '> Select</label><strong>' + escapeHtml(formatHours(entry.h)) + 'h</strong><small>' + escapeHtml(formatLogDate(entry.at)) + '</small></div>' + (metadata ? '<p class="log-meta">' + metadata + '</p>' : '') + '<p>' + escapeHtml(entry.text) + '</p><div class="row row--actions"><button type="button" class="btn" data-log-action="edit" data-log-id="' + escapeHtml(entry.id) + '">Edit</button><button type="button" class="btn danger" data-log-action="delete" data-log-id="' + escapeHtml(entry.id) + '">Delete</button></div></article>';
-  }).join("");
+  }).join("") + (rows.length > logLimit ? '<button type="button" class="btn log-more" data-log-action="more">Show ' + Math.min(100, rows.length - logLimit) + " more of " + (rows.length - logLimit) + " remaining</button>" : "");
 }
 function totalLoggedHours() {
   return data.logs.reduce((sum, entry) => sum + Number(entry.h || 0), 0).toFixed(1);
@@ -602,9 +603,10 @@ const apps = [
       });
       filterInput.addEventListener("input", () => {
         shipFilter = filterInput.value;
+        logLimit = 100;
         render();
       });
-      rangeInput.addEventListener("change", () => { shipDateRange = rangeInput.value; render(); });
+      rangeInput.addEventListener("change", () => { shipDateRange = rangeInput.value; logLimit = 100; render(); });
       root.querySelector("[data-export-log]").addEventListener("click", exportShipLog);
       list.addEventListener("change", (event) => {
         const entryCheckbox = event.target.closest("[data-log-select]");
@@ -627,6 +629,11 @@ const apps = [
         if (!button) return;
         const action = button.dataset.logAction;
         const id = button.dataset.logId;
+        if (action === "more") {
+          logLimit += 100;
+          render();
+          return;
+        }
         if (action === "clear-selection") {
           selectedLogIds.clear();
           render();

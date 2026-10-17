@@ -836,6 +836,7 @@ select.field:focus {
   margin-left: auto;
 }
 
+.log-more { width: 100%; margin-top: 4px; }
 .log-item p {
   margin: 8px 0;
   overflow-wrap: anywhere;
