@@ -269,7 +269,6 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
-  resize: both;
   background: var(--window-bg);
   padding: 0 3px 3px;
   border-radius: 8px 8px 0 0;
@@ -285,6 +284,8 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   box-shadow: var(--frame);
 }
 
+.win-grip { position: absolute; right: 3px; bottom: 3px; width: 12px; height: 12px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 0 50%, #fff 50% 58%, #aca899 58% 66%, transparent 66% 75%, #fff 75% 83%, #aca899 83% 91%, transparent 91%); touch-action: none; }
+.win.max .win-grip { display: none; }
 .win.min {
   visibility: hidden;
   pointer-events: none;

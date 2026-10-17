@@ -1512,7 +1512,7 @@ function openApp(id) {
   element.style.top = (window.innerWidth <= 640 ? icons.offsetTop + icons.offsetHeight + 8 : 40) + offset + "px";
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
-  element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
+  element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div><span class="win-grip" data-grip aria-hidden="true"></span>';
   wins.append(element);
   playSound("open");
   const tab = document.createElement("button");
@@ -1545,6 +1545,7 @@ function openApp(id) {
     focusWin(id);
   });
   drag(element);
+  resizeGrip(element);
   if ("ResizeObserver" in window) {
     entry.resizeObserver = new ResizeObserver(() => constrainWindow(element));
     entry.resizeObserver.observe(element);
@@ -1650,6 +1651,54 @@ function flingWindow(node, velocityX, velocityY) {
     }
   };
   requestAnimationFrame(step);
+}
+function resizeGrip(node) {
+  const grip = node.querySelector("[data-grip]");
+  grip.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || node.classList.contains("max")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    focusWin(node.dataset.appId);
+    const pointerId = event.pointerId;
+    try { grip.setPointerCapture(pointerId); } catch { return; }
+    const [startX, startY] = toScene(event.clientX, event.clientY);
+    const startWidth = node.offsetWidth;
+    const startHeight = node.offsetHeight;
+    const style = getComputedStyle(node);
+    const minimumWidth = parseInt(style.minWidth, 10) || 200;
+    const minimumHeight = parseInt(style.minHeight, 10) || 150;
+    const maximumWidth = wins.clientWidth - node.offsetLeft;
+    const maximumHeight = wins.clientHeight - node.offsetTop;
+    let width = startWidth;
+    let height = startHeight;
+    let frame = 0;
+    desk.classList.add("moving");
+    const apply = () => {
+      frame = 0;
+      node.style.width = width + "px";
+      node.style.height = height + "px";
+    };
+    const move = (moveEvent) => {
+      if (moveEvent.pointerId !== pointerId) return;
+      const [sceneX, sceneY] = toScene(moveEvent.clientX, moveEvent.clientY);
+      width = Math.round(Math.max(minimumWidth, Math.min(maximumWidth, startWidth + sceneX - startX)));
+      height = Math.round(Math.max(minimumHeight, Math.min(maximumHeight, startHeight + sceneY - startY)));
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    const stop = (stopEvent) => {
+      if (stopEvent.pointerId !== pointerId) return;
+      cancelAnimationFrame(frame);
+      apply();
+      if (grip.hasPointerCapture(pointerId)) grip.releasePointerCapture(pointerId);
+      grip.removeEventListener("pointermove", move);
+      grip.removeEventListener("pointerup", stop);
+      grip.removeEventListener("pointercancel", stop);
+      desk.classList.remove("moving");
+    };
+    grip.addEventListener("pointermove", move);
+    grip.addEventListener("pointerup", stop);
+    grip.addEventListener("pointercancel", stop);
+  });
 }
 function drag(node) {
   const bar = node.querySelector(".bar");
