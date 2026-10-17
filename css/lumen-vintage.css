@@ -64,6 +64,9 @@ html[data-wallpaper="graphite"] {
   box-sizing: border-box;
 }
 
+:root { --bezel: 0px; }
+@media (display-mode: window-controls-overlay) { :root { --bezel: env(titlebar-area-height, 32px); } }
+
 html,
 body {
   width: 100%;
@@ -79,6 +82,7 @@ body {
 }
 
 body {
+  padding-top: var(--bezel);
   border-radius: 10px / 7px;
 }
 
@@ -1226,7 +1230,7 @@ body::before,
 body::after {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: var(--bezel) 0 0;
   pointer-events: none;
 }
 
@@ -1261,10 +1265,10 @@ html[data-effects="off"] body::after {
   display: none;
 }
 html[data-effects="full"] body::before { opacity: 0.72; background: repeating-linear-gradient(180deg, #000 0 1px, transparent 1px 3px); mix-blend-mode: soft-light; animation: crt-flicker 7s steps(1) infinite; }
-.crt-mask { position: fixed; inset: 0; z-index: 9995; display: none; pointer-events: none; background: repeating-linear-gradient(90deg, rgba(255, 40, 40, 0.07) 0 1px, rgba(40, 255, 100, 0.05) 1px 2px, rgba(40, 110, 255, 0.07) 2px 3px); mix-blend-mode: multiply; }
+.crt-mask { position: fixed; inset: var(--bezel) 0 0; z-index: 9995; display: none; pointer-events: none; background: repeating-linear-gradient(90deg, rgba(255, 40, 40, 0.07) 0 1px, rgba(40, 255, 100, 0.05) 1px 2px, rgba(40, 110, 255, 0.07) 2px 3px); mix-blend-mode: multiply; }
 html[data-effects="full"] .crt-mask { display: block; }
 html[data-effects="full"] body::after { background: radial-gradient(ellipse 22% 14% at 20% 13%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 55%, transparent 100%), linear-gradient(122deg, rgba(255, 255, 255, 0.11) 0, rgba(255, 255, 255, 0.04) 22%, transparent 34%, transparent 78%, rgba(255, 255, 255, 0.035) 90%, transparent 100%); mix-blend-mode: screen; box-shadow: inset 2px 0 rgba(255, 32, 64, 0.22), inset -2px 0 rgba(0, 190, 255, 0.24); }
-.crt-roll { position: fixed; top: 0; left: 0; z-index: 9996; display: none; width: 100%; height: 160px; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.05) 50%, transparent); mix-blend-mode: screen; will-change: transform; }
+.crt-roll { position: fixed; top: var(--bezel); left: 0; z-index: 9996; display: none; width: 100%; height: 160px; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.05) 50%, transparent); mix-blend-mode: screen; will-change: transform; }
 html[data-effects="full"] .crt-roll { display: block; animation: crt-roll 9s linear infinite; }
 html[data-effects="full"] .desktop { filter: url("#crt-split") var(--tube, saturate(1.12) contrast(1.05)); }
 html[data-effects="full"] .desktop.moving { filter: url("#crt-fast") var(--tube, saturate(1.12) contrast(1.05)); }
@@ -1436,3 +1440,11 @@ html[data-theme="light"] .task.on { background: linear-gradient(180deg, #b9bbc8,
 html[data-theme="light"] .tray { color: #000; background: linear-gradient(180deg, #a8aab9 0, #f6f6f9 6%, #e8e9ef 40%, #d9dae2 90%, #b5b7c4 100%); border-left-color: #9a9cad; box-shadow: inset 1px 0 #fff; }
 html[data-theme="light"] .btn { border-color: #6f7387; background: linear-gradient(180deg, #fff, #eeeef2 86%, #d6d7df); }
 html[data-theme="light"] .btn.scene-hover:not(:disabled) { box-shadow: inset 0 0 0 1px #fff, inset 0 0 0 2px #b9bccc; }
+.bezel { display: none; }
+@media (display-mode: window-controls-overlay) {
+  body { border-radius: 0; }
+  .desktop { border-radius: 10px / 7px; }
+  .bezel { position: fixed; top: 0; right: 0; left: 0; z-index: 10000; display: flex; align-items: center; gap: 8px; height: var(--bezel); padding: 0 12px 0 calc(env(titlebar-area-x, 0px) + 12px); color: #77777f; background: linear-gradient(180deg, #3b3b40, #26262a 45%, #18181b); box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), inset 0 -1px #000; font: italic 700 12px/1 "Trebuchet MS", var(--font); letter-spacing: 3px; text-shadow: 0 1px rgba(255, 255, 255, 0.1), 0 -1px #000; -webkit-app-region: drag; app-region: drag; user-select: none; }
+  html[data-curved-cursor="on"] .bezel { cursor: default !important; }
+  .bezel__led { width: 6px; height: 6px; background: #4cff6a; border-radius: 50%; box-shadow: 0 0 2px #4cff6a, 0 0 6px rgba(76, 255, 106, 0.6); }
+}

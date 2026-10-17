@@ -8,15 +8,15 @@ const screenCursor = document.querySelector("[data-screen-cursor]");
 let cursorFrame = 0;
 let cursorX = -40;
 let cursorY = -40;
-function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < 0 || surfaceX >= innerWidth || surfaceY >= innerHeight); const matrix = cursorSurfaceMatrix(x, y, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
+function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < lens.top || surfaceX >= innerWidth || surfaceY >= lens.top + lens.height); const matrix = cursorSurfaceMatrix(x, y - lens.top, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
 document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
-let lens = { strength: 0, width: 1, height: 1 };
+let lens = { strength: 0, top: 0, width: 1, height: 1 };
 document.documentElement.dataset.curvedCursor = "on";
 function toScene(x, y) {
   if (!lens.strength || document.documentElement.dataset.effects !== "full") return [x, y];
   const nx = x / lens.width * 2 - 1;
-  const ny = y / lens.height * 2 - 1;
+  const ny = (y - lens.top) / lens.height * 2 - 1;
   const pull = lens.strength * (nx * nx + ny * ny) / 2;
   return [Math.round(x + nx * pull * lens.width), Math.round(y + ny * pull * lens.height)];
 }
@@ -118,7 +118,7 @@ function applyTheme() {
   document.documentElement.dataset.wallpaper = data.wallpaper;
   clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: data.clock24 ? "h23" : "h12" });
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
+  if (meta) meta.content = "#1d1d20";
 }
 persistData();
 applyTheme();
@@ -2315,8 +2315,9 @@ function bendScreen() {
   if (document.documentElement.dataset.effects !== "full") return;
   const strength = 0.028;
   const width = 160;
-  const height = Math.max(1, Math.round(width * window.innerHeight / window.innerWidth));
-  const scale = Math.ceil(2 * strength * Math.max(window.innerWidth, window.innerHeight));
+  const screen = document.getElementById("desk");
+  const height = Math.max(1, Math.round(width * screen.clientHeight / Math.max(1, screen.clientWidth)));
+  const scale = Math.ceil(2 * strength * Math.max(screen.clientWidth, screen.clientHeight));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -2328,8 +2329,8 @@ function bendScreen() {
       const ny = (y + 0.5) / height * 2 - 1;
       const pull = strength * (nx * nx + ny * ny) / scale / 2;
       const index = (y * width + x) * 4;
-      image.data[index] = Math.round(255 * (0.5 + nx * pull * window.innerWidth));
-      image.data[index + 1] = Math.round(255 * (0.5 + ny * pull * window.innerHeight));
+      image.data[index] = Math.round(255 * (0.5 + nx * pull * screen.clientWidth));
+      image.data[index + 1] = Math.round(255 * (0.5 + ny * pull * screen.clientHeight));
       image.data[index + 2] = 128;
       image.data[index + 3] = 255;
     }
@@ -2338,7 +2339,7 @@ function bendScreen() {
   const map = canvas.toDataURL();
   lenses.forEach((lens) => lens.setAttribute("href", map));
   bends.forEach((bend) => bend.setAttribute("scale", String(scale)));
-  lens = { strength, width: window.innerWidth, height: window.innerHeight };
+  lens = { strength, top: screen.offsetTop, width: screen.clientWidth, height: screen.clientHeight };
 }
 let bendTimer = 0;
 window.addEventListener("resize", () => {

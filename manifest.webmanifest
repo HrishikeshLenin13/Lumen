@@ -6,8 +6,9 @@
   "start_url": "./?v=15",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#3a6ea5",
-  "theme_color": "#245edb",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#000000",
+  "theme_color": "#1d1d20",
   "icons": [
     {
       "src": "icons/app-icon.png?v=12",
@@ -22,6 +23,9 @@
     { "name": "Ship Log", "url": "./#shiplog" },
     { "name": "Checklist", "url": "./#checklist" },
     { "name": "Calculator", "url": "./#calculator" },
-    { "name": "Files", "url": "./#files" }
+    { "name": "Files", "url": "./#files" },
+    { "name": "Paint", "url": "./#paint" },
+    { "name": "Calendar", "url": "./#calendar" },
+    { "name": "Character Map", "url": "./#charmap" }
   ]
 }
