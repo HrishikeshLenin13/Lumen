@@ -1795,8 +1795,19 @@ function arrangeWindows(mode) {
   });
   rememberWindows();
 }
+let hiddenByDesktop = [];
+function toggleDesktop() {
+  const showing = Array.from(open.keys()).filter((id) => !open.get(id).el.classList.contains("min") && !open.get(id).el.classList.contains("minimizing"));
+  if (showing.length) {
+    hiddenByDesktop = showing;
+    showing.forEach((id) => minimizeApp(id));
+    return;
+  }
+  hiddenByDesktop.filter((id) => open.has(id)).forEach((id) => restoreApp(id));
+  hiddenByDesktop = [];
+}
 function arrangeMenu() {
-  return [{ label: "Cascade windows", run: () => arrangeWindows("cascade") }, { label: "Tile windows", run: () => arrangeWindows("tile") }, { label: "Show the desktop", run: () => open.forEach((entry, id) => { if (!entry.el.classList.contains("min")) minimizeApp(id); }) }];
+  return [{ label: "Cascade windows", run: () => arrangeWindows("cascade") }, { label: "Tile windows", run: () => arrangeWindows("tile") }, { label: "Show the desktop", run: toggleDesktop }];
 }
 function closeAllWindows() {
   open.forEach((entry) => {
@@ -2369,6 +2380,7 @@ function tickClock() {
 }
 tickClock();
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
+document.querySelector("[data-show-desktop]").addEventListener("click", toggleDesktop);
 function paintVolume() {
   const volume = document.getElementById("volume");
   volume.classList.toggle("muted", !data.sounds);
