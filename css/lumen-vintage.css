@@ -1048,7 +1048,10 @@ kbd {
   position: absolute;
   bottom: var(--taskbar-height);
   left: 0;
-  width: 288px;
+  width: 420px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
   padding: 0 3px 5px;
   overflow: hidden;
   color: #111;
@@ -1089,12 +1092,13 @@ kbd {
 .start-menu__search { display: block; padding: 6px 7px 2px; }
 .start-menu__search .field { width: 100%; }
 .start-menu [data-open-app].hidden { display: none; }
+.start-menu > :not([data-open-app]) { grid-column: 1 / -1; }
 
 .start-menu button {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 38px;
+  min-height: 34px;
   padding: 4px 8px;
   gap: 9px;
   color: #111;
@@ -1112,8 +1116,8 @@ kbd {
 }
 
 .start-menu__glyph {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   flex: 0 0 auto;
   object-fit: contain;
   image-rendering: pixelated;
@@ -1345,7 +1349,7 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
   }
 
   .start-menu {
-    width: min(288px, calc(100vw - 8px));
+    width: min(420px, calc(100vw - 8px));
   }
 }
 
