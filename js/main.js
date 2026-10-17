@@ -958,12 +958,11 @@ function zoomRects(from, to, done) {
   const frames = [];
   const at = (start, end, step) => Math.round(start + (end - start) * step / 8);
   const draw = (step) => {
-    const frame = document.createElement("div");
+    const frame = frames.length < 3 ? document.createElement("div") : frames.shift();
     frame.className = "zoom-rect";
     frame.style.cssText = "left:" + at(from.left, to.left, step) + "px;top:" + at(from.top, to.top, step) + "px;width:" + at(from.width, to.width, step) + "px;height:" + at(from.height, to.height, step) + "px";
     document.body.append(frame);
     frames.push(frame);
-    if (frames.length > 3) frames.shift().remove();
     if (step < 8) window.setTimeout(() => draw(step + 1), 22);
     else window.setTimeout(() => { frames.forEach((item) => item.remove()); done?.(); }, 22);
   };
