@@ -150,6 +150,9 @@ function stopTimerInterval() {
 function writeText(element, value) {
   if (element.textContent !== value) element.textContent = value;
 }
+function writeAttribute(element, name, value) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
 function paintTimer(root = open.get("focus")?.el.querySelector(".body")) {
   if (!root) return;
   const readout = root.querySelector("#timer");
@@ -831,9 +834,9 @@ const apps = [
           const info = field?.[index];
           cell.classList.toggle("open", open);
           cell.classList.toggle("boom", open && Boolean(info?.mine));
-          cell.dataset.count = open && info && !info.mine && info.count ? String(info.count) : "";
+          writeAttribute(cell, "data-count", open && info && !info.mine && info.count ? String(info.count) : "");
           writeText(cell, open ? (info.mine ? "●" : info.count ? String(info.count) : "") : flags.has(index) ? "⚑" : "");
-          cell.setAttribute("aria-label", open ? (info.mine ? "Mine" : info.count ? info.count + " nearby mines" : "Empty") : flags.has(index) ? "Flagged square" : "Hidden square");
+          writeAttribute(cell, "aria-label", open ? (info.mine ? "Mine" : info.count ? info.count + " nearby mines" : "Empty") : flags.has(index) ? "Flagged square" : "Hidden square");
         });
         writeText(counter, led(mines - flags.size));
       };
