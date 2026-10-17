@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=1b1ba3c80e";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix } from "./data-core.mjs?v=7f8052253c";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -8,7 +8,7 @@ const screenCursor = document.querySelector("[data-screen-cursor]");
 let cursorFrame = 0;
 let cursorX = -40;
 let cursorY = -40;
-function angleCursor(x, y) { const nx = x / innerWidth * 2 - 1; const ny = y / innerHeight * 2 - 1; screenCursor.style.setProperty("--cursor-x", Math.round(x) + "px"); screenCursor.style.setProperty("--cursor-y", Math.round(y) + "px"); screenCursor.style.setProperty("--cursor-rx", Math.round(-ny * 12) + "deg"); screenCursor.style.setProperty("--cursor-ry", Math.round(nx * 12) + "deg"); screenCursor.style.setProperty("--cursor-rz", Math.round(nx * 5) + "deg"); }
+function angleCursor(x, y) { const matrix = cursorSurfaceMatrix(x, y, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
 document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; screenCursor.classList.remove("hidden"); if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, width: 1, height: 1 };
@@ -439,10 +439,12 @@ function bindFiles(root) {
   list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button) return; selected = button.dataset.fileId; render(); });
   list.addEventListener("dblclick", (event) => { const item = data.files.find((candidate) => candidate.id === event.target.closest("[data-file-id]")?.dataset.fileId); if (!item) return; if (item.kind === "folder") { current = item.id; selected = null; render(); } else content.focus(); });
   list.addEventListener("dragover", (event) => { if (event.dataTransfer.types.includes("Files")) event.preventDefault(); });
-  list.addEventListener("drop", async (event) => { const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("text/") || /\.txt$/i.test(file.name)); if (!files.length) return; event.preventDefault(); const imported = await Promise.all(files.slice(0, 20).map(async (file) => ({ id: makeId(), kind: "text", name: file.name.replace(/[\\/]/g, "-").slice(0, 80), parent: current, content: (await file.text()).slice(0, 200000) }))); data.files.push(...imported); persistData(); render(); root.querySelector("[data-files-status]").textContent = "Imported " + imported.length + (imported.length === 1 ? " text file." : " text files."); });
+  list.addEventListener("drop", async (event) => { const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("text/") || /\.txt$/i.test(file.name)); if (!files.length) return; event.preventDefault(); const destination = current; try { const imported = await Promise.all(files.slice(0, Math.min(20, Math.max(0, 500 - data.files.length))).map(async (file) => ({ id: makeId(), kind: "text", name: file.name.replace(/[\\/]/g, "-").slice(0, 80), parent: destination, content: (await file.slice(0, 800000).text()).slice(0, 200000) }))); data.files.push(...imported.slice(0, Math.max(0, 500 - data.files.length))); const saved = persistData(); render(); root.querySelector("[data-files-status]").textContent = saved ? "Imported " + imported.length + (imported.length === 1 ? " text file." : " text files.") : "Import could not be saved. Export your files to keep them."; } catch { showToast("These text files could not be imported."); } });
   root.querySelector("[data-files-up]").addEventListener("click", () => { current = data.files.find((item) => item.id === current)?.parent ?? null; selected = null; render(); });
-  content.addEventListener("input", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; item.content = content.value.slice(0, 200000); clearTimeout(saveTimer); saveTimer = setTimeout(() => { persistData(); root.querySelector("[data-files-status]").textContent = "Saved."; }, 300); });
+  content.addEventListener("input", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; item.content = content.value.slice(0, 200000); clearTimeout(saveTimer); saveTimer = setTimeout(() => { root.querySelector("[data-files-status]").textContent = persistData() ? "Saved." : "Save failed. Download this file to keep your edits."; }, 300); });
   root.querySelector("[data-files-download]").addEventListener("click", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; const url = URL.createObjectURL(new Blob([item.content], { type: "text/plain;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = item.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 0); });
+  content.maxLength = 200000;
+  content.addEventListener("blur", () => { clearTimeout(saveTimer); root.querySelector("[data-files-status]").textContent = persistData() ? "Saved." : "Save failed. Download this file to keep your edits."; });
   root.querySelector("[data-files-rename]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const renamed = await showWindowDialog({ title: "Rename", message: "Enter a new name.", value: item.name, confirmLabel: "Rename" }); const name = renamed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
   const descendantsOf = (id) => { const descendants = new Set([id]); let changed = true; while (changed) { changed = false; data.files.forEach((item) => { if (item.parent && descendants.has(item.parent) && !descendants.has(item.id)) { descendants.add(item.id); changed = true; } }); } return descendants; };
   root.querySelector("[data-files-move]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choice = await showWindowDialog({ title: "Move " + item.name, message: "Choose a destination.", options: [{ value: "", label: "Desktop" }, ...folders.map((folder) => ({ value: folder.id, label: folder.name }))], confirmLabel: "Move" }); if (choice === null) return; item.parent = choice || null; persistData(); selected = null; render(); });
@@ -1513,13 +1515,14 @@ function onOwnAnimationEnd(element, callback) {
 
 function zoomRects(from, to, done) {
   if (reducedMotion.matches) return void done?.();
+  const surface = desk.getBoundingClientRect();
   const frames = [];
   const at = (start, end, step) => Math.round(start + (end - start) * step / 8);
   const draw = (step) => {
     const frame = frames.length < 3 ? document.createElement("div") : frames.shift();
     frame.className = "zoom-rect";
-    frame.style.cssText = "left:" + at(from.left, to.left, step) + "px;top:" + at(from.top, to.top, step) + "px;width:" + at(from.width, to.width, step) + "px;height:" + at(from.height, to.height, step) + "px";
-    document.body.append(frame);
+    frame.style.cssText = "left:" + at(from.left - surface.left, to.left - surface.left, step) + "px;top:" + at(from.top - surface.top, to.top - surface.top, step) + "px;width:" + at(from.width, to.width, step) + "px;height:" + at(from.height, to.height, step) + "px";
+    desk.append(frame);
     frames.push(frame);
     if (step < 8) window.setTimeout(() => draw(step + 1), 22);
     else window.setTimeout(() => { frames.forEach((item) => item.remove()); done?.(); }, 22);

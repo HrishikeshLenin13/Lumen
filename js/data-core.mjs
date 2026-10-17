@@ -74,6 +74,7 @@ export function clampNumber(value, minimum, maximum, fallback) {
   if (!Number.isFinite(number)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.round(number)));
 }
+export function cursorSurfaceMatrix(x, y, width, height, strength = 0) { if (!strength || width <= 0 || height <= 0) return [1, 0, 0, 1]; const nx = x / width * 2 - 1; const ny = y / height * 2 - 1; const a = 1 + strength * (3 * nx * nx + ny * ny) / 2; const b = strength * nx * ny * height / width; const c = strength * nx * ny * width / height; const d = 1 + strength * (nx * nx + 3 * ny * ny) / 2; const determinant = a * d - b * c; return [d / determinant, -b / determinant, -c / determinant, a / determinant]; }
 
 export function calculateExpression(value) {
   const expression = String(value ?? "").trim();

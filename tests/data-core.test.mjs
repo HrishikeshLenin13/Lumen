@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { cursorSurfaceMatrix } from "../js/data-core.mjs";
+test("cursor surface cancels the local CRT distortion at opposite corners", () => { for (const [x, y] of [[0, 0], [1200, 0], [0, 800], [1200, 800]]) { const [a, b, c, d] = cursorSurfaceMatrix(x, y, 1200, 800, 0.028); const cross = (x ? 1 : -1) * (y ? 1 : -1) * 0.028; assert.ok(Math.abs(1.056 * a + cross * 1.5 * b - 1) < 1e-12); assert.ok(Math.abs(cross / 1.5 * a + 1.056 * b) < 1e-12); assert.ok(Math.abs(1.056 * c + cross * 1.5 * d) < 1e-12); assert.ok(Math.abs(cross / 1.5 * c + 1.056 * d - 1) < 1e-12); } });
+test("cursor surface stays flat without curvature and at the screen center", () => { assert.deepEqual(cursorSurfaceMatrix(0, 0, 1200, 800), [1, 0, 0, 1]); assert.deepEqual(cursorSurfaceMatrix(600, 400, 1200, 800, 0.028).map((n) => n || 0), [1, 0, 0, 1]); });
 import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, monthGrid } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
