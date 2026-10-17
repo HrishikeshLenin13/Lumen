@@ -1939,25 +1939,6 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
   });
 }
 
-const smoothCursor = document.getElementById("smoothCursor");
-if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
-  const cursorImage = new Image();
-  cursorImage.addEventListener("load", () => document.documentElement.classList.add("custom-cursor"), { once: true });
-  cursorImage.src = "icons/cursor.png?v=af1b0be3b4";
-  let cursorFrame = 0;
-  const moveCursor = (event) => {
-    const x = Math.round(event.clientX);
-    const y = Math.round(event.clientY);
-    cancelAnimationFrame(cursorFrame);
-    cursorFrame = requestAnimationFrame(() => {
-      smoothCursor.style.transform = "translate3d(" + x + "px," + y + "px,0)";
-    });
-    if (!smoothCursor.classList.contains("visible")) smoothCursor.classList.add("visible");
-  };
-  document.addEventListener("pointermove", moveCursor);
-  document.addEventListener("wheel", moveCursor, { passive: true });
-  document.documentElement.addEventListener("mouseleave", () => smoothCursor.classList.remove("visible"));
-}
 const saver = document.createElement("div");
 saver.className = "saver hidden";
 saver.setAttribute("aria-hidden", "true");
@@ -1969,7 +1950,6 @@ function startSaver() {
   if (!data.screensaver || reducedMotion.matches || document.getElementById("boot")) return;
   const logo = saver.firstElementChild;
   saver.classList.remove("hidden");
-  smoothCursor?.classList.remove("visible");
   const maximumX = Math.max(0, window.innerWidth - logo.offsetWidth);
   const maximumY = Math.max(0, window.innerHeight - logo.offsetHeight);
   let x = Math.round(maximumX / 3);

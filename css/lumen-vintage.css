@@ -1157,15 +1157,13 @@ kbd {
   border: 0 !important;
 }
 
-.custom-cursor,
-.custom-cursor body,
-.custom-cursor button,
-.custom-cursor input,
-.custom-cursor textarea,
-.custom-cursor select,
-.custom-cursor .bar,
-.custom-cursor .icon {
-  cursor: none !important;
+html,
+body,
+button,
+select,
+.bar,
+.icon {
+  cursor: url("../icons/cursor-2x.png?v=f168de4de6") 0 0, default;
 }
 
 body::before,
@@ -1214,26 +1212,6 @@ html[data-effects="full"] body::after { background: radial-gradient(ellipse 22% 
 html[data-effects="full"] .crt-roll { display: block; animation: crt-roll 9s linear infinite; }
 html[data-effects="full"] .desktop { filter: url("#crt-split") saturate(1.12) contrast(1.05); }
 html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.36) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.36) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
-
-.smooth-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10000;
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-  opacity: 0;
-  background: url("../icons/cursor.png?v=af1b0be3b4") 0 0 / 14px 14px no-repeat;
-  image-rendering: pixelated;
-  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.7));
-  transition: opacity 70ms linear;
-  will-change: transform;
-}
-
-.smooth-cursor.visible {
-  opacity: 1;
-}
 
 .win.opening {
   visibility: hidden;
@@ -1356,20 +1334,6 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 }
 
 @media (prefers-reduced-motion: reduce), (pointer: coarse) {
-  html,
-  body,
-  button,
-  input,
-  textarea,
-  select,
-  .bar,
-  .icon {
-    cursor: auto !important;
-  }
-
-  .smooth-cursor {
-    display: none;
-  }
   html[data-effects] body::before, html[data-effects] body::after, html[data-effects] .crt-roll { animation: none; }
 
   .boot.fade,
