@@ -1194,7 +1194,7 @@ function drag(node) {
       node.style.left = pendingLeft + "px";
       node.style.top = pendingTop + "px";
     };
-    bar.setPointerCapture(pointerId);
+    try { bar.setPointerCapture(pointerId); } catch { return; }
     document.body.classList.add("dragging");
     const move = (moveEvent) => {
       if (moveEvent.pointerId !== pointerId) return;
@@ -1296,7 +1296,7 @@ desk.addEventListener("pointerdown", (event) => {
     desk.removeEventListener("pointerup", stop);
     desk.removeEventListener("pointercancel", stop);
   };
-  desk.setPointerCapture(pointerId);
+  try { desk.setPointerCapture(pointerId); } catch { return; }
   desk.addEventListener("pointermove", move);
   desk.addEventListener("pointerup", stop);
   desk.addEventListener("pointercancel", stop);
