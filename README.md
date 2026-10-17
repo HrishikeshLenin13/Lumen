@@ -18,6 +18,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Minesweeper with a safe first click, flags, and a saved best time
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 - Character Map for copying arrows, box drawing, currency, accents, and math symbols
+- A Recycle Bin that keeps deleted files and folders until you restore or empty them
 - Monitor brightness and contrast knobs and a 12 or 24-hour clock
 - An XP-style two-column Start menu with Log Off and Turn Off Computer, which fades the desk to gray before the tube collapses
 

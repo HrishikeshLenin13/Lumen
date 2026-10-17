@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=e350c0aea3";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f9ccc414";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -21,6 +21,7 @@ function toScene(x, y) {
   return [Math.round(x + nx * pull * lens.width), Math.round(y + ny * pull * lens.height)];
 }
 const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" });
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
 const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
 const logDateFormat = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
@@ -440,6 +441,8 @@ function bindFiles(root) {
     content.value = item?.kind === "text" ? item.content : "";
     writeText(root.querySelector("[data-files-status]"), item?.kind === "text" ? item.content.length.toLocaleString() + " characters" : (refreshList ? items.length + (items.length === 1 ? " item" : " items") : "Folder selected"));
   };
+  const refreshFromBin = () => { if (!root.isConnected) return document.removeEventListener("lumen-files-changed", refreshFromBin); render(); };
+  document.addEventListener("lumen-files-changed", refreshFromBin);
   const createItem = async (kind) => { const proposed = await showWindowDialog({ title: kind === "folder" ? "New folder" : "New text file", message: "Enter a name.", value: kind === "folder" ? "New Folder" : "New Text File.txt", confirmLabel: "Create" }); const name = proposed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; const item = { id: makeId(), kind, name, parent: current, content: "" }; data.files.push(item); selected = item.id; persistData(); render(); if (kind === "text") content.focus(); };
   root.querySelector("[data-files-new-folder]").addEventListener("click", () => createItem("folder"));
   root.querySelector("[data-files-new-text]").addEventListener("click", () => createItem("text"));
@@ -456,7 +459,7 @@ function bindFiles(root) {
   root.querySelector("[data-files-rename]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const renamed = await showWindowDialog({ title: "Rename", message: "Enter a new name.", value: item.name, confirmLabel: "Rename" }); const name = renamed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
   const descendantsOf = (id) => { const descendants = new Set([id]); let changed = true; while (changed) { changed = false; data.files.forEach((item) => { if (item.parent && descendants.has(item.parent) && !descendants.has(item.id)) { descendants.add(item.id); changed = true; } }); } return descendants; };
   root.querySelector("[data-files-move]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choice = await showWindowDialog({ title: "Move " + item.name, message: "Choose a destination.", options: [{ value: "", label: "Desktop" }, ...folders.map((folder) => ({ value: folder.id, label: folder.name }))], confirmLabel: "Move" }); if (choice === null) return; item.parent = choice || null; persistData(); selected = null; render(); });
-  root.querySelector("[data-files-delete]").addEventListener("click", async () => { const item = selectedItem(); if (!item || !await showWindowDialog({ title: "Delete " + item.name, message: item.kind === "folder" ? "Delete this folder and everything inside it?" : "Delete this text file?", confirmLabel: "Delete", danger: true })) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
+  root.querySelector("[data-files-delete]").addEventListener("click", async () => { const item = selectedItem(); if (!item || !await showWindowDialog({ title: "Delete " + item.name, message: item.kind === "folder" ? "Move this folder and everything inside it to the Recycle Bin?" : "Move this text file to the Recycle Bin?", confirmLabel: "Delete" })) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.recycle = [{ id: makeId(), deletedAt: new Date().toISOString(), items: data.files.filter((candidate) => removing.has(candidate.id)) }, ...data.recycle].slice(0, 50); data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); document.dispatchEvent(new Event("lumen-files-changed")); });
   list.addEventListener("keydown", (event) => { if (event.ctrlKey || event.metaKey || event.altKey) return; const buttons = Array.from(list.querySelectorAll("[data-file-id]")); const index = buttons.findIndex((button) => button.dataset.fileId === selected); if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && buttons.length) { event.preventDefault(); event.stopPropagation(); const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : Math.max(0, Math.min(buttons.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))); selected = buttons[next].dataset.fileId; render(false); buttons[next].focus(); } else if (event.key === "Enter" && selectedItem()) { event.preventDefault(); if (selectedItem().kind === "folder") { current = selected; selected = null; render(); list.querySelector("button")?.focus(); } else content.focus(); } else if (event.key === "F2" && selectedItem()) { event.preventDefault(); root.querySelector("[data-files-rename]").click(); } else if (event.key === "Delete" && selectedItem()) { event.preventDefault(); root.querySelector("[data-files-delete]").click(); } else if (event.key === "Backspace" && current) { event.preventDefault(); root.querySelector("[data-files-up]").click(); list.querySelector("button")?.focus(); } });
   render();
   return (flush = true) => { clearTimeout(saveTimer); if (flush) persistData(); };
@@ -1548,6 +1551,51 @@ const apps = [
       return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
     },
     bind() {},
+  },
+  {
+    id: "recycle",
+    name: "Recycle Bin",
+    icon: "icons/recycle-bin.png?v=65c80a1be7",
+    size: [430, 320],
+    html() {
+      return '<div class="bin"><div class="files__toolbar"><button type="button" class="btn" data-bin-restore disabled>Restore</button><button type="button" class="btn" data-bin-delete disabled>Delete</button><button type="button" class="btn" data-bin-empty>Empty Recycle Bin</button></div><div class="bin__list" data-bin-list role="listbox" tabindex="0" aria-label="Deleted items"></div><p class="hint hint--flush" data-bin-status aria-live="polite"></p></div>';
+    },
+    bind(root) {
+      const list = root.querySelector("[data-bin-list]");
+      const status = root.querySelector("[data-bin-status]");
+      const icons = { folder: apps.find((app) => app.id === "files").icon, text: apps.find((app) => app.id === "notes").icon };
+      let selected = null;
+      const render = () => {
+        if (!data.recycle.some((entry) => entry.id === selected)) selected = null;
+        list.innerHTML = data.recycle.length ? data.recycle.map((entry) => '<button type="button" role="option" class="bin__item" data-bin-id="' + escapeHtml(entry.id) + '" aria-selected="' + (entry.id === selected) + '"><img src="' + icons[entry.items[0].kind] + '" alt="" width="16" height="16"><span class="bin__name">' + escapeHtml(entry.items[0].name) + '</span><span class="bin__meta">' + (entry.items.length > 1 ? entry.items.length + " items" : entry.items[0].kind === "folder" ? "Folder" : "Text file") + '</span><span class="bin__meta">' + escapeHtml(entry.deletedAt ? dateTimeFormat.format(new Date(entry.deletedAt)) : "") + "</span></button>").join("") : '<p class="hint bin__empty">The Recycle Bin is empty.</p>';
+        writeText(status, data.recycle.length === 1 ? "1 deleted item" : data.recycle.length + " deleted items");
+        root.querySelector("[data-bin-restore]").disabled = !selected;
+        root.querySelector("[data-bin-delete]").disabled = !selected;
+        root.querySelector("[data-bin-empty]").disabled = !data.recycle.length;
+      };
+      const restore = () => {
+        const entry = data.recycle.find((item) => item.id === selected);
+        if (!entry) return;
+        const taken = new Set(data.files.map((item) => item.id));
+        const items = entry.items.filter((item) => !taken.has(item.id));
+        const ids = new Set(items.map((item) => item.id));
+        items.forEach((item) => { if (item.parent && !ids.has(item.parent) && !data.files.some((file) => file.id === item.parent && file.kind === "folder")) item.parent = null; });
+        data.files.push(...items);
+        data.recycle = data.recycle.filter((item) => item !== entry);
+        persistData();
+        showToast(entry.items[0].name + " was restored to Files.");
+        document.dispatchEvent(new Event("lumen-files-changed"));
+      };
+      const refresh = () => { if (!root.isConnected) return document.removeEventListener("lumen-files-changed", refresh); render(); };
+      document.addEventListener("lumen-files-changed", refresh);
+      list.addEventListener("click", (event) => { const item = event.target.closest("[data-bin-id]"); if (!item) return; selected = item.dataset.binId; render(); list.querySelector('[data-bin-id="' + CSS.escape(selected) + '"]')?.focus(); });
+      list.addEventListener("dblclick", (event) => { if (event.target.closest("[data-bin-id]")) restore(); });
+      list.addEventListener("keydown", (event) => { if (event.key === "Delete" && selected) root.querySelector("[data-bin-delete]").click(); if (event.key === "Enter" && selected) restore(); });
+      root.querySelector("[data-bin-restore]").addEventListener("click", restore);
+      root.querySelector("[data-bin-delete]").addEventListener("click", async () => { const entry = data.recycle.find((item) => item.id === selected); if (!entry || !await showWindowDialog({ title: "Delete " + entry.items[0].name, message: "Permanently delete this item? This cannot be undone.", confirmLabel: "Delete", danger: true })) return; data.recycle = data.recycle.filter((item) => item !== entry); persistData(); render(); });
+      root.querySelector("[data-bin-empty]").addEventListener("click", async () => { if (!data.recycle.length || !await showWindowDialog({ title: "Empty Recycle Bin", message: "Permanently delete all " + data.recycle.length + " items in the Recycle Bin?", confirmLabel: "Empty", danger: true })) return; data.recycle = []; persistData(); playSound("close"); render(); });
+      render();
+    },
   },
 ];
 
