@@ -904,6 +904,7 @@ select.field:focus {
 .files__item.selected, .files__item.scene-hover { color: #fff; background: #316ac5; }
 .files__glyph { display: grid; place-items: center; width: 22px; height: 20px; color: #000; background: #fff; border: 1px solid #000; font-size: 8px; }
 .files__editor { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; padding: 6px; background: #d4d0c8; border-left: 1px solid #808080; }
+.files__editor-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .files__editor textarea { width: 100%; min-height: 0; resize: none; font: inherit; }
 .cal { display: grid; gap: 6px; }
 .cal__head { display: flex; align-items: center; gap: 4px; }
