@@ -73,7 +73,14 @@ let toastTimer = null;
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
-  toast.textContent = message;
+  const title = document.createElement("strong");
+  title.className = "toast__title";
+  title.textContent = "LUMEN";
+  const icon = document.createElement("img");
+  icon.className = "toast__icon";
+  icon.src = "icons/info.png?v=b8b38795ff";
+  icon.alt = "";
+  toast.replaceChildren(icon, title, message);
   toast.classList.remove("hidden");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), 3200);
@@ -1507,6 +1514,7 @@ const apps = [
         data.effects = root.querySelector("#effectsChoice").value;
         data.wallpaper = root.querySelector("#wallpaperChoice").value;
         data.sounds = root.querySelector("#soundsChoice").value === "on";
+        paintVolume();
         data.screensaver = root.querySelector("#saverChoice").value === "on";
         data.clock24 = root.querySelector("#clockChoice").value === "24";
         persistData();
@@ -2351,6 +2359,15 @@ function tickClock() {
 }
 tickClock();
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
+function paintVolume() {
+  const volume = document.getElementById("volume");
+  volume.classList.toggle("muted", !data.sounds);
+  volume.setAttribute("aria-pressed", String(!data.sounds));
+  volume.setAttribute("aria-label", data.sounds ? "Mute system sounds" : "Turn system sounds on");
+}
+document.getElementById("volume").addEventListener("click", () => { data.sounds = !data.sounds; persistData(); paintVolume(); if (data.sounds) playSound("restore"); showToast(data.sounds ? "System sounds are on." : "System sounds are muted."); });
+document.getElementById("toast").addEventListener("click", () => document.getElementById("toast").classList.add("hidden"));
+paintVolume();
 window.addEventListener("beforeunload", persistData);
 document.addEventListener("pointerdown", primeAudio);
 document.addEventListener("pointerdown", () => Object.keys(sounds).forEach(loadSound), { once: true });
