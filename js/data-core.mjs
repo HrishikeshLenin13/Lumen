@@ -151,9 +151,9 @@ export function filterLogs(logs, { query = "", days = 0, now = Date.now() } = {}
     const timestamp = new Date(entry.at).getTime();
     if (cutoff && (!Number.isFinite(timestamp) || timestamp < cutoff)) return false;
     if (!needle) return true;
-    const dateText = Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString() : entry.at;
-    const haystack = [entry.text, entry.h, entry.project || "", ...normalizeTags(entry.tags), entry.at, dateText].join(" ").toLocaleLowerCase();
-    return haystack.includes(needle);
+    const searchable = [entry.text, entry.h, entry.project || "", ...normalizeTags(entry.tags), entry.at].join(" ").toLocaleLowerCase();
+    if (searchable.includes(needle)) return true;
+    return (searchable + " " + (Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString() : entry.at).toLocaleLowerCase()).includes(needle);
   });
 }
 

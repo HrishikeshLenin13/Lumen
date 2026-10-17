@@ -166,6 +166,7 @@ test("Ship Log search and date ranges compose before export", () => {
   ];
   assert.deepEqual(filterLogs(logs, { query: "  UI ", days: 7, now }), [logs[0]]);
   assert.deepEqual(filterLogs(logs, { query: "Lumen", now }), [logs[0], logs[1]]);
+  assert.deepEqual(filterLogs(logs, { query: new Date(logs[0].at).toLocaleString(), now }), [logs[0]]);
 });
 
 test("fresh installs start with clean workspace data", () => {
