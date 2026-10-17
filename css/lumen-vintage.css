@@ -889,7 +889,7 @@ select.field { height: 23px; }
 .calc__keys .btn { min-height: 36px; padding: 0; font-size: 14px; font-weight: 700; }
 .calc__digit { color: #0000c8 !important; }
 .calc__op { color: #c80000 !important; }
-.calc__keys .calc__mem { min-height: 26px; color: #800080; font-size: 12px; }
+.calc__keys .calc__mem, .calc__keys .calc__fn { min-height: 26px; color: #800080; font-size: 12px; }
 .calc__screen { position: relative; }
 .calc.has-memory .calc__screen::before { position: absolute; top: 6px; left: 8px; color: #000; font: 700 11px/1 var(--mono); content: "M"; }
 .calc__tape { max-height: 76px; margin: 0; padding: 0; overflow: auto; list-style: none; font-family: var(--mono); }

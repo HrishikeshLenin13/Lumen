@@ -874,10 +874,10 @@ const apps = [
     id: "calculator",
     name: "Calculator",
     icon: "icons/calculator.png?v=528346ef06",
-    size: [284, 396],
+    size: [284, 436],
     html() {
-      const keys = [["MC", "mc", "mem"], ["MR", "mr", "mem"], ["M+", "m+", "mem"], ["M−", "m-", "mem"], ["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
-      return '<div class="calc" data-calc data-autofocus tabindex="0" aria-label="Calculator. Type numbers and operators or use the keypad."><div class="calc__screen"><span class="calc__expr" data-calc-expr></span><output class="calc__value" data-calc-value aria-live="polite">0</output></div><div class="calc__keys">' + keys.map(([label, key, kind]) => '<button type="button" class="btn calc__' + kind + '" data-calc-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(key === "back" ? "Backspace" : key === "clear" ? "Clear" : key === "equals" ? "Equals" : { mc: "Memory clear", mr: "Memory recall", "m+": "Memory add", "m-": "Memory subtract" }[key] || label) + '">' + label + '</button>').join("") + '</div><ol class="calc__tape" data-calc-tape aria-label="Recent results"></ol></div>';
+      const keys = [["MC", "mc", "mem"], ["MR", "mr", "mem"], ["M+", "m+", "mem"], ["M−", "m-", "mem"], ["√", "sqrt", "fn"], ["%", "percent", "fn"], ["±", "negate", "fn"], ["1/x", "inverse", "fn"], ["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
+      return '<div class="calc" data-calc data-autofocus tabindex="0" aria-label="Calculator. Type numbers and operators or use the keypad."><div class="calc__screen"><span class="calc__expr" data-calc-expr></span><output class="calc__value" data-calc-value aria-live="polite">0</output></div><div class="calc__keys">' + keys.map(([label, key, kind]) => '<button type="button" class="btn calc__' + kind + '" data-calc-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(key === "back" ? "Backspace" : key === "clear" ? "Clear" : key === "equals" ? "Equals" : { mc: "Memory clear", mr: "Memory recall", "m+": "Memory add", "m-": "Memory subtract", sqrt: "Square root", percent: "Percent", negate: "Change sign", inverse: "Reciprocal" }[key] || label) + '">' + label + '</button>').join("") + '</div><ol class="calc__tape" data-calc-tape aria-label="Recent results"></ol></div>';
     },
     bind(root) {
       const calc = root.querySelector("[data-calc]");
@@ -895,6 +895,19 @@ const apps = [
         valueView.classList.toggle("preview", preview);
       };
       const press = (key) => {
+        if (["sqrt", "percent", "negate", "inverse"].includes(key)) {
+          const current = calculateExpression(expression || "0");
+          if (!current.ok) return render(current.error, false);
+          const value = { sqrt: Math.sqrt(current.value), percent: current.value / 100, negate: -current.value, inverse: 1 / current.value }[key];
+          if (!Number.isFinite(value)) return render("That calculation has no finite result.", false);
+          const tidy = Number(value.toPrecision(12));
+          results.unshift([{ sqrt: "√", percent: "%", negate: "±", inverse: "1/" }[key] + "(" + pretty(expression || "0") + ")", String(tidy)]);
+          results.length = Math.min(results.length, 5);
+          tape.innerHTML = results.map(([sum, answer]) => '<li><button type="button" data-calc-recall="' + escapeHtml(answer) + '">' + escapeHtml(sum) + " = <strong>" + escapeHtml(answer) + "</strong></button></li>").join("");
+          expression = tidy < 0 ? "(0" + tidy + ")" : String(tidy);
+          evaluated = true;
+          return render(String(tidy), false);
+        }
         if (/^m[cr+-]$/.test(key)) {
           const current = calculateExpression(expression);
           if (key === "mc") memory = 0;
@@ -2133,7 +2146,17 @@ orderedApps.forEach((app) => {
     if (!icons.classList.contains("free")) openApp(app.id);
   });
   button.addEventListener("dblclick", () => openApp(app.id));
-  button.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); openApp(app.id); } });
+  button.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); openApp(app.id); return; }
+    const direction = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+    if (!direction) return;
+    event.preventDefault();
+    const here = [button.offsetLeft, button.offsetTop];
+    const next = Array.from(iconButtons.values()).filter((item) => item !== button).map((item) => { const dx = item.offsetLeft - here[0]; const dy = item.offsetTop - here[1]; const along = dx * direction[0] + dy * direction[1]; const across = Math.abs(dx * direction[1]) + Math.abs(dy * direction[0]); return [item, along, across]; }).filter(([, along]) => along > 0).sort((a, b) => a[1] + a[2] * 3 - (b[1] + b[2] * 3))[0]?.[0];
+    if (!next) return;
+    selectIcons(new Set([next.dataset.appId]));
+    next.focus();
+  });
   iconButtons.set(app.id, button);
   icons.append(button);
 });
