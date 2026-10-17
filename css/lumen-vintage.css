@@ -228,8 +228,8 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
 .marquee { position: absolute; z-index: 2; pointer-events: none; background: rgba(49, 106, 197, 0.32); border: 1px solid #316ac5; }
 .context-menu { position: absolute; z-index: 100000; min-width: 172px; padding: 2px; background: #fff; border: 1px solid #aca899; box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4); }
 .context-menu button { display: block; width: 100%; padding: 3px 18px; color: #000; background: transparent; border: 0; text-align: left; white-space: nowrap; }
-.context-menu button:hover:not(:disabled), .context-menu button:focus-visible { color: #fff; background: #316ac5; outline: none; }
-.context-menu button:focus:not(:focus-visible):not(:hover) { color: #000; background: transparent; }
+.context-menu button.scene-hover:not(:disabled), .context-menu button:focus-visible { color: #fff; background: #316ac5; outline: none; }
+.context-menu button:focus:not(:focus-visible):not(.scene-hover) { color: #000; background: transparent; }
 .context-menu button:disabled { color: #aca899; }
 .icons.refreshing .icon { animation: icon-refresh 240ms steps(2, end); }
 @keyframes icon-refresh { from { visibility: hidden; } to { visibility: visible; } }
@@ -620,7 +620,7 @@ select.field:focus {
   box-shadow: none;
 }
 
-.btn:hover:not(:disabled) {
+.btn.scene-hover:not(:disabled) {
   box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
 }
 
@@ -866,7 +866,7 @@ select.field:focus {
 .calc__op { color: #c80000 !important; }
 .calc__tape { max-height: 76px; margin: 0; padding: 0; overflow: auto; list-style: none; font-family: var(--mono); }
 .calc__tape button { width: 100%; padding: 2px 4px; color: var(--window-muted); background: transparent; border: 0; text-align: right; }
-.calc__tape button:hover { color: #fff; background: #316ac5; }
+.calc__tape button.scene-hover { color: #fff; background: #316ac5; }
 .mines { display: grid; justify-content: center; gap: 8px; }
 .mines__bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: #c0c0c0; border: 2px solid; border-color: #808080 #fff #fff #808080; }
 .mines__led { min-width: 44px; padding: 1px 3px; color: #ff1a1a; background: #000; font: 700 20px/22px var(--mono); text-align: right; }
@@ -902,7 +902,7 @@ select.field:focus {
 .cal__weekday { padding: 2px 0; color: #fff; background: #316ac5; font-weight: 700; text-align: center; }
 .cal__day { position: relative; min-height: 26px; padding: 0; color: #000; background: #fff; border: 0; text-align: center; }
 .cal__day.out { color: #aca899; }
-.cal__day:hover { background: #ffe9a8; }
+.cal__day.scene-hover { background: #ffe9a8; }
 .cal__day.today { box-shadow: inset 0 0 0 1px #c00000; font-weight: 700; }
 .cal__day.selected { color: #fff; background: #316ac5; }
 .cal__day.busy::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 4px; height: 4px; background: #e5a01a; }
@@ -991,7 +991,7 @@ kbd {
   image-rendering: pixelated;
 }
 
-.start:hover {
+.start.scene-hover {
   filter: brightness(1.06);
 }
 
@@ -1022,7 +1022,7 @@ kbd {
   text-align: left;
 }
 
-.task:hover {
+.task.scene-hover {
   background: #53a3ff;
 }
 
@@ -1116,7 +1116,7 @@ kbd {
   text-align: left;
 }
 
-.start-menu button:hover,
+.start-menu button.scene-hover,
 .start-menu button:focus-visible {
   color: #fff;
   background: #316ac5;

@@ -4,6 +4,14 @@ const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
 const TIMER_TICK_MS = 1000;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let lens = { strength: 0, width: 1, height: 1 };
+function toScene(x, y) {
+  if (!lens.strength || document.documentElement.dataset.effects !== "full") return [x, y];
+  const nx = x / lens.width * 2 - 1;
+  const ny = y / lens.height * 2 - 1;
+  const pull = lens.strength * (nx * nx + ny * ny) / 2;
+  return [Math.round(x + nx * pull * lens.width), Math.round(y + ny * pull * lens.height)];
+}
 const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" });
 const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
 const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -963,7 +971,8 @@ const apps = [
       }
       const point = (event) => {
         const box = canvas.getBoundingClientRect();
-        return [Math.floor((event.clientX - box.left) / box.width * canvas.width), Math.floor((event.clientY - box.top) / box.height * canvas.height)];
+        const [x, y] = toScene(event.clientX, event.clientY);
+        return [Math.floor((x - box.left) / box.width * canvas.width), Math.floor((y - box.top) / box.height * canvas.height)];
       };
       const stamp = ([x, y]) => {
         const size = Number(sizeInput.value);
@@ -1526,7 +1535,7 @@ function openApp(id) {
   const openWindowMenu = (event) => {
     event.preventDefault();
     focusWin(id);
-    showMenu(event.clientX, event.clientY, windowMenu(id));
+    showMenu(...toScene(event.clientX, event.clientY), windowMenu(id));
   };
   element.querySelector(".bar").addEventListener("contextmenu", openWindowMenu);
   tab.addEventListener("contextmenu", openWindowMenu);
@@ -1651,8 +1660,7 @@ function drag(node) {
     delete node.dataset.flinging;
     const samples = [];
     const pointerId = event.pointerId;
-    const startX = event.clientX;
-    const startY = event.clientY;
+    const [startX, startY] = toScene(event.clientX, event.clientY);
     const startLeft = node.offsetLeft;
     const startTop = node.offsetTop;
     const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
@@ -1672,8 +1680,9 @@ function drag(node) {
       if (moveEvent.pointerId !== pointerId) return;
       samples.push([moveEvent.clientX, moveEvent.clientY, moveEvent.timeStamp]);
       if (samples.length > 6) samples.shift();
-      pendingLeft = Math.round(Math.min(maximumLeft, Math.max(0, startLeft + moveEvent.clientX - startX)));
-      pendingTop = Math.round(Math.min(maximumTop, Math.max(0, startTop + moveEvent.clientY - startY)));
+      const [sceneX, sceneY] = toScene(moveEvent.clientX, moveEvent.clientY);
+      pendingLeft = Math.round(Math.min(maximumLeft, Math.max(0, startLeft + sceneX - startX)));
+      pendingTop = Math.round(Math.min(maximumTop, Math.max(0, startTop + sceneY - startY)));
       if (!dragFrame) dragFrame = requestAnimationFrame(applyDrag);
     };
     const stop = (stopEvent) => {
@@ -1738,8 +1747,7 @@ desk.addEventListener("pointerdown", (event) => {
   document.activeElement?.blur();
   selectIcons(new Set());
   const pointerId = event.pointerId;
-  const originX = Math.round(event.clientX);
-  const originY = Math.round(event.clientY);
+  const [originX, originY] = toScene(event.clientX, event.clientY);
   const boxes = Array.from(iconButtons, ([id, button]) => [id, button.getBoundingClientRect()]);
   let pointerX = originX;
   let pointerY = originY;
@@ -1756,8 +1764,7 @@ desk.addEventListener("pointerdown", (event) => {
   };
   const move = (moveEvent) => {
     if (moveEvent.pointerId !== pointerId) return;
-    pointerX = Math.round(moveEvent.clientX);
-    pointerY = Math.round(moveEvent.clientY);
+    [pointerX, pointerY] = toScene(moveEvent.clientX, moveEvent.clientY);
     if (!frame) frame = requestAnimationFrame(paint);
   };
   const stop = (stopEvent) => {
@@ -1775,6 +1782,48 @@ desk.addEventListener("pointerdown", (event) => {
   desk.addEventListener("pointermove", move);
   desk.addEventListener("pointerup", stop);
   desk.addEventListener("pointercancel", stop);
+});
+const sceneEvents = new WeakSet();
+function retarget(event) {
+  if (!event.isTrusted || sceneEvents.has(event)) return;
+  const [x, y] = toScene(event.clientX, event.clientY);
+  if (x === Math.round(event.clientX) && y === Math.round(event.clientY)) return;
+  const target = document.elementFromPoint(x, y);
+  if (!target || target === event.target || !desk.contains(target)) return;
+  if (event.type !== "pointerdown") event.preventDefault();
+  event.stopImmediatePropagation();
+  if (event.type === "mousedown") {
+    const focusable = target.closest("input, textarea, select, button, [tabindex]");
+    if (focusable) focusable.focus({ preventScroll: true });
+    else if (desk.contains(document.activeElement)) document.activeElement.blur();
+  }
+  const init = { bubbles: true, cancelable: true, composed: true, view: window, detail: event.detail, screenX: event.screenX, screenY: event.screenY, clientX: event.clientX, clientY: event.clientY, ctrlKey: event.ctrlKey, shiftKey: event.shiftKey, altKey: event.altKey, metaKey: event.metaKey, button: event.button, buttons: event.buttons };
+  const copy = event.type === "pointerdown" ? new PointerEvent(event.type, { ...init, pointerId: event.pointerId, pointerType: event.pointerType, isPrimary: event.isPrimary }) : new MouseEvent(event.type, init);
+  sceneEvents.add(copy);
+  target.dispatchEvent(copy);
+}
+["pointerdown", "mousedown", "click", "dblclick", "contextmenu"].forEach((type) => document.addEventListener(type, retarget, { capture: true }));
+let sceneHover = null;
+let hoverFrame = 0;
+let hoverX = 0;
+let hoverY = 0;
+function updateSceneHover() {
+  hoverFrame = 0;
+  const [x, y] = toScene(hoverX, hoverY);
+  const next = document.elementFromPoint(x, y)?.closest("button") || null;
+  if (next === sceneHover) return;
+  sceneHover?.classList.remove("scene-hover");
+  next?.classList.add("scene-hover");
+  sceneHover = next;
+}
+document.addEventListener("pointermove", (event) => {
+  hoverX = event.clientX;
+  hoverY = event.clientY;
+  if (!hoverFrame) hoverFrame = requestAnimationFrame(updateSceneHover);
+}, { passive: true });
+document.documentElement.addEventListener("pointerleave", () => {
+  sceneHover?.classList.remove("scene-hover");
+  sceneHover = null;
 });
 let scrollSettle = 0;
 document.addEventListener("scroll", () => {
@@ -1862,9 +1911,9 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
-    return showMenu(event.clientX, event.clientY, [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => openApp("settings") }]);
+    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => openApp("settings") }]);
   }
-  showMenu(event.clientX, event.clientY, desktopMenu());
+  showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
 startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
@@ -2034,6 +2083,7 @@ function bendScreen() {
   const map = canvas.toDataURL();
   lenses.forEach((lens) => lens.setAttribute("href", map));
   bends.forEach((bend) => bend.setAttribute("scale", String(scale)));
+  lens = { strength, width: window.innerWidth, height: window.innerHeight };
 }
 let bendTimer = 0;
 window.addEventListener("resize", () => {
