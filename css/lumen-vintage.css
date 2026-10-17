@@ -887,12 +887,13 @@ select.field:focus {
 .mine-cell[data-count="7"] { color: #000000; }
 .mine-cell[data-count="8"] { color: #808080; }
 .paint { display: grid; gap: 8px; }
-.paint__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.paint__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding-bottom: 6px; border-bottom: 1px solid #808080; box-shadow: 0 1px #fff; }
 .paint__tools .btn { min-height: 23px; padding: 2px 8px; }
+.paint__tools .btn.active { color: #fff; background: #316ac5; box-shadow: inset 1px 1px #0a246a; }
 .paint__size { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 .paint__size .field { width: auto; min-height: 21px; margin: 0; padding: 1px 2px; }
 .paint__canvas { width: 320px; height: 208px; touch-action: none; image-rendering: pixelated; background: #fff; border: 2px solid; border-color: #808080 #fff #fff #808080; cursor: crosshair; }
-.paint__palette { display: grid; grid-template-columns: repeat(8, 16px); gap: 2px; }
+.paint__palette { display: grid; grid-template-columns: repeat(8, 16px); gap: 2px; width: max-content; padding: 4px; border: 2px solid; border-color: #808080 #fff #fff #808080; }
 .paint__canvas:focus-visible { outline: 1px dotted #000; outline-offset: 2px; }
 .paint__swatch { width: 16px; height: 16px; padding: 0; background: var(--swatch); border: 1px solid #808080; box-shadow: inset 1px 1px #fff; }
 .paint__swatch[aria-checked="true"] { outline: 2px solid #000; outline-offset: 1px; }

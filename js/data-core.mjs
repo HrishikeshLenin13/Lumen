@@ -232,6 +232,7 @@ export function floodFill(pixels, width, height, x, y, color) {
   }
   return painted;
 }
+export function smudgePixels(pixels) { const totals = [0, 0, 0, 0]; for (let offset = 0; offset < pixels.length; offset += 4) for (let channel = 0; channel < 4; channel += 1) totals[channel] += pixels[offset + channel]; const count = pixels.length / 4; for (let offset = 0; offset < pixels.length; offset += 4) for (let channel = 0; channel < 4; channel += 1) pixels[offset + channel] = Math.round((pixels[offset + channel] * 2 + totals[channel] / count) / 3); return pixels; }
 export function linePoints(x0, y0, x1, y1) {
   const points = [];
   const dx = Math.abs(x1 - x0);
