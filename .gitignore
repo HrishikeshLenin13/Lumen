@@ -4,3 +4,5 @@
 .vscode/
 .idea/
 graphify-out/
+AGENTS.md
+.claude/

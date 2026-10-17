@@ -58,11 +58,13 @@ test("migration preserves existing logs and supplies empty project metadata", ()
   assert.equal(migrated.logs.length, 1);
   assert.deepEqual(migrated.logs[0], { id: "old", h: 1.5, text: "Fixed the header", at: "2026-01-02T03:04:00.000Z", project: "", tags: [] });
   assert.deepEqual(migrated.sessions, []);
+  assert.deepEqual(migrated.tasks, []);
   assert.equal(migrated.timerState, null);
   assert.deepEqual(migrated.noteHistory, []);
 });
 
 test("migration repairs note version metadata and rejects invalid versions", () => {
+  assert.deepEqual(normalizeData({ tasks: [{ id: "task", text: "  Ship update  ", done: 1, createdAt: "now" }, { text: "  " }] }).tasks, [{ id: "task", text: "Ship update", done: true, createdAt: "now" }]);
   const migrated = normalizeData({ noteHistory: [
     { id: "old", text: "One two", at: "2026-01-02", words: 900 },
     { text: "" },

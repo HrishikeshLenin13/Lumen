@@ -1,29 +1,33 @@
 # LUMEN
-Lumen is the Swiss army knife of your browser.
+Lumen is an installable offline workspace for notes, task tracking, focus sessions, and work logs.
 
-Wanting an effective pomodoro timer? Or a notepad that can track your activities? Or even a shipping log that allows you to effectively track hours on that project you're working on?
+## Features
 
-We've got your back. And more than just your back, at that. 
+- Notes with automatic saving, Markdown outlines, statistics, and version history
 
-Alongside these great features comes our promise of security. Nothing leaves your browser. After all, no backend calls are made. Every setting, every datapoint, and every timer set stays completely within your browser, without leaving to enter a bad actor's servers.
+- Checklist with persistent completion state
 
-# How to use it
-Simply clone the repository and localhost the app on your computer. Then, simply open `index.html` on your browser of choice. With this, you're able to open the local app on your computer. 
+- Focus and break timers with notifications and session history
+- Ship Log with projects, tags, filtering, bulk actions, and CSV export
 
-# What's unique to our project
-Sure, other projects may have similar features. After all, it's everyone and their mother's first project to make a notepad.
+## Run locally
+Serve the repository with any static HTTP server so the service worker and ES modules can load correctly.
 
-So what do we bring to the table? What's unique about Lumen?
+```sh
 
-Well, we bring a sleek design to our idea. Relive the golden days of retro, vintage Windows. You get a nice, sleek, and well-optimized UI that wraps the apps functionality up nicely.
+python3 -m http.server 8000
 
-# Anything else?
-Yep! What's cool is that you can actually INSTALL our app! It's not just a dingy local app. Even thouogh I really didn't say that before LOL
+```
+## Install
 
-All you gotta do is click the Lumen title/logo in the corner when you launch the app. There'll be an option to INSTALL, and after clicking that, it'll let you use Lumen as a desktop app! Nice and handy.
+Open LUMEN in a supported browser, choose LUMEN on the taskbar, then select **Install LUMEN...**.
 
-# Who made this?
-Hrishikesh Lenin and Sandeep Shenoy.
+## Privacy and storage
+Notes, tasks, settings, timer state, and work logs stay in browser storage. Settings can export or restore a JSON backup.
 
-Coding assistance/MVP iterations helped with by Codex. :O
-All art and creative direction by humans. :D
+## Credits
+Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are human-made.
+
+## Development
+
+- `js/main.js` contains the desktop, window manager, and app bindings.

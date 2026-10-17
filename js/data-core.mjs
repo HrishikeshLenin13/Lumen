@@ -4,6 +4,7 @@ export function makeDefaultData() {
     noteHistory: [],
     logs: [],
     sessions: [],
+    tasks: [],
     timerState: null,
     focusMin: 25,
     breakMin: 5,
@@ -76,7 +77,6 @@ export function normalizeTags(value) {
   return [...unique];
 }
 
-// Build a lightweight Markdown heading outline without changing the saved note.
 export function extractNoteHeadings(value) {
   const lines = String(value ?? "").split("\n");
   const headings = [];
@@ -156,7 +156,6 @@ export function appendCompletedSession(sessions, mode, minutes, at = new Date().
   return [session, ...previous].slice(0, 50);
 }
 
-// Retain old log rows while normalizing the optional project and tag fields.
 export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
   const defaults = makeDefaultData();
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -178,6 +177,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     if (!Number.isFinite(minutes) || minutes < 1 || !["focus", "break"].includes(session?.mode)) return null;
     return { mode: session.mode, minutes: Math.min(180, Math.round(minutes)), at: typeof session.at === "string" ? session.at : new Date().toISOString() };
   }).filter(Boolean).slice(0, 50) : [];
+  const tasks = Array.isArray(source.tasks) ? source.tasks.map((task) => ({ id: typeof task?.id === "string" && task.id ? task.id : makeId(), text: typeof task?.text === "string" ? task.text.trim().slice(0, 160) : "", done: Boolean(task?.done), createdAt: typeof task?.createdAt === "string" ? task.createdAt : new Date().toISOString() })).filter((task) => task.text).slice(0, 200) : [];
   const savedTimer = source.timerState && typeof source.timerState === "object" ? source.timerState : null;
   const noteHistory = Array.isArray(source.noteHistory) ? limitNoteHistory(source.noteHistory.map((revision) => {
     if (!revision || typeof revision.text !== "string" || !revision.text.trim()) return null;
@@ -211,6 +211,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     wallpaper: ["classic", "midnight", "aurora", "graphite"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
     logs,
     sessions,
+    tasks,
     timerState,
   };
 }

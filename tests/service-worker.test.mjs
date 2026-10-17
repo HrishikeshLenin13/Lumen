@@ -27,11 +27,12 @@ test('cross-origin requests are left to the browser', async () => {
   assert.equal(await offline('https://other.test/api','cors'), undefined);
 });
 
-test('the app shell caches the feature data module used by the timer and Ship Log', () => {
+test('the app shell caches current scripts, styles, and app icons', () => {
   const source = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
-  assert.match(source, /lumen-app-v24/);
-  assert.match(html, /<script type="module" src="js\/main\.js\?v=23"><\/script>/);
-  assert.match(source, /lumen-vintage\.css\?v=21/);
+  assert.match(source, /\.\/icons\/checklist\.png\?v=1/);
+  assert.match(source, /lumen-app-v26/);
+  assert.match(html, /<script type="module" src="js\/main\.js\?v=24"><\/script>/);
+  assert.match(source, /lumen-vintage\.css\?v=22/);
 });

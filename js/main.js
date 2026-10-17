@@ -57,7 +57,6 @@ function applyTheme() {
 }
 persistData();
 applyTheme();
-// Store an absolute deadline so a running timer can resume accurately after reload.
 const timer = {
   ...restoreTimerState(data.timerState, data.focusMin),
   intervalId: null,
@@ -66,7 +65,6 @@ function saveTimerState() {
   data.timerState = { mode: timer.mode, secondsLeft: timer.secondsLeft, running: timer.running, finished: timer.finished, endAt: timer.endAt };
   persistData();
 }
-// Keep a small, newest-first history; a finished focus block adds one record.
 function recordCompletedSession() {
   if (timer.mode !== "focus") return;
   data.sessions = appendCompletedSession(data.sessions, timer.mode, timerMinutes("focus"));
@@ -261,7 +259,6 @@ function renderNoteStats(element, notes) {
   const stats = noteStats(notes);
   element.textContent = stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines";
 }
-// Search, date presets, the visible list, and CSV all use this one result set.
 function filteredLogs() {
   const days = shipDateRange === "7" || shipDateRange === "30" ? Number(shipDateRange) : 0;
   return filterLogs(data.logs, { query: shipFilter, days });
@@ -642,6 +639,47 @@ const apps = [
     },
   },
   {
+    id: "checklist",
+    name: "Checklist",
+    glyph: "C",
+    icon: "icons/checklist.png?v=1",
+    html() {
+      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist" data-task-list></div>';
+    },
+    bind(root) {
+      const form = root.querySelector("[data-task-form]");
+      const input = root.querySelector("[data-task-input]");
+      const list = root.querySelector("[data-task-list]");
+      const render = () => {
+        list.innerHTML = data.tasks.length ? data.tasks.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span>' + escapeHtml(task.text) + '</span></label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">No tasks yet.</p>';
+      };
+      render();
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        data.tasks.unshift({ id: makeId(), text: text.slice(0, 160), done: false, createdAt: new Date().toISOString() });
+        input.value = "";
+        persistData();
+        render();
+      });
+      list.addEventListener("change", (event) => {
+        const task = data.tasks.find((item) => item.id === event.target.dataset.taskToggle);
+        if (!task) return;
+        task.done = event.target.checked;
+        persistData();
+        render();
+      });
+      list.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-task-delete]");
+        if (!button) return;
+        data.tasks = data.tasks.filter((task) => task.id !== button.dataset.taskDelete);
+        persistData();
+        render();
+      });
+    },
+  },
+  {
     id: "settings",
     name: "Settings",
     glyph: "S",
@@ -693,7 +731,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=12",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul><p class="hint hint--flush">Accounts and cloud sync are intentionally not included.</p>';
+      return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
     bind() {},
   },
@@ -702,7 +740,6 @@ const apps = [
 const wins = document.getElementById("wins");
 const tasks = document.getElementById("tasks");
 const open = new Map();
-// Start a restored deadline only after window state exists for timer rendering.
 if (timer.running) {
   if (timer.secondsLeft <= 0) updateTimer();
   else timer.intervalId = setInterval(updateTimer, TIMER_TICK_MS);
@@ -748,10 +785,18 @@ function toggleMaximize(id) {
   if (!maximized) requestAnimationFrame(() => constrainWindow(entry.el));
 }
 
+function setGenieTarget(entry) {
+  const windowRect = entry.el.getBoundingClientRect();
+  const taskRect = entry.tab.getBoundingClientRect();
+  entry.el.style.setProperty("--genie-x", Math.round(taskRect.left + taskRect.width / 2 - windowRect.left - windowRect.width / 2) + "px");
+  entry.el.style.setProperty("--genie-y", Math.round(taskRect.top + taskRect.height / 2 - windowRect.top - windowRect.height / 2) + "px");
+}
 function minimizeApp(id) {
   const entry = open.get(id);
-  if (!entry) return;
-  entry.el.classList.add("min");
+  if (!entry || entry.el.classList.contains("minimizing")) return;
+  setGenieTarget(entry);
+  entry.el.classList.add("minimizing");
+  onOwnAnimationEnd(entry.el, () => entry.el.classList.replace("minimizing", "min"));
   entry.el.classList.remove("focus");
   entry.tab.classList.remove("on");
   entry.tab.setAttribute("aria-selected", "false");
@@ -761,10 +806,21 @@ function minimizeApp(id) {
   }
 }
 
+function restoreApp(id) {
+  const entry = open.get(id);
+  if (!entry?.el.classList.contains("min")) return false;
+  setGenieTarget(entry);
+  entry.el.classList.replace("min", "restoring");
+  onOwnAnimationEnd(entry.el, () => entry.el.classList.remove("restoring"));
+  focusWin(id);
+  if (id === "focus") paintTimer(entry.el.querySelector(".body"));
+  return true;
+}
 function openApp(id) {
   const app = apps.find((candidate) => candidate.id === id);
   if (!app) return;
   setStartMenu(false);
+  if (restoreApp(id)) return;
   if (open.has(id)) {
     const existing = open.get(id);
     existing.el.classList.remove("min");
@@ -804,7 +860,7 @@ function openApp(id) {
   });
   element.addEventListener("mousedown", () => focusWin(id));
   tab.addEventListener("click", () => {
-    element.classList.remove("min");
+    if (restoreApp(id)) return;
     focusWin(id);
   });
   drag(element);
