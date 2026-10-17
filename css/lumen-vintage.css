@@ -1248,6 +1248,8 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 .win.painting { animation: window-paint 210ms steps(7, end) both; }
 .crt-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .zoom-rect { position: fixed; z-index: 9990; pointer-events: none; border: 2px solid #fff; mix-blend-mode: difference; }
+.saver { position: fixed; inset: 0; z-index: 9000; background: #000; cursor: none; }
+.saver__logo { position: absolute; top: 0; left: 0; color: hsl(210 90% 62%); font: italic 700 48px/1 var(--font); letter-spacing: -3px; text-shadow: 3px 3px #000, 4px 4px rgba(255, 255, 255, 0.25); will-change: transform; }
 
 .task.opening {
   transform-origin: left center;

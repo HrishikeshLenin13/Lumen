@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=2a818cc041";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=7f97dd6eb3";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1303,7 +1303,7 @@ const apps = [
       const midnightWallpaperSelected = data.wallpaper === "midnight" ? " selected" : "";
       const auroraWallpaperSelected = data.wallpaper === "aurora" ? " selected" : "";
       const graphiteWallpaperSelected = data.wallpaper === "graphite" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label><label class="form-label">Screensaver<select class="field" id="saverChoice"><option value="on"' + (data.screensaver ? " selected" : "") + '>After 3 minutes</option><option value="off"' + (data.screensaver ? "" : " selected") + '>Off</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -1318,6 +1318,7 @@ const apps = [
         data.effects = root.querySelector("#effectsChoice").value;
         data.wallpaper = root.querySelector("#wallpaperChoice").value;
         data.sounds = root.querySelector("#soundsChoice").value === "on";
+        data.screensaver = root.querySelector("#saverChoice").value === "on";
         persistData();
         applyTheme();
         resetTimer(timer.mode);
@@ -1957,4 +1958,57 @@ if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
   document.addEventListener("wheel", moveCursor, { passive: true });
   document.documentElement.addEventListener("mouseleave", () => smoothCursor.classList.remove("visible"));
 }
+const saver = document.createElement("div");
+saver.className = "saver hidden";
+saver.setAttribute("aria-hidden", "true");
+saver.innerHTML = '<span class="saver__logo">LUMEN</span>';
+document.body.append(saver);
+let lastActive = performance.now();
+let saverFrame = 0;
+function startSaver() {
+  if (!data.screensaver || reducedMotion.matches || document.getElementById("boot")) return;
+  const logo = saver.firstElementChild;
+  saver.classList.remove("hidden");
+  smoothCursor?.classList.remove("visible");
+  const maximumX = Math.max(0, window.innerWidth - logo.offsetWidth);
+  const maximumY = Math.max(0, window.innerHeight - logo.offsetHeight);
+  let x = Math.round(maximumX / 3);
+  let y = Math.round(maximumY / 4);
+  let velocityX = 0.09;
+  let velocityY = 0.07;
+  let hue = 210;
+  logo.style.transform = "translate(" + x + "px, " + y + "px)";
+  let last = performance.now();
+  const step = (now) => {
+    const elapsed = Math.min(50, now - last);
+    last = now;
+    x += velocityX * elapsed;
+    y += velocityY * elapsed;
+    if (x <= 0 || x >= maximumX || y <= 0 || y >= maximumY) {
+      if (x <= 0 || x >= maximumX) velocityX = -velocityX;
+      if (y <= 0 || y >= maximumY) velocityY = -velocityY;
+      x = Math.max(0, Math.min(maximumX, x));
+      y = Math.max(0, Math.min(maximumY, y));
+      hue = (hue + 67) % 360;
+      logo.style.color = "hsl(" + hue + " 90% 62%)";
+    }
+    logo.style.transform = "translate(" + Math.round(x) + "px, " + Math.round(y) + "px)";
+    saverFrame = requestAnimationFrame(step);
+  };
+  saverFrame = requestAnimationFrame(step);
+}
+function wake(event) {
+  lastActive = performance.now();
+  if (saver.classList.contains("hidden")) return;
+  cancelAnimationFrame(saverFrame);
+  saver.classList.add("hidden");
+  if (event.type === "keydown" || event.type === "pointerdown") {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+["pointermove", "pointerdown", "keydown", "wheel"].forEach((type) => document.addEventListener(type, wake, { capture: true }));
+window.setInterval(() => {
+  if (saver.classList.contains("hidden") && performance.now() - lastActive > 180000) startSaver();
+}, 5000);
 boot();
