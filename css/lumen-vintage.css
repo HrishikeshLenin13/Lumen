@@ -1,5 +1,5 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --taskbar-height: 34px;
   --font: Tahoma, "Segoe UI", sans-serif;
   --mono: "Lucida Console", "Courier New", monospace;
@@ -11,15 +11,18 @@
   --task-start: #3e95f2;
   --task-mid: #2468d7;
   --task-end: #173f9d;
-  --window-bg: #0b1019;
-  --window-text: #f4f6fa;
-  --window-muted: #b6bfcc;
-  --window-heading: #79a7ff;
-  --card-bg: #151d29;
-  --card-border: #46566d;
+  --window-bg: #ece9d8;
+  --window-text: #000000;
+  --window-muted: #4d4d4d;
+  --window-heading: #0046d5;
+  --card-bg: #ffffff;
+  --card-border: #d0d0bf;
   --field-bg: #ffffff;
   --field-text: #111111;
   --danger: #b42336;
+  --title-bar-bg: linear-gradient(180deg, #0997ff, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7);
+  --frame: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd;
+  --frame-inactive: inset -1px -1px #6582d6, inset 1px 1px #7d9ae4, inset -2px -2px #7590dd, inset 2px 2px #a6bdf0, inset -3px -3px #8aa5e8, inset 3px 3px #9db4ec;
   --desktop-bg: #3a6ea5 url("../icons/wallpaper.png?v=01c59e11e7") center / cover no-repeat;
 }
 
@@ -40,6 +43,9 @@ html[data-theme="light"] {
   --card-bg: #fffef5;
   --card-border: #aca899;
   --danger: #9c1428;
+  --title-bar-bg: linear-gradient(180deg, #b7c3d8, #8597b8 8%, #7a8db0 40%, #6d82a8 88%, #6a7fa5 93%, #5d7299 96%, #52678d);
+  --frame: inset -1px -1px #3f526f, inset 1px 1px #6f84a6, inset -2px -2px #52668a, inset 2px 2px #b6c3d8, inset -3px -3px #6a7fa3, inset 3px 3px #93a5c2;
+  --frame-inactive: inset -1px -1px #8a97ab, inset 1px 1px #a3afc2, inset -2px -2px #97a3b7, inset 2px 2px #d3dae5, inset -3px -3px #a9b4c6, inset 3px 3px #c0c9d7;
 }
 
 html[data-wallpaper="midnight"] {
@@ -255,19 +261,18 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   overflow: hidden;
   resize: both;
   background: var(--window-bg);
-  border: 3px solid var(--title-end);
-  border-radius: 8px 8px 1px 1px;
-  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.42);
+  padding: 0 3px 3px;
+  border-radius: 8px 8px 0 0;
+  box-shadow: var(--frame);
   pointer-events: auto;
 }
 
 .win:not(.focus) {
-  border-color: var(--inactive-end);
-  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--frame-inactive);
 }
 
 .win.focus {
-  box-shadow: 0 0 0 1px rgba(113, 177, 255, 0.38), 3px 5px 12px rgba(0, 0, 0, 0.46);
+  box-shadow: var(--frame);
 }
 
 .win.min {
@@ -292,12 +297,12 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   justify-content: space-between;
   min-height: 28px;
   max-height: 28px;
-  padding: 2px 3px 2px 5px;
+  margin: 0 -3px;
+  padding: 2px 5px 2px 6px;
   color: #fff;
-  background: linear-gradient(180deg, var(--title-mid), var(--title-start) 48%, var(--title-end));
-  font-size: 12px;
-  font-weight: 700;
-  text-shadow: 1px 1px #0b286f;
+  background: var(--title-bar-bg);
+  font: 700 13px "Trebuchet MS", var(--font);
+  text-shadow: 1px 1px #0f1089;
   touch-action: none;
   user-select: none;
 }
