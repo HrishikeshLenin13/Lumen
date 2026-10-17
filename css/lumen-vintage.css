@@ -870,6 +870,9 @@ select.field:focus {
 .calc__keys .btn { min-height: 36px; padding: 0; font-size: 14px; font-weight: 700; }
 .calc__digit { color: #0000c8 !important; }
 .calc__op { color: #c80000 !important; }
+.calc__keys .calc__mem { min-height: 26px; color: #800080; font-size: 12px; }
+.calc__screen { position: relative; }
+.calc.has-memory .calc__screen::before { position: absolute; top: 6px; left: 8px; color: #000; font: 700 11px/1 var(--mono); content: "M"; }
 .calc__tape { max-height: 76px; margin: 0; padding: 0; overflow: auto; list-style: none; font-family: var(--mono); }
 .calc__tape button { width: 100%; padding: 2px 4px; color: var(--window-muted); background: transparent; border: 0; text-align: right; }
 .calc__tape button.scene-hover { color: #fff; background: #316ac5; }

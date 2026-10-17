@@ -826,10 +826,10 @@ const apps = [
     id: "calculator",
     name: "Calculator",
     icon: "icons/calculator.png?v=528346ef06",
-    size: [284, 356],
+    size: [284, 396],
     html() {
-      const keys = [["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
-      return '<div class="calc" data-calc data-autofocus tabindex="0" aria-label="Calculator. Type numbers and operators or use the keypad."><div class="calc__screen"><span class="calc__expr" data-calc-expr></span><output class="calc__value" data-calc-value aria-live="polite">0</output></div><div class="calc__keys">' + keys.map(([label, key, kind]) => '<button type="button" class="btn calc__' + kind + '" data-calc-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(key === "back" ? "Backspace" : key === "clear" ? "Clear" : key === "equals" ? "Equals" : label) + '">' + label + '</button>').join("") + '</div><ol class="calc__tape" data-calc-tape aria-label="Recent results"></ol></div>';
+      const keys = [["MC", "mc", "mem"], ["MR", "mr", "mem"], ["M+", "m+", "mem"], ["M−", "m-", "mem"], ["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
+      return '<div class="calc" data-calc data-autofocus tabindex="0" aria-label="Calculator. Type numbers and operators or use the keypad."><div class="calc__screen"><span class="calc__expr" data-calc-expr></span><output class="calc__value" data-calc-value aria-live="polite">0</output></div><div class="calc__keys">' + keys.map(([label, key, kind]) => '<button type="button" class="btn calc__' + kind + '" data-calc-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(key === "back" ? "Backspace" : key === "clear" ? "Clear" : key === "equals" ? "Equals" : { mc: "Memory clear", mr: "Memory recall", "m+": "Memory add", "m-": "Memory subtract" }[key] || label) + '">' + label + '</button>').join("") + '</div><ol class="calc__tape" data-calc-tape aria-label="Recent results"></ol></div>';
     },
     bind(root) {
       const calc = root.querySelector("[data-calc]");
@@ -840,12 +840,28 @@ const apps = [
       let expression = "";
       let evaluated = false;
       const results = [];
+      let memory = 0;
       const render = (value, preview) => {
         writeText(exprView, pretty(expression));
         writeText(valueView, value);
         valueView.classList.toggle("preview", preview);
       };
       const press = (key) => {
+        if (/^m[cr+-]$/.test(key)) {
+          const current = calculateExpression(expression);
+          if (key === "mc") memory = 0;
+          if ((key === "m+" || key === "m-") && current.ok) memory = Number((memory + (key === "m+" ? current.value : -current.value)).toPrecision(12));
+          calc.classList.toggle("has-memory", memory !== 0);
+          if (key !== "mr") {
+            evaluated = current.ok;
+            return render(current.ok ? String(current.value) : expression ? pretty(expression) : "0", false);
+          }
+          const replace = evaluated || !/[+\-*/(]$/.test(expression);
+          expression = replace ? String(memory) : expression + (memory < 0 ? "(" + memory + ")" : memory);
+          evaluated = replace;
+          const recalled = calculateExpression(expression);
+          return render(recalled.ok ? String(recalled.value) : pretty(expression), !replace);
+        }
         if (key === "clear") {
           expression = "";
           evaluated = false;
