@@ -19,6 +19,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 - Character Map for copying arrows, box drawing, currency, accents, and math symbols
 - Monitor brightness and contrast knobs and a 12 or 24-hour clock
+- An XP-style two-column Start menu with Log Off and Turn Off Computer, which fades the desk to gray before the tube collapses
 
 - Focus and break timers with notifications and session history
 - Ship Log with projects, tags, filtering, bulk actions, and CSV export

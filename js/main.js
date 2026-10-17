@@ -2170,16 +2170,18 @@ desk.addEventListener("contextmenu", (event) => {
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), arrangeMenu()); });
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
+const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned">' + ["notes", "checklist", "calculator", "paint", "focus", "shiplog"].map((id) => startItem(id)).join("") + '</div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"], ["terminal", "Run..."]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
-  startMenu.querySelectorAll("[data-open-app]").forEach((button) => button.classList.toggle("hidden", !button.textContent.toLocaleLowerCase().includes(needle)));
+  startMenu.classList.toggle("searching", Boolean(needle));
+  startMenu.querySelectorAll(".start-menu__all [data-open-app]").forEach((button) => button.classList.toggle("hidden", !button.textContent.toLocaleLowerCase().includes(needle)));
 }
 startSearch.addEventListener("input", () => filterStartMenu(startSearch.value));
 startSearch.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
-  const firstMatch = startMenu.querySelector("[data-open-app]:not(.hidden)");
+  const firstMatch = startMenu.querySelector(".start-menu__all [data-open-app]:not(.hidden)");
   if (!firstMatch) return;
   firstMatch.click();
 });
@@ -2189,6 +2191,7 @@ function setStartMenu(show) {
   startBtn.setAttribute("aria-expanded", String(show));
   if (show) {
     startSearch.value = "";
+    startMenu.classList.remove("show-all");
     filterStartMenu("");
     startSearch.focus();
   }
@@ -2205,10 +2208,54 @@ startMenu.addEventListener("click", (event) => {
     setStartMenu(false);
     installApp();
   }
+  if (event.target.closest("[data-all-programs]")) writeText(startMenu.querySelector("[data-all-programs] span"), startMenu.classList.toggle("show-all") ? "Back" : "All Programs");
+  if (event.target.closest("[data-log-off]")) { setStartMenu(false); logOff(); }
+  if (event.target.closest("[data-power-off]")) { setStartMenu(false); turnOffDialog(); }
 });
 document.addEventListener("mousedown", (event) => {
   if (!event.target.closest(".start-wrap")) setStartMenu(false);
 });
+async function logOff() {
+  if (!open.size) return showToast("There is nothing open to log off from.");
+  if (!await showWindowDialog({ title: "Log Off LUMEN", message: "Close every open window? Your notes, files, and drawings stay saved.", confirmLabel: "Log Off" })) return;
+  Array.from(open.keys()).forEach((id) => closeApp(id));
+  showToast("Logged off. Everything is saved.");
+}
+function turnOffDialog() {
+  if (desk.querySelector(".shutdown")) return;
+  desk.classList.add("shutting");
+  const dialog = document.createElement("div");
+  dialog.className = "shutdown";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-label", "Turn off LUMEN");
+  dialog.innerHTML = '<div class="shutdown__box"><div class="shutdown__head"><span>Turn off LUMEN</span><img src="icons/l.png?v=33d4468d61" alt="" width="14" height="16"></div><div class="shutdown__choices"><button type="button" data-power="standby"><span class="shutdown__icon shutdown__icon--standby" aria-hidden="true">☾</span>Stand By</button><button type="button" data-power="off"><span class="shutdown__icon shutdown__icon--off" aria-hidden="true">⏻</span>Turn Off</button><button type="button" data-power="restart"><span class="shutdown__icon shutdown__icon--restart" aria-hidden="true">↻</span>Restart</button></div><div class="shutdown__foot"><button type="button" class="btn" data-power="cancel">Cancel</button></div></div>';
+  desk.append(dialog);
+  const close = () => { dialog.remove(); desk.classList.remove("shutting"); };
+  dialog.addEventListener("keydown", (event) => { if (event.key === "Escape") { event.stopPropagation(); close(); } });
+  dialog.addEventListener("click", (event) => {
+    const choice = event.target.closest("[data-power]")?.dataset.power;
+    if (!choice) return;
+    close();
+    if (choice === "standby") startSaver();
+    if (choice === "off") powerOff();
+    if (choice === "restart") { rememberWindows(); location.reload(); }
+  });
+  dialog.querySelector('[data-power="off"]').focus({ preventScroll: true });
+}
+function powerOff() {
+  rememberWindows();
+  playSound("close");
+  document.documentElement.classList.add("powered-off");
+  const hint = document.createElement("p");
+  hint.className = "power-hint";
+  hint.textContent = "LUMEN is off. Click or press any key to turn it on.";
+  document.body.append(hint);
+  window.setTimeout(() => {
+    const wake = () => location.reload();
+    document.addEventListener("pointerdown", wake, { once: true });
+    document.addEventListener("keydown", wake, { once: true });
+  }, 700);
+}
 
 const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
 let konamiStep = 0;
