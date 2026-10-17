@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=899ba1966b";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=49622f4843";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -24,7 +24,7 @@ const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" })
 const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
 const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
 const logDateFormat = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
-const clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+let clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
 function escapeHtml(value) {
   return String(value)
@@ -111,8 +111,12 @@ function persistData() {
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
   document.documentElement.dataset.effects = data.effects;
+  const tone = "brightness(" + data.brightness / 100 + ") contrast(" + data.contrast / 100 + ")" + { color: "", amber: " grayscale(1) sepia(1) saturate(3) hue-rotate(-12deg)", green: " grayscale(1) sepia(1) saturate(4) hue-rotate(62deg)" }[data.phosphor];
+  document.documentElement.style.setProperty("--tube", "saturate(1.12) contrast(1.05) " + tone);
+  document.documentElement.style.setProperty("--tone", tone === "brightness(1) contrast(1)" ? "none" : tone);
   bendScreen();
   document.documentElement.dataset.wallpaper = data.wallpaper;
+  clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: data.clock24 ? "h23" : "h12" });
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
 }
@@ -1445,12 +1449,15 @@ const apps = [
       const midnightWallpaperSelected = data.wallpaper === "midnight" ? " selected" : "";
       const auroraWallpaperSelected = data.wallpaper === "aurora" ? " selected" : "";
       const graphiteWallpaperSelected = data.wallpaper === "graphite" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label><label class="form-label">Screensaver<select class="field" id="saverChoice"><option value="on"' + (data.screensaver ? " selected" : "") + '>After 3 minutes</option><option value="off"' + (data.screensaver ? "" : " selected") + '>Off</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label><label class="form-label">Screensaver<select class="field" id="saverChoice"><option value="on"' + (data.screensaver ? " selected" : "") + '>After 3 minutes</option><option value="off"' + (data.screensaver ? "" : " selected") + '>Off</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label><label class="form-label">Phosphor<select class="field" id="phosphorChoice"><option value="color">Color</option><option value="amber">Amber monochrome</option><option value="green">Green monochrome</option></select></label><label class="form-label">Taskbar clock<select class="field" id="clockChoice"><option value="12">12-hour</option><option value="24">24-hour</option></select></label><label class="form-label">Brightness<input class="knob" id="brightnessKnob" type="range" min="70" max="130" step="5" value="' + data.brightness + '"></label><label class="form-label">Contrast<input class="knob" id="contrastKnob" type="range" min="70" max="140" step="5" value="' + data.contrast + '"></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
       const status = root.querySelector("[data-settings-status]");
       const fileInput = root.querySelector("[data-import-file]");
+      root.querySelector("#phosphorChoice").value = data.phosphor;
+      root.querySelector("#clockChoice").value = data.clock24 ? "24" : "12";
+      form.addEventListener("input", (event) => { if (!event.target.matches(".knob, #phosphorChoice")) return; data.brightness = clampNumber(root.querySelector("#brightnessKnob").value, 70, 130, 100); data.contrast = clampNumber(root.querySelector("#contrastKnob").value, 70, 140, 100); data.phosphor = root.querySelector("#phosphorChoice").value; applyTheme(); persistData(); });
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         if (!form.reportValidity()) return;
@@ -1461,9 +1468,11 @@ const apps = [
         data.wallpaper = root.querySelector("#wallpaperChoice").value;
         data.sounds = root.querySelector("#soundsChoice").value === "on";
         data.screensaver = root.querySelector("#saverChoice").value === "on";
+        data.clock24 = root.querySelector("#clockChoice").value === "24";
         persistData();
         applyTheme();
         resetTimer(timer.mode);
+        writeText(document.querySelector("[data-clock-time]"), clockFormat.format(new Date()));
         status.textContent = "Settings saved.";
         showToast("Settings saved.");
       });
