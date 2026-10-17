@@ -1138,19 +1138,28 @@ function drag(node) {
     const startY = event.clientY;
     const startLeft = node.offsetLeft;
     const startTop = node.offsetTop;
+    const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
+    const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
+    let pendingLeft = startLeft;
+    let pendingTop = startTop;
+    let dragFrame = 0;
+    const applyDrag = () => {
+      dragFrame = 0;
+      node.style.left = pendingLeft + "px";
+      node.style.top = pendingTop + "px";
+    };
     bar.setPointerCapture(pointerId);
     document.body.classList.add("dragging");
     const move = (moveEvent) => {
       if (moveEvent.pointerId !== pointerId) return;
-      const desiredLeft = startLeft + moveEvent.clientX - startX;
-      const desiredTop = startTop + moveEvent.clientY - startY;
-      const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
-      const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
-      node.style.left = Math.min(maximumLeft, Math.max(0, desiredLeft)) + "px";
-      node.style.top = Math.min(maximumTop, Math.max(0, desiredTop)) + "px";
+      pendingLeft = Math.round(Math.min(maximumLeft, Math.max(0, startLeft + moveEvent.clientX - startX)));
+      pendingTop = Math.round(Math.min(maximumTop, Math.max(0, startTop + moveEvent.clientY - startY)));
+      if (!dragFrame) dragFrame = requestAnimationFrame(applyDrag);
     };
     const stop = (stopEvent) => {
       if (stopEvent.pointerId !== pointerId) return;
+      cancelAnimationFrame(dragFrame);
+      applyDrag();
       if (bar.hasPointerCapture(pointerId)) bar.releasePointerCapture(pointerId);
       document.body.classList.remove("dragging");
       bar.removeEventListener("pointermove", move);
