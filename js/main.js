@@ -1506,7 +1506,7 @@ if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
   cursorImage.addEventListener("load", () => document.documentElement.classList.add("custom-cursor"), { once: true });
   cursorImage.src = "icons/cursor.png?v=af1b0be3b4";
   let cursorFrame = 0;
-  document.addEventListener("pointermove", (event) => {
+  const moveCursor = (event) => {
     const x = Math.round(event.clientX);
     const y = Math.round(event.clientY);
     cancelAnimationFrame(cursorFrame);
@@ -1514,7 +1514,9 @@ if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
       smoothCursor.style.transform = "translate3d(" + x + "px," + y + "px,0)";
     });
     if (!smoothCursor.classList.contains("visible")) smoothCursor.classList.add("visible");
-  });
+  };
+  document.addEventListener("pointermove", moveCursor);
+  document.addEventListener("wheel", moveCursor, { passive: true });
   document.documentElement.addEventListener("mouseleave", () => smoothCursor.classList.remove("visible"));
 }
 boot();
