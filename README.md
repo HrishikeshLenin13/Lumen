@@ -3,6 +3,7 @@ Lumen is an installable offline workspace for notes, task tracking, focus sessio
 Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 Drag desktop icons to keep your preferred app order.
 The pixel cursor tilts with the curved CRT surface, and confirmations stay inside LUMEN windows.
+Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dragging.png` with your own 16×16 PNGs. Cursor hotspots use the top-left pixel, matching `cursor-2x.png`.
 
 ## Features
 

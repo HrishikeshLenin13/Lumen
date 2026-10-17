@@ -926,7 +926,7 @@ const apps = [
           cell.classList.toggle("open", open);
           cell.classList.toggle("boom", open && Boolean(info?.mine));
           writeAttribute(cell, "data-count", open && info && !info.mine && info.count ? String(info.count) : "");
-          writeText(cell, open ? (info.mine ? "●" : info.count ? String(info.count) : "") : flags.has(index) ? "⚑" : "");
+          writeText(cell, open ? (info.mine ? "" : info.count ? String(info.count) : "") : flags.has(index) ? "⚑" : "");
           writeAttribute(cell, "aria-label", open ? (info.mine ? "Mine" : info.count ? info.count + " nearby mines" : "Empty") : flags.has(index) ? "Flagged square" : "Hidden square");
         });
         writeText(counter, led(mines - flags.size));
@@ -1147,7 +1147,7 @@ const apps = [
     },
     bind(root) {
       const localDate = (date) => date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
-      const today = localDate(new Date());
+      let today = localDate(new Date());
       let year = new Date().getFullYear();
       let month = new Date().getMonth();
       let selected = today;
@@ -1155,10 +1155,11 @@ const apps = [
       const list = root.querySelector("[data-cal-events]");
       const input = root.querySelector("[data-cal-input]");
       const render = () => {
+        today = localDate(new Date());
         const busy = new Set(data.events.map((event) => event.date));
         writeText(root.querySelector("[data-cal-title]"), monthTitleFormat.format(new Date(year, month, 1)));
         grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(fullDateFormat.format(new Date(cell.date + "T12:00"))) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
-        writeText(root.querySelector("[data-cal-selected]"), dayHeadingFormat.format(new Date(selected + "T12:00")));
+        const focusDay = grid.querySelector('[data-cal-date="' + selected + '"]') || grid.querySelector(".cal__day:not(.out)"); grid.querySelectorAll("[data-cal-date]").forEach((day) => { day.tabIndex = day === focusDay ? 0 : -1; if (day.dataset.calDate === today) day.setAttribute("aria-current", "date"); }); writeText(root.querySelector("[data-cal-selected]"), dayHeadingFormat.format(new Date(selected + "T12:00")));
         const events = data.events.filter((event) => event.date === selected);
         list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
       };
@@ -1171,7 +1172,7 @@ const apps = [
       root.querySelector("[data-cal-today]").addEventListener("click", () => {
         year = new Date().getFullYear();
         month = new Date().getMonth();
-        selected = today;
+        selected = localDate(new Date());
         render();
       });
       grid.addEventListener("click", (event) => {
@@ -1184,6 +1185,7 @@ const apps = [
         render();
         input.focus();
       });
+      grid.addEventListener("keydown", (event) => { const day = event.target.closest("[data-cal-date]"); if (!day || event.altKey || event.ctrlKey || event.metaKey) return; const picked = new Date(day.dataset.calDate + "T12:00"); const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, Home: -picked.getDay(), End: 6 - picked.getDay() }; if (Object.hasOwn(offsets, event.key)) picked.setDate(picked.getDate() + offsets[event.key]); else if (event.key === "PageUp" || event.key === "PageDown") { const date = picked.getDate(); picked.setDate(1); picked.setMonth(picked.getMonth() + (event.key === "PageUp" ? -1 : 1)); picked.setDate(Math.min(date, new Date(picked.getFullYear(), picked.getMonth() + 1, 0).getDate())); } else return; event.preventDefault(); event.stopPropagation(); selected = localDate(picked); year = picked.getFullYear(); month = picked.getMonth(); render(); grid.querySelector('[data-cal-date="' + selected + '"]')?.focus(); });
       root.querySelector("[data-cal-form]").addEventListener("submit", (event) => {
         event.preventDefault();
         const text = input.value.trim();
@@ -1985,7 +1987,8 @@ let hoverY = 0;
 function updateSceneHover() {
   hoverFrame = 0;
   const [x, y] = toScene(hoverX, hoverY);
-  const next = document.elementFromPoint(x, y)?.closest("button") || null;
+  const hit = document.elementFromPoint(x, y); const next = hit?.closest("button") || null;
+  screenCursor.dataset.shape = hit?.closest("button:not(:disabled), a[href], select:not(:disabled), label") ? "pointing" : "pointer";
   if (next === sceneHover) return;
   sceneHover?.classList.remove("scene-hover");
   next?.classList.add("scene-hover");
