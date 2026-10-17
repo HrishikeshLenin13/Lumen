@@ -389,7 +389,6 @@ const apps = [
   {
     id: "notes",
     name: "Notes",
-    glyph: "N",
     icon: "icons/notes.png?v=8c65e95fff",
     html() {
       return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
@@ -513,7 +512,6 @@ const apps = [
   {
     id: "focus",
     name: "Focus",
-    glyph: "F",
     icon: "icons/timer.png?v=13bd7c6582",
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
@@ -532,7 +530,6 @@ const apps = [
   {
     id: "shiplog",
     name: "Ship Log",
-    glyph: "H",
     icon: "icons/logs.png?v=7ce34f25cf",
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" max="24" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" maxlength="240" placeholder="What did you ship?" id="logText" aria-label="Ship description"><input class="field" type="text" maxlength="48" placeholder="Project (optional)" id="logProject" aria-label="Project"><input class="field" type="text" placeholder="Tags, comma separated" id="logTags" aria-label="Tags"><button type="button" class="btn primary" data-add-log>Add entry</button></div><div class="log-tools"><label class="form-label log-filter">Search entries<input class="field" type="search" placeholder="Description, project, tag, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><label class="form-label">Date range<select class="field" data-log-range><option value="all"' + (shipDateRange === "all" ? " selected" : "") + '>All time</option><option value="7"' + (shipDateRange === "7" ? " selected" : "") + '>Last 7 days</option><option value="30"' + (shipDateRange === "30" ? " selected" : "") + '>Last 30 days</option></select></label><button type="button" class="btn" data-export-log>Export filtered CSV</button></div><div class="log-list" data-log-list>' + logListHtml() + '</div>';
@@ -680,7 +677,6 @@ const apps = [
   {
     id: "checklist",
     name: "Checklist",
-    glyph: "C",
     icon: "icons/checklist.png?v=0e27a20bbd",
     html() {
       return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
@@ -730,7 +726,6 @@ const apps = [
   {
     id: "calculator",
     name: "Calculator",
-    glyph: "=",
     icon: "icons/calculator.png?v=528346ef06",
     html() {
       return '<form class="calculator" data-calculator><label class="form-label">Expression<input class="field calculator-input" type="text" inputmode="decimal" maxlength="120" placeholder="(12 + 3) * 2" data-calculator-input required></label><button type="submit" class="btn primary">Calculate</button><output class="calculator-result" data-calculator-result aria-live="polite">0</output></form>';
@@ -749,7 +744,6 @@ const apps = [
   {
     id: "petrock",
     name: "Pet Rock",
-    glyph: "R",
     icon: "icons/pet-rock.png?v=65c80a1be7",
     html() {
       return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite">Your rock is resting.</p><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><p class="hint hint--flush" data-rock-count></p></div>';
@@ -773,7 +767,6 @@ const apps = [
   {
     id: "fortune",
     name: "Fortune",
-    glyph: "?",
     icon: "icons/fortune.png?v=65c80a1be7",
     html() {
       return '<div class="toy"><p class="toy__slip" data-fortune aria-live="polite"></p><button type="button" class="btn primary" data-fortune-next>Crack another cookie</button></div>';
@@ -791,7 +784,6 @@ const apps = [
   {
     id: "coinflip",
     name: "Coin Flip",
-    glyph: "O",
     icon: "icons/coin.png?v=65c80a1be7",
     html() {
       return '<div class="toy"><output class="toy__coin" data-coin aria-live="polite">?</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
@@ -821,7 +813,6 @@ const apps = [
   {
     id: "busywork",
     name: "Busy Work",
-    glyph: "B",
     icon: "icons/busy.png?v=65c80a1be7",
     html() {
       return '<p class="hint" data-busy-task aria-live="polite">Ready to look busy.</p><div class="busy-bar" role="progressbar" aria-label="Busy work progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-busy-bar><span></span></div><div class="row row--actions"><button type="button" class="btn primary" data-busy-start>Look busy</button><button type="button" class="btn" data-busy-stop disabled>Stop</button></div>';
@@ -864,7 +855,6 @@ const apps = [
   {
     id: "settings",
     name: "Settings",
-    glyph: "S",
     icon: "icons/help.png?v=aa753d325e",
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
@@ -912,7 +902,6 @@ const apps = [
   {
     id: "about",
     name: "About",
-    glyph: "i",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
       return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
