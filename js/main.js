@@ -632,6 +632,7 @@ const apps = [
       const rangeInput = root.querySelector("[data-log-range]");
       const list = root.querySelector("[data-log-list]");
       const total = root.querySelector("[data-log-total]");
+      let filterFrame = 0;
       const render = () => {
         const rows = filteredLogs();
         const validIds = new Set(data.logs.map((entry) => entry.id));
@@ -679,7 +680,7 @@ const apps = [
       filterInput.addEventListener("input", () => {
         shipFilter = filterInput.value;
         logLimit = 100;
-        render();
+        if (!filterFrame) filterFrame = requestAnimationFrame(() => { filterFrame = 0; if (root.isConnected) render(); });
       });
       rangeInput.addEventListener("change", () => { shipDateRange = rangeInput.value; logLimit = 100; render(); });
       root.querySelector("[data-export-log]").addEventListener("click", exportShipLog);
@@ -1504,6 +1505,7 @@ function onOwnAnimationEnd(element, callback) {
     if (finished) return;
     finished = true;
     element.removeEventListener("animationend", handleAnimationEnd);
+    clearTimeout(fallback);
     callback();
   };
   const handleAnimationEnd = (event) => {
@@ -1511,12 +1513,13 @@ function onOwnAnimationEnd(element, callback) {
     finish();
   };
   element.addEventListener("animationend", handleAnimationEnd);
-  window.setTimeout(finish, 500);
+  const fallback = window.setTimeout(finish, 500);
 }
 
 function zoomRects(from, to, done) {
   if (reducedMotion.matches) return void done?.();
   const surface = desk.getBoundingClientRect();
+  const started = performance.now(); let lastStep = 0;
   const frames = [];
   const at = (start, end, step) => Math.round(start + (end - start) * step / 8);
   const draw = (step) => {
@@ -1525,10 +1528,9 @@ function zoomRects(from, to, done) {
     frame.style.cssText = "left:" + at(from.left - surface.left, to.left - surface.left, step) + "px;top:" + at(from.top - surface.top, to.top - surface.top, step) + "px;width:" + at(from.width, to.width, step) + "px;height:" + at(from.height, to.height, step) + "px";
     desk.append(frame);
     frames.push(frame);
-    if (step < 8) window.setTimeout(() => draw(step + 1), 22);
-    else window.setTimeout(() => { frames.forEach((item) => item.remove()); done?.(); }, 22);
+    frames.forEach((trail, index) => { trail.style.opacity = String((index + 1) / frames.length); });
   };
-  draw(1);
+  const tick = (now) => { if (document.hidden || now - started >= 198) { frames.forEach((frame) => frame.remove()); done?.(); return; } const step = Math.min(8, Math.floor((now - started) / 22) + 1); if (step !== lastStep) { draw(step); lastStep = step; } requestAnimationFrame(tick); }; requestAnimationFrame(tick);
 }
 function paintWindow(element, phase) {
   if (!element.classList.replace(phase, "painting")) return;
