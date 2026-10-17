@@ -680,6 +680,37 @@ const apps = [
     },
   },
   {
+    id: "texttools",
+    name: "Text Tools",
+    glyph: "T",
+    icon: "icons/text-tools.png?v=1",
+    html() {
+      return '<textarea class="text-tools-area" data-text-tools aria-label="Text to inspect" placeholder="Paste or type text"></textarea><div class="row text-tools-bar"><span class="hint hint--flush" data-text-stats>0 words · 0 characters · 0 lines</span><button type="button" class="btn" data-text-trim>Trim lines</button><button type="button" class="btn primary" data-text-copy>Copy</button></div>';
+    },
+    bind(root) {
+      const area = root.querySelector("[data-text-tools]");
+      const stats = root.querySelector("[data-text-stats]");
+      const render = () => {
+        const values = noteStats(area.value);
+        stats.textContent = values.words + " words · " + values.characters + " characters · " + values.lines + " lines";
+      };
+      area.addEventListener("input", render);
+      root.querySelector("[data-text-trim]").addEventListener("click", () => {
+        area.value = area.value.split("\n").map((line) => line.trim()).join("\n").trim();
+        render();
+      });
+      root.querySelector("[data-text-copy]").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(area.value);
+          showToast("Text copied.");
+        } catch {
+          showToast("Copy failed. Select the text and copy it manually.");
+        }
+      });
+      render();
+    },
+  },
+  {
     id: "settings",
     name: "Settings",
     glyph: "S",

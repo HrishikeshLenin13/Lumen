@@ -6,6 +6,7 @@ Lumen is an installable offline workspace for notes, task tracking, focus sessio
 - Notes with automatic saving, Markdown outlines, statistics, and version history
 
 - Checklist with persistent completion state
+- Text Tools with live counts, line trimming, and clipboard copying
 
 - Focus and break timers with notifications and session history
 - Ship Log with projects, tags, filtering, bulk actions, and CSV export
@@ -31,3 +32,6 @@ Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are h
 ## Development
 
 - `js/main.js` contains the desktop, window manager, and app bindings.
+- `js/data-core.mjs` contains normalized storage and reusable data operations.
+- `sw.js` manages the versioned offline app shell.
+- Run tests with `node --test tests/*.test.mjs`.

@@ -841,6 +841,9 @@ select.field:focus {
 .checklist-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border: 1px solid var(--panel-line); background: var(--panel-bg); }
 .checklist-item label { display: flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; }
 .checklist-item input:checked + span { color: var(--window-muted); text-decoration: line-through; }
+.text-tools-area { width: 100%; min-height: 190px; resize: vertical; padding: 8px; color: var(--window-text); background: var(--field-bg); border: 1px solid var(--panel-line); font: inherit; }
+.text-tools-bar { align-items: center; margin-top: 8px; }
+.text-tools-bar [data-text-stats] { flex: 1 1 auto; }
 
 .settings-grid .form-label:last-child {
   grid-column: auto;
