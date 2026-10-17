@@ -1506,13 +1506,13 @@ if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
   cursorImage.src = "icons/cursor.png?v=af1b0be3b4";
   let cursorFrame = 0;
   document.addEventListener("pointermove", (event) => {
-    const x = event.clientX;
-    const y = event.clientY;
+    const x = Math.round(event.clientX);
+    const y = Math.round(event.clientY);
     cancelAnimationFrame(cursorFrame);
     cursorFrame = requestAnimationFrame(() => {
       smoothCursor.style.transform = "translate3d(" + x + "px," + y + "px,0)";
     });
-    smoothCursor.classList.add("visible");
+    if (!smoothCursor.classList.contains("visible")) smoothCursor.classList.add("visible");
   });
   document.documentElement.addEventListener("mouseleave", () => smoothCursor.classList.remove("visible"));
 }
