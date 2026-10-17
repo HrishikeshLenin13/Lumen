@@ -843,15 +843,12 @@ select.field:focus {
 .checklist-entry .field { flex: 1 1 auto; min-width: 0; }
 .checklist-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .checklist { display: grid; gap: 6px; }
-.checklist-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border: 1px solid var(--panel-line); background: var(--panel-bg); }
+.checklist-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border: 1px solid var(--card-border); background: var(--card-bg); }
 .checklist-item label { display: flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; }
 .checklist-item input:checked + span { color: var(--window-muted); text-decoration: line-through; }
-.text-tools-area { width: 100%; min-height: 190px; resize: vertical; padding: 8px; color: var(--window-text); background: var(--field-bg); border: 1px solid var(--panel-line); font: inherit; }
-.text-tools-bar { align-items: center; margin-top: 8px; }
-.text-tools-bar [data-text-stats] { flex: 1 1 auto; }
 .calculator { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
 .calculator .form-label { min-width: 0; }
-.calculator-result { grid-column: 1 / -1; min-height: 70px; padding: 12px; overflow-wrap: anywhere; color: var(--window-heading); background: var(--field-bg); border: 1px solid var(--panel-line); font-size: 30px; font-weight: 700; text-align: right; }
+.calculator-result { grid-column: 1 / -1; min-height: 70px; padding: 12px; overflow-wrap: anywhere; color: var(--window-heading); background: var(--field-bg); border: 1px solid var(--card-border); font-size: 30px; font-weight: 700; text-align: right; }
 .calculator-input { font-variant-numeric: tabular-nums; }
 .about-art { display: block; width: 192px; height: 96px; margin: 0 0 12px; image-rendering: pixelated; }
 .toy { display: grid; justify-items: center; gap: 12px; padding: 8px 0; text-align: center; }
@@ -861,14 +858,6 @@ select.field:focus {
 .toy__coin { display: grid; place-items: center; width: 96px; height: 96px; color: #111; background: #fff; border: 1px solid #000; border-radius: 50%; box-shadow: 2px 2px 0 #000; font-family: var(--mono); font-weight: 700; }
 .busy-bar { height: 22px; padding: 2px; background: #fff; border: 1px solid #000; box-shadow: inset 1px 1px #808080; }
 .busy-bar span { display: block; width: 0; height: 100%; background: repeating-linear-gradient(90deg, #2fae3c 0 8px, transparent 8px 10px); }
-
-.settings-grid .form-label:last-child {
-  grid-column: auto;
-}
-
-.settings-grid__wide {
-  grid-column: 1 / -1;
-}
 
 .shortcut-list {
   padding-left: 20px;
@@ -1291,10 +1280,6 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
     padding: 10px 0 0;
     border-top: 1px solid var(--card-border);
     border-left: 0;
-  }
-
-  .settings-grid .form-label:last-child {
-    grid-column: auto;
   }
 
   .task {
