@@ -154,6 +154,7 @@ test("CSV quotes cells, keeps filters export-ready, and neutralizes spreadsheet 
 });
 
 test("Ship Log search and date ranges compose before export", () => {
+  const unfiltered = [{ at: "invalid", text: "Draft", h: 1 }]; assert.deepEqual(filterLogs(unfiltered), unfiltered); assert.notEqual(filterLogs(unfiltered), unfiltered); assert.deepEqual(filterLogs(unfiltered, { days: 7 }), []);
   const now = Date.parse("2026-01-31T12:00:00Z");
   const logs = [
     { at: "2026-01-30T10:00:00Z", h: 1, project: "Lumen", tags: ["ui"], text: "Filter panel" },

@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=4d423de9b0";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=1b1ba3c80e";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -82,6 +82,7 @@ function showWindowDialog({ title = "LUMEN", message, value, options, confirmLab
   return new Promise((resolve) => {
     const host = activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
     const previousFocus = document.activeElement;
+    if (host.querySelector(".window-dialog")) return resolve(null);
     const overlay = document.createElement("div");
     overlay.className = "window-dialog";
     overlay.setAttribute("role", "presentation");
@@ -91,7 +92,7 @@ function showWindowDialog({ title = "LUMEN", message, value, options, confirmLab
     host.append(overlay);
     overlay.querySelector("form").addEventListener("submit", (event) => { event.preventDefault(); settle(overlay.querySelector("[data-dialog-value]")?.value ?? true); });
     overlay.querySelector("[data-dialog-cancel]").addEventListener("click", () => settle(null));
-    overlay.addEventListener("keydown", (event) => { if (event.key === "Escape") settle(null); });
+    overlay.addEventListener("keydown", (event) => { event.stopPropagation(); if (event.key === "Escape") { event.preventDefault(); settle(null); } if (event.key === "Tab") { const controls = Array.from(overlay.querySelectorAll("input, select, button")); const index = controls.indexOf(document.activeElement); event.preventDefault(); controls[(index + (event.shiftKey ? controls.length - 1 : 1)) % controls.length]?.focus(); } });
     (overlay.querySelector("[data-dialog-value]") || overlay.querySelector("button[type=submit]")).focus();
   });
 }
@@ -2325,7 +2326,6 @@ async function boot() {
 }
 window.addEventListener("hashchange", () => {
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
-  const restored = restoreWindows();
   if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
