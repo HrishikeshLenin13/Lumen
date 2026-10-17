@@ -759,7 +759,7 @@ const apps = [
       root.querySelector("[data-rock-pet]").addEventListener("click", () => {
         data.rockPets += 1;
         persistData();
-        mood.textContent = moods[data.rockPets % moods.length];
+        mood.textContent = data.rockPets % 100 === 0 ? "The rock has chosen you." : moods[data.rockPets % moods.length];
         render();
       });
       render();
@@ -1341,7 +1341,21 @@ document.addEventListener("mousedown", (event) => {
   if (!event.target.closest(".start-wrap")) setStartMenu(false);
 });
 
+const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+let konamiStep = 0;
+function degauss() {
+  if (desk.classList.contains("degauss") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  desk.classList.add("degauss");
+  primeAudio();
+  systemSound(110, 0.6);
+  window.setTimeout(() => desk.classList.remove("degauss"), 900);
+}
 document.addEventListener("keydown", (event) => {
+  konamiStep = event.key === konami[konamiStep] ? konamiStep + 1 : event.key === konami[0] ? 1 : 0;
+  if (konamiStep === konami.length) {
+    konamiStep = 0;
+    degauss();
+  }
   if (event.key === "Enter" && !event.target.closest("input, textarea, select, button, a") && selectedIconIds().length) {
     event.preventDefault();
     selectedIconIds().forEach((id) => openApp(id));
