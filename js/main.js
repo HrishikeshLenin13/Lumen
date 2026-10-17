@@ -1294,6 +1294,41 @@ setInterval(tickClock, 30_000);
 window.addEventListener("beforeunload", persistData);
 document.addEventListener("pointerdown", primeAudio);
 
+function bendScreen() {
+  const lens = document.querySelector("[data-crt-lens]");
+  const bend = document.querySelector("[data-crt-bend]");
+  if (!lens || !bend) return;
+  const strength = 0.028;
+  const width = 160;
+  const height = Math.max(1, Math.round(width * window.innerHeight / window.innerWidth));
+  const scale = Math.ceil(2 * strength * Math.max(window.innerWidth, window.innerHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  const image = context.createImageData(width, height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const nx = (x + 0.5) / width * 2 - 1;
+      const ny = (y + 0.5) / height * 2 - 1;
+      const pull = strength * (nx * nx + ny * ny) / scale / 2;
+      const index = (y * width + x) * 4;
+      image.data[index] = Math.round(255 * (0.5 + nx * pull * window.innerWidth));
+      image.data[index + 1] = Math.round(255 * (0.5 + ny * pull * window.innerHeight));
+      image.data[index + 2] = 128;
+      image.data[index + 3] = 255;
+    }
+  }
+  context.putImageData(image, 0, 0);
+  lens.setAttribute("href", canvas.toDataURL());
+  bend.setAttribute("scale", String(scale));
+}
+let bendFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(bendFrame);
+  bendFrame = requestAnimationFrame(bendScreen);
+});
+bendScreen();
 async function boot() {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const post = document.querySelector("[data-boot-post]");
@@ -1316,6 +1351,7 @@ async function boot() {
   await wait(700);
   document.getElementById("boot").classList.add("fade");
   document.getElementById("desk").classList.replace("hidden", "power-on");
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll("#bootSplitRed, #bootSplitBlue").forEach((split) => split.beginElement?.());
   await wait(120);
   document.getElementById("boot").remove();
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);

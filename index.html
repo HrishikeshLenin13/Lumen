@@ -15,17 +15,18 @@
     <link rel="icon" href="icons/favicon.png?v=86272e4942" type="image/png">
     <title>LUMEN - builder desk</title>
 
-    <link rel="stylesheet" href="css/lumen-vintage.css?v=e9661383c3" />
+    <link rel="stylesheet" href="css/lumen-vintage.css?v=3d4c291298" />
   </head>
   <body>
     <div id="boot" class="boot" role="status" aria-live="polite"><pre class="boot-post" data-boot-post></pre><div class="boot-brand hidden" data-boot-brand><img class="boot-mark" src="icons/l.png?v=33d4468d61" alt=""><span class="boot-logo">LUMEN</span><span class="boot-copy">Starting up...</span><span class="boot-track"><span></span></span></div></div>
 
     <svg class="crt-defs" aria-hidden="true" focusable="false"><filter id="crt-split" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feOffset in="red" dx="-2" result="redShift"/>
+      <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feOffset in="red" dx="-2" result="redShift"><animate id="bootSplitRed" attributeName="dx" values="-14;7;-8;3;-2" dur="1.2s" begin="indefinite" fill="freeze"/></feOffset>
       <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>
-      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/><feOffset in="blue" dx="2" result="blueShift"/>
+      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/><feOffset in="blue" dx="2" result="blueShift"><animate id="bootSplitBlue" attributeName="dx" values="14;-7;8;-3;2" dur="1.2s" begin="indefinite" fill="freeze"/></feOffset>
       <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/><feBlend in="redGreen" in2="blueShift" mode="screen" result="split"/>
-      <feGaussianBlur in="split" stdDeviation="2" result="bloom"/><feComponentTransfer in="bloom" result="softBloom"><feFuncA type="linear" slope="0.35"/></feComponentTransfer><feBlend in="split" in2="softBloom" mode="screen"/>
+      <feGaussianBlur in="split" stdDeviation="2" result="bloom"/><feComponentTransfer in="bloom" result="softBloom"><feFuncA type="linear" slope="0.35"/></feComponentTransfer><feBlend in="split" in2="softBloom" mode="screen" result="glow"/>
+      <feImage preserveAspectRatio="none" result="lens" data-crt-lens/><feDisplacementMap in="glow" in2="lens" scale="0" xChannelSelector="R" yChannelSelector="G" data-crt-bend/>
     </filter></svg>
 
     <main id="desk" class="desktop hidden">
@@ -55,6 +56,6 @@
 
     <div class="smooth-cursor" id="smoothCursor" aria-hidden="true"></div>
 
-    <script type="module" src="js/main.js?v=2ac44f7920"></script>
+    <script type="module" src="js/main.js?v=bcdd78e8c0"></script>
   </body>
 </html>
