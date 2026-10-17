@@ -15,10 +15,18 @@
     <link rel="icon" href="icons/favicon.png?v=86272e4942" type="image/png">
     <title>LUMEN - builder desk</title>
 
-    <link rel="stylesheet" href="css/lumen-vintage.css?v=a1ba12b65e" />
+    <link rel="stylesheet" href="css/lumen-vintage.css?v=41a4fbaa0c" />
   </head>
   <body>
     <div id="boot" class="boot" role="status" aria-live="polite"><img class="boot-mark" src="icons/l.png?v=33d4468d61" alt=""><span class="boot-logo">LUMEN</span><span class="boot-copy">Starting up...</span><span class="boot-track"><span></span></span></div>
+
+    <svg class="crt-defs" aria-hidden="true" focusable="false"><filter id="crt-split" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feOffset in="red" dx="-2" result="redShift"/>
+      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>
+      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/><feOffset in="blue" dx="2" result="blueShift"/>
+      <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/><feBlend in="redGreen" in2="blueShift" mode="screen" result="split"/>
+      <feGaussianBlur in="split" stdDeviation="2" result="bloom"/><feComponentTransfer in="bloom" result="softBloom"><feFuncA type="linear" slope="0.35"/></feComponentTransfer><feBlend in="split" in2="softBloom" mode="screen"/>
+    </filter></svg>
 
     <main id="desk" class="desktop hidden">
       <nav class="icons" id="icons" aria-label="Applications"></nav>
