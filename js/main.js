@@ -147,27 +147,30 @@ function stopTimerInterval() {
   clearInterval(timer.intervalId);
   timer.intervalId = null;
 }
+function writeText(element, value) {
+  if (element.textContent !== value) element.textContent = value;
+}
 function paintTimer(root = open.get("focus")?.el.querySelector(".body")) {
   if (!root) return;
   const readout = root.querySelector("#timer");
   const status = root.querySelector("[data-timer-status]");
   const start = root.querySelector("[data-focus-start]");
   const pause = root.querySelector("[data-focus-pause]");
-  readout.textContent = formatTime(timer.secondsLeft);
+  writeText(readout, formatTime(timer.secondsLeft));
   readout.classList.toggle("done", timer.finished);
   root.querySelectorAll("[data-timer-mode]").forEach((button) => {
     const selected = button.dataset.timerMode === timer.mode;
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
-  if (timer.finished) status.textContent = timerLabel() + " complete.";
-  else if (timer.running) status.textContent = timerLabel() + " timer is running.";
-  else if (timer.secondsLeft < timerMinutes() * 60) status.textContent = timerLabel() + " timer is paused.";
-  else status.textContent = "Ready for a " + timerMinutes() + " minute " + timerLabel().toLowerCase() + ".";
-  if (timer.finished) start.textContent = "Restart " + timerLabel().toLowerCase();
-  else if (timer.running) start.textContent = "Running…";
-  else if (timer.secondsLeft < timerMinutes() * 60) start.textContent = "Resume";
-  else start.textContent = "Start " + timerMinutes() + "m";
+  if (timer.finished) writeText(status, timerLabel() + " complete.");
+  else if (timer.running) writeText(status, timerLabel() + " timer is running.");
+  else if (timer.secondsLeft < timerMinutes() * 60) writeText(status, timerLabel() + " timer is paused.");
+  else writeText(status, "Ready for a " + timerMinutes() + " minute " + timerLabel().toLowerCase() + ".");
+  if (timer.finished) writeText(start, "Restart " + timerLabel().toLowerCase());
+  else if (timer.running) writeText(start, "Running…");
+  else if (timer.secondsLeft < timerMinutes() * 60) writeText(start, "Resume");
+  else writeText(start, "Start " + timerMinutes() + "m");
   start.disabled = timer.running;
   pause.disabled = !timer.running;
 }
@@ -508,7 +511,7 @@ const apps = [
     glyph: "F",
     icon: "icons/timer.png?v=13bd7c6582",
     html() {
-      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
+      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
     },
     bind(root) {
       root.querySelectorAll("[data-timer-mode]").forEach((button) => {
@@ -978,8 +981,12 @@ function constrainWindow(node) {
   if (node.classList.contains("max")) return;
   const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
   const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
-  node.style.left = Math.min(maximumLeft, Math.max(0, node.offsetLeft)) + "px";
-  node.style.top = Math.min(maximumTop, Math.max(0, node.offsetTop)) + "px";
+  const currentLeft = node.offsetLeft;
+  const currentTop = node.offsetTop;
+  const left = Math.min(maximumLeft, Math.max(0, currentLeft));
+  const top = Math.min(maximumTop, Math.max(0, currentTop));
+  if (left !== currentLeft) node.style.left = left + "px";
+  if (top !== currentTop) node.style.top = top + "px";
 }
 
 function toggleMaximize(id) {
@@ -1295,11 +1302,12 @@ window.addEventListener("appinstalled", () => {
 function tickClock() {
   const now = new Date();
   const clock = document.getElementById("clock");
-  clock.textContent = now.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
-  clock.dateTime = now.toISOString();
+  const label = now.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  writeText(clock, label);
+  clock.dateTime = now.toISOString().slice(0, 16);
+  window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
 }
 tickClock();
-setInterval(tickClock, 30_000);
 window.addEventListener("beforeunload", persistData);
 document.addEventListener("pointerdown", primeAudio);
 
