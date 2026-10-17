@@ -20,6 +20,7 @@
   --field-bg: #ffffff;
   --field-text: #111111;
   --danger: #b42336;
+  --desktop-bg: #3a6ea5 url("../icons/wallpaper.png?v=12") center / cover no-repeat;
 }
 
 html[data-theme="light"] {
@@ -39,6 +40,29 @@ html[data-theme="light"] {
   --card-bg: #fffef5;
   --card-border: #aca899;
   --danger: #9c1428;
+}
+
+html[data-wallpaper="midnight"] {
+  --desktop-bg:
+    radial-gradient(circle at 78% 18%, rgba(122, 167, 255, 0.24), transparent 28%),
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(135deg, #081a35, #102f62 54%, #06101f);
+}
+
+html[data-wallpaper="aurora"] {
+  --desktop-bg:
+    radial-gradient(circle at 20% 24%, rgba(251, 192, 93, 0.32), transparent 23%),
+    radial-gradient(circle at 76% 34%, rgba(88, 177, 255, 0.36), transparent 28%),
+    radial-gradient(circle at 48% 78%, rgba(129, 234, 177, 0.22), transparent 32%),
+    linear-gradient(145deg, #1b2d4d, #315f80 48%, #1a403e);
+}
+
+html[data-wallpaper="graphite"] {
+  --desktop-bg:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 8px),
+    radial-gradient(circle at 26% 20%, rgba(255, 255, 255, 0.12), transparent 24%),
+    linear-gradient(145deg, #20242c, #3b414c 52%, #161a20);
 }
 
 * {
@@ -163,7 +187,8 @@ select:focus-visible {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #3a6ea5 url("../icons/wallpaper.png?v=12") center / cover no-repeat;
+  background: var(--desktop-bg);
+  background-size: cover, 24px 24px, 24px 24px, cover;
 }
 
 .icons {
@@ -812,6 +837,10 @@ select.field:focus {
 
 .settings-grid .form-label:last-child {
   grid-column: auto;
+}
+
+.settings-grid__wide {
+  grid-column: 1 / -1;
 }
 
 .shortcut-list {

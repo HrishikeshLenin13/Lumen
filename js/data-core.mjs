@@ -9,6 +9,7 @@ export function makeDefaultData() {
     breakMin: 5,
     theme: "dark",
     effects: "full",
+    wallpaper: "classic",
   };
 }
 
@@ -207,6 +208,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     breakMin: clampNumber(source.breakMin, 1, 60, defaults.breakMin),
     theme: source.theme === "light" ? "light" : "dark",
     effects: ["full", "subtle", "off"].includes(source.effects) ? source.effects : defaults.effects,
+    wallpaper: ["classic", "midnight", "aurora", "graphite"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
     logs,
     sessions,
     timerState,

@@ -31,7 +31,7 @@ test('the app shell caches the feature data module used by the timer and Ship Lo
   const source = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
-  assert.match(source, /lumen-app-v23/);
-  assert.match(html, /<script type="module" src="js\/main\.js\?v=22"><\/script>/);
-  assert.match(source, /lumen-vintage\.css\?v=20/);
+  assert.match(source, /lumen-app-v24/);
+  assert.match(html, /<script type="module" src="js\/main\.js\?v=23"><\/script>/);
+  assert.match(source, /lumen-vintage\.css\?v=21/);
 });

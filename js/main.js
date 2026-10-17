@@ -51,6 +51,7 @@ function persistData() {
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
   document.documentElement.dataset.effects = data.effects;
+  document.documentElement.dataset.wallpaper = data.wallpaper;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
 }
@@ -651,7 +652,11 @@ const apps = [
       const fullEffectsSelected = data.effects === "full" ? " selected" : "";
       const subtleEffectsSelected = data.effects === "subtle" ? " selected" : "";
       const offEffectsSelected = data.effects === "off" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Full CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle</option><option value="off"' + offEffectsSelected + '>Off</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
+      const classicWallpaperSelected = data.wallpaper === "classic" ? " selected" : "";
+      const midnightWallpaperSelected = data.wallpaper === "midnight" ? " selected" : "";
+      const auroraWallpaperSelected = data.wallpaper === "aurora" ? " selected" : "";
+      const graphiteWallpaperSelected = data.wallpaper === "graphite" ? " selected" : "";
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Full CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label settings-grid__wide">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -664,6 +669,7 @@ const apps = [
         data.breakMin = clampNumber(root.querySelector("#breakMinutes").value, 1, 60, data.breakMin);
         data.theme = root.querySelector("#themeChoice").value;
         data.effects = root.querySelector("#effectsChoice").value;
+        data.wallpaper = root.querySelector("#wallpaperChoice").value;
         persistData();
         applyTheme();
         resetTimer(timer.mode);
