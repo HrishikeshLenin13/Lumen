@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=17d0f9db98";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea } from "./data-core.mjs?v=514f46e2ee";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -794,6 +794,116 @@ const apps = [
         root.querySelector('[data-calc-key="' + CSS.escape(key) + '"]')?.classList.add("active");
         window.setTimeout(() => root.querySelector(".calc__keys .active")?.classList.remove("active"), 90);
       });
+    },
+  },
+  {
+    id: "minesweeper",
+    name: "Minesweeper",
+    icon: "icons/minesweeper.png?v=65c80a1be7",
+    size: [236, 334],
+    html() {
+      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
+    },
+    bind(root) {
+      const width = 9;
+      const height = 9;
+      const mines = 10;
+      const board = root.querySelector("[data-mine-board]");
+      const counter = root.querySelector("[data-mine-count]");
+      const clock = root.querySelector("[data-mine-time]");
+      const status = root.querySelector("[data-mine-status]");
+      board.innerHTML = Array.from({ length: width * height }, (_, index) => '<button type="button" class="mine-cell" data-mine-cell="' + index + '" aria-label="Hidden square"></button>').join("");
+      const cells = Array.from(board.children);
+      let field = null;
+      let revealed = new Set();
+      let flags = new Set();
+      let over = false;
+      let started = 0;
+      let ticker = null;
+      const led = (value) => String(Math.max(-99, Math.min(999, value))).padStart(3, "0");
+      const stopClock = () => {
+        clearInterval(ticker);
+        ticker = null;
+      };
+      const paint = () => {
+        cells.forEach((cell, index) => {
+          const open = revealed.has(index);
+          const info = field?.[index];
+          cell.classList.toggle("open", open);
+          cell.classList.toggle("boom", open && Boolean(info?.mine));
+          cell.dataset.count = open && info && !info.mine && info.count ? String(info.count) : "";
+          writeText(cell, open ? (info.mine ? "●" : info.count ? String(info.count) : "") : flags.has(index) ? "⚑" : "");
+          cell.setAttribute("aria-label", open ? (info.mine ? "Mine" : info.count ? info.count + " nearby mines" : "Empty") : flags.has(index) ? "Flagged square" : "Hidden square");
+        });
+        writeText(counter, led(mines - flags.size));
+      };
+      const reset = () => {
+        field = null;
+        revealed = new Set();
+        flags = new Set();
+        over = false;
+        stopClock();
+        writeText(clock, "000");
+        writeText(status, data.mineBest ? "Best time " + data.mineBest + "s. Right click or press F to flag." : "Click a square to start. Right click or press F to flag.");
+        paint();
+      };
+      const finish = (won) => {
+        over = true;
+        stopClock();
+        if (won) {
+          const seconds = Math.max(1, Math.round((Date.now() - started) / 1000));
+          const best = !data.mineBest || seconds < data.mineBest;
+          if (best) data.mineBest = seconds;
+          persistData();
+          writeText(status, "Cleared in " + seconds + "s." + (best ? " New best time." : " Best is " + data.mineBest + "s."));
+          systemSound(880, 0.12);
+        } else {
+          field.forEach((info, index) => {
+            if (info.mine) revealed.add(index);
+          });
+          writeText(status, "Boom. Press the face for a new game.");
+          systemSound(90, 0.4);
+        }
+        paint();
+      };
+      const toggleFlag = (index) => {
+        if (over || revealed.has(index)) return;
+        if (flags.has(index)) flags.delete(index);
+        else flags.add(index);
+        paint();
+      };
+      board.addEventListener("click", (event) => {
+        const cell = event.target.closest("[data-mine-cell]");
+        if (!cell || over) return;
+        const index = Number(cell.dataset.mineCell);
+        if (flags.has(index) || revealed.has(index)) return;
+        if (!field) {
+          field = createMinefield(width, height, mines, index);
+          started = Date.now();
+          ticker = setInterval(() => {
+            if (!root.isConnected) return stopClock();
+            writeText(clock, led(Math.floor((Date.now() - started) / 1000)));
+          }, 1000);
+        }
+        revealed = revealArea(field, width, height, index, revealed, flags);
+        if (field[index].mine) return finish(false);
+        if (revealed.size === width * height - mines) return finish(true);
+        paint();
+      });
+      board.addEventListener("contextmenu", (event) => {
+        const cell = event.target.closest("[data-mine-cell]");
+        if (!cell) return;
+        event.preventDefault();
+        toggleFlag(Number(cell.dataset.mineCell));
+      });
+      board.addEventListener("keydown", (event) => {
+        const cell = event.target.closest("[data-mine-cell]");
+        if (!cell || event.key.toLowerCase() !== "f") return;
+        event.preventDefault();
+        toggleFlag(Number(cell.dataset.mineCell));
+      });
+      root.querySelector("[data-mine-reset]").addEventListener("click", reset);
+      reset();
     },
   },
   {

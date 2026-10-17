@@ -859,6 +859,24 @@ select.field:focus {
 .calc__tape { max-height: 76px; margin: 0; padding: 0; overflow: auto; list-style: none; font-family: var(--mono); }
 .calc__tape button { width: 100%; padding: 2px 4px; color: var(--window-muted); background: transparent; border: 0; text-align: right; }
 .calc__tape button:hover { color: #fff; background: #316ac5; }
+.mines { display: grid; justify-content: center; gap: 8px; }
+.mines__bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: #c0c0c0; border: 2px solid; border-color: #808080 #fff #fff #808080; }
+.mines__led { min-width: 44px; padding: 1px 3px; color: #ff1a1a; background: #000; font: 700 20px/22px var(--mono); text-align: right; }
+.mines__reset.btn { width: 32px; min-width: 0; height: 32px; min-height: 0; padding: 3px; border-radius: 0; }
+.mines__reset img { display: block; image-rendering: pixelated; }
+.mines__board { display: grid; grid-template-columns: repeat(9, 20px); background: #c0c0c0; border: 3px solid; border-color: #808080 #fff #fff #808080; }
+.mine-cell { width: 20px; height: 20px; padding: 0; color: #c00000; background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; font: 700 12px/16px var(--font); }
+.mine-cell:focus-visible { outline: 1px dotted #000; outline-offset: -4px; }
+.mine-cell.open { color: #000; border-width: 0 1px 1px 0; border-color: #808080; cursor: default; }
+.mine-cell.boom { background: #ff0000; }
+.mine-cell[data-count="1"] { color: #0000ff; }
+.mine-cell[data-count="2"] { color: #008000; }
+.mine-cell[data-count="3"] { color: #ff0000; }
+.mine-cell[data-count="4"] { color: #000080; }
+.mine-cell[data-count="5"] { color: #800000; }
+.mine-cell[data-count="6"] { color: #008080; }
+.mine-cell[data-count="7"] { color: #000000; }
+.mine-cell[data-count="8"] { color: #808080; }
 .about-art { display: block; width: 192px; height: 96px; margin: 0 0 12px; image-rendering: pixelated; }
 .toy { display: grid; justify-items: center; gap: 12px; padding: 8px 0; text-align: center; }
 .toy__art { width: 96px; height: 96px; image-rendering: pixelated; }

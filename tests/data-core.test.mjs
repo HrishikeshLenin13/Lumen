@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
   assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
@@ -171,4 +171,20 @@ test("fresh installs start with clean workspace data", () => {
   assert.deepEqual(makeDefaultData().noteHistory, []);
   assert.equal(normalizeData({ rockPets: -4 }).rockPets, 0);
   assert.equal(normalizeData({ sounds: false }).sounds, false);
+});
+test("minefields keep the first click and its neighbors safe and count nearby mines", () => {
+  const field = createMinefield(9, 9, 10, 40, () => 0.5);
+  assert.equal(field.filter((cell) => cell.mine).length, 10);
+  assert.equal(field[40].mine, false);
+  assert.ok(neighbors(40, 9, 9).every((index) => !field[index].mine));
+  field.forEach((cell, index) => assert.equal(cell.count, neighbors(index, 9, 9).filter((next) => field[next].mine).length));
+});
+test("revealing an empty square floods to numbered edges and skips flags", () => {
+  const field = Array.from({ length: 9 }, () => ({ mine: false, count: 0 }));
+  field[8] = { mine: true, count: 0 };
+  field[4].count = 1;
+  field[5].count = 1;
+  field[7].count = 1;
+  const revealed = revealArea(field, 3, 3, 0, new Set(), new Set([2]));
+  assert.deepEqual([...revealed].sort(), [0, 1, 3, 4, 5, 6, 7]);
 });

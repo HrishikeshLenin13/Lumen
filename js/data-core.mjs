@@ -13,6 +13,7 @@ export function makeDefaultData() {
     wallpaper: "classic",
     rockPets: 0,
     sounds: true,
+    mineBest: 0,
   };
 }
 
@@ -169,6 +170,38 @@ export function appendCompletedSession(sessions, mode, minutes, at = new Date().
   return [session, ...previous].slice(0, 50);
 }
 
+export function neighbors(index, width, height) {
+  const x = index % width;
+  const y = Math.floor(index / width);
+  const list = [];
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      if ((dx || dy) && x + dx >= 0 && x + dx < width && y + dy >= 0 && y + dy < height) list.push((y + dy) * width + x + dx);
+    }
+  }
+  return list;
+}
+export function createMinefield(width, height, mines, safeIndex, random = Math.random) {
+  const blocked = new Set([safeIndex, ...neighbors(safeIndex, width, height)]);
+  const candidates = Array.from({ length: width * height }, (_, index) => index).filter((index) => !blocked.has(index));
+  for (let index = candidates.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    [candidates[index], candidates[swap]] = [candidates[swap], candidates[index]];
+  }
+  const mineSet = new Set(candidates.slice(0, Math.min(mines, candidates.length)));
+  return Array.from({ length: width * height }, (_, index) => ({ mine: mineSet.has(index), count: neighbors(index, width, height).filter((next) => mineSet.has(next)).length }));
+}
+export function revealArea(field, width, height, start, revealed = new Set(), flags = new Set()) {
+  const next = new Set(revealed);
+  const queue = [start];
+  while (queue.length) {
+    const index = queue.pop();
+    if (next.has(index) || flags.has(index)) continue;
+    next.add(index);
+    if (!field[index].mine && field[index].count === 0) queue.push(...neighbors(index, width, height));
+  }
+  return next;
+}
 export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
   const defaults = makeDefaultData();
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -224,6 +257,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     wallpaper: ["classic", "midnight", "aurora", "graphite"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
     rockPets: clampNumber(source.rockPets, 0, 1000000000, defaults.rockPets),
     sounds: source.sounds !== false,
+    mineBest: clampNumber(source.mineBest, 0, 999, defaults.mineBest),
     logs,
     sessions,
     tasks,
