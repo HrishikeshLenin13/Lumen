@@ -13,7 +13,7 @@ The pixel cursor tilts with the curved CRT surface, and confirmations stay insid
 - Calendar with local events, opened from the taskbar clock
 - Command Prompt that opens apps, does math, and adds tasks and notes
 - Paint with pencil, eraser, fill, airbrush, smudge, picker, undo, a VGA palette, and PNG export
-- Files with folders, autosaved text documents, drag-in import, download, rename, move, and delete controls
+- Files with folders, autosaved text documents, drag-in import, download, and keyboard navigation; use F2 to rename, Enter to open, and Backspace to go up
 - Minesweeper with a safe first click, flags, and a saved best time
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 
