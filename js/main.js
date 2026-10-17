@@ -507,7 +507,7 @@ const apps = [
     name: "Notes",
     icon: "icons/notes.png?v=8c65e95fff",
     html() {
-      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
+      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes. Press Ctrl+F to find.</p><div class="notes-find" data-note-find hidden><input class="field" data-note-find-input aria-label="Find" placeholder="Find"><input class="field" data-note-replace-input aria-label="Replace with" placeholder="Replace with"><button type="button" class="btn" data-note-find-next>Find Next</button><button type="button" class="btn" data-note-replace-all>Replace All</button><span class="hint hint--flush" data-note-find-count aria-live="polite"></span><button type="button" class="btn" data-note-find-close>Close</button></div><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
     },
     bind(root) {
       const area = root.querySelector("#notesArea");
@@ -515,6 +515,28 @@ const apps = [
       const outline = root.querySelector("[data-note-outline]");
       const history = root.querySelector("[data-note-history]");
       const stats = root.querySelector("[data-note-stats]");
+      const finder = root.querySelector("[data-note-find]");
+      const findInput = root.querySelector("[data-note-find-input]");
+      const findCount = root.querySelector("[data-note-find-count]");
+      const countMatches = () => { const needle = findInput.value.toLowerCase(); const total = needle ? area.value.toLowerCase().split(needle).length - 1 : 0; writeText(findCount, needle ? (total === 1 ? "1 match" : total + " matches") : ""); return total; };
+      const findNext = (backward = false) => {
+        const needle = findInput.value.toLowerCase();
+        if (!needle || !countMatches()) return;
+        const haystack = area.value.toLowerCase();
+        let at = backward ? haystack.lastIndexOf(needle, area.selectionStart - 1) : haystack.indexOf(needle, area.selectionEnd);
+        if (at < 0) at = backward ? haystack.lastIndexOf(needle) : haystack.indexOf(needle);
+        area.focus({ preventScroll: true });
+        area.setSelectionRange(at, at + needle.length);
+        area.scrollTop = Math.max(0, area.value.slice(0, at).split("\n").length * 15 - area.clientHeight / 2);
+        findInput.focus({ preventScroll: true });
+      };
+      const openFinder = () => { finder.hidden = false; const picked = area.value.slice(area.selectionStart, area.selectionEnd); if (picked && !picked.includes("\n")) findInput.value = picked; findInput.select(); countMatches(); };
+      area.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") { event.preventDefault(); openFinder(); } });
+      findInput.addEventListener("input", countMatches);
+      finder.addEventListener("keydown", (event) => { event.stopPropagation(); if (event.key === "Enter") { event.preventDefault(); findNext(event.shiftKey); } if (event.key === "Escape") { finder.hidden = true; area.focus(); } });
+      root.querySelector("[data-note-find-next]").addEventListener("click", () => findNext());
+      root.querySelector("[data-note-find-close]").addEventListener("click", () => { finder.hidden = true; area.focus(); });
+      root.querySelector("[data-note-replace-all]").addEventListener("click", () => { const needle = findInput.value; if (!needle) return; const total = countMatches(); if (!total) return; const replacement = root.querySelector("[data-note-replace-input]").value; area.value = area.value.replace(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), () => replacement); area.dispatchEvent(new Event("input", { bubbles: true })); countMatches(); showToast("Replaced " + total + (total === 1 ? " match." : " matches.")); });
       let saveTimer = null;
       let metadataFrame = null;
       let savedNotes = data.notes;

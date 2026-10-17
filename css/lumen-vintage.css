@@ -1607,3 +1607,6 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .window-dialog__content > span { white-space: pre-line; }
 .mines__level { margin: 0; }
 .mine-cell.flagged { background-image: url("../icons/mine-flag.png?v=6163da60ab"); background-position: center; background-repeat: no-repeat; image-rendering: pixelated; }
+.notes-find { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; padding: 6px; background: var(--window-bg); border: 1px solid #aca899; }
+.notes-find[hidden] { display: none; }
+.notes-find .field { flex: 1 1 120px; width: auto; margin: 0; }
