@@ -1173,8 +1173,8 @@ kbd {
 .start-menu__right .start-menu__glyph { width: 22px; height: 22px; }
 .start-menu__right .menu-separator { background: #95bdee; box-shadow: none; }
 .start-menu .start-menu__more { justify-content: center; min-height: 26px; font-weight: 700; }
-.start-menu .start-menu__more::after { content: ""; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #2f9a2f; }
-.start-menu.show-all .start-menu__more::after { order: -1; border-right: 7px solid #2f9a2f; border-left: 0; }
+.start-menu .start-menu__more::after { content: ""; width: 16px; height: 16px; background: url("../icons/all-programs.png?v=466fc6b9b5") center / 16px 16px no-repeat; image-rendering: pixelated; }
+.start-menu.show-all .start-menu__more::after { order: -1; transform: scaleX(-1); }
 .start-menu__foot { display: flex; justify-content: flex-end; gap: 2px; padding: 3px 6px; background: linear-gradient(180deg, #4282d6, #3b77d0 10%, #2e64c4 50%, #2a5fbf 90%, #1e4ea8); }
 .start-menu .start-menu__foot button { width: auto; min-height: 30px; padding: 2px 6px; gap: 5px; color: #fff; border-radius: 3px; }
 .start-menu .start-menu__foot button.scene-hover, .start-menu .start-menu__foot button:focus-visible { background: rgba(255, 255, 255, 0.18); }
@@ -1194,12 +1194,11 @@ kbd {
 .toast__icon { grid-row: 1 / span 2; width: 16px; height: 16px; image-rendering: pixelated; }
 .toast__title { font-weight: 700; }
 @keyframes balloon { from { opacity: 0; transform: translateY(4px); } }
-.tray__volume, .tray__clock { padding: 0; color: inherit; background: transparent; border: 0; font: inherit; }
+.tray__clock { padding: 0; color: inherit; background: transparent; border: 0; font: inherit; }
+.tray__volume { padding: 0; border: 0; }
 .tray__clock { align-self: stretch; padding: 0 2px; }
-.tray__volume { position: relative; width: 18px; height: 18px; margin-right: 8px; }
-.tray__volume::before { content: ""; position: absolute; top: 4px; left: 2px; width: 9px; height: 10px; background: currentColor; clip-path: polygon(0 30%, 40% 30%, 100% 0, 100% 100%, 40% 70%, 0 70%); }
-.tray__volume::after { content: ""; position: absolute; top: 4px; left: 12px; width: 4px; height: 10px; border: 2px solid currentColor; border-left: 0; border-radius: 0 6px 6px 0; }
-.tray__volume.muted::after { top: 3px; left: 11px; width: auto; height: auto; color: #ff3b24; border: 0; border-radius: 0; font: 700 13px/1 Arial, sans-serif; content: "×"; }
+.tray__volume { width: 16px; height: 16px; margin-right: 8px; background: url("../icons/volume.png?v=466fc6b9b5") center / 16px 16px no-repeat; image-rendering: pixelated; }
+.tray__volume.muted { background-image: url("../icons/volume-muted.png?v=466fc6b9b5"); }
 .tray__volume.scene-hover, .tray__clock.scene-hover { filter: brightness(1.15); }
 .window-dialog { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; padding: 12px; background: rgba(0, 0, 0, 0.35); }
 .window-dialog__panel { width: min(340px, 100%); max-height: 100%; overflow: auto; overflow-wrap: anywhere; padding: 0 3px 3px; color: #000; background: var(--window-bg); border: 0; border-radius: 8px 8px 0 0; box-shadow: var(--frame), 2px 3px 8px rgba(0, 0, 0, 0.4); animation: dialog-arrive 120ms steps(4, end) both; }
@@ -1467,11 +1466,8 @@ html[data-theme="light"] .btn.scene-hover:not(:disabled) { box-shadow: inset 0 0
 .shutdown__head img { image-rendering: pixelated; }
 .shutdown__choices { display: flex; justify-content: space-around; padding: 26px 12px 20px; box-shadow: inset 0 1px #8aa6ec; }
 .shutdown__choices button { display: grid; justify-items: center; gap: 6px; width: 80px; padding: 0; color: #fff; background: transparent; border: 0; font-size: 11px; }
-.shutdown__icon { display: grid; place-items: center; width: 32px; height: 32px; color: #fff; border: 1px solid #fff; border-radius: 4px; font: 700 18px/1 "Segoe UI Symbol", "Apple Symbols", var(--font); box-shadow: inset -2px -2px rgba(0, 0, 0, 0.25), inset 2px 2px rgba(255, 255, 255, 0.35); }
-.shutdown__icon--standby { background: #e8a91e; }
-.shutdown__icon--off { background: #d8432a; }
-.shutdown__icon--restart { background: #3a9b2f; }
-.shutdown__choices button.scene-hover .shutdown__icon, .shutdown__choices button:focus-visible .shutdown__icon { filter: brightness(1.18); outline: 1px dotted #fff; outline-offset: 2px; }
+.shutdown__icon { display: block; width: 32px; height: 32px; image-rendering: pixelated; }
+.shutdown__choices button.scene-hover .shutdown__icon, .shutdown__choices button:focus-visible .shutdown__icon { outline: 1px dotted #fff; outline-offset: 2px; }
 .shutdown__choices button:focus-visible { outline: none; }
 .shutdown__foot { display: flex; justify-content: flex-end; padding: 8px 12px; background: #0a2a8c; }
 html.powered-off .desktop { pointer-events: none; animation: crt-off 560ms ease-in forwards; }
@@ -1492,9 +1488,7 @@ form > .tab-panel + .row--actions { margin-top: 8px; }
 .group legend { padding: 0 3px; color: #0046d5; }
 .group > .hint:first-of-type { margin-top: 2px; }
 .quick-launch { display: flex; align-items: center; align-self: stretch; padding: 0 6px 0 4px; border-right: 1px solid rgba(0, 0, 0, 0.25); box-shadow: 1px 0 rgba(255, 255, 255, 0.2); }
-.quick-launch__desktop { position: relative; width: 22px; height: 22px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 2px; }
-.quick-launch__desktop::before { content: ""; position: absolute; top: 4px; left: 3px; width: 14px; height: 10px; background: linear-gradient(180deg, #8fc7ff, #2f7be8 60%, #4a9c3a 60%); border: 1px solid #fff; box-shadow: 0 0 0 1px #0b2f86; }
-.quick-launch__desktop::after { content: ""; position: absolute; bottom: 3px; left: 7px; width: 8px; height: 2px; background: #d4d0c8; box-shadow: 0 0 0 1px #0b2f86; }
-.quick-launch__desktop.scene-hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); }
-.quick-launch__desktop:active { background: rgba(0, 0, 0, 0.18); }
+.quick-launch__desktop { width: 22px; height: 22px; padding: 0; background: url("../icons/show-desktop.png?v=466fc6b9b5") center / 16px 16px no-repeat; border: 1px solid transparent; border-radius: 2px; image-rendering: pixelated; }
+.quick-launch__desktop.scene-hover { background-color: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); }
+.quick-launch__desktop:active { background-color: rgba(0, 0, 0, 0.18); }
 html[data-theme="light"] .quick-launch { border-right-color: #9a9cad; box-shadow: 1px 0 #fff; }
