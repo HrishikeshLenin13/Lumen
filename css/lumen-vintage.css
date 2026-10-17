@@ -1500,3 +1500,8 @@ html[data-theme="light"] .quick-launch { border-right-color: #9a9cad; box-shadow
 .bin__name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bin__meta { overflow: hidden; color: inherit; opacity: 0.75; white-space: nowrap; text-overflow: ellipsis; }
 .bin__empty { margin: 8px; }
+.task.flashing, .task.flashing.scene-hover { animation: task-flash 1000ms steps(1, end) 7 forwards; }
+@keyframes task-flash { 0% { color: #000; background: linear-gradient(180deg, #ffd9a8, #f9a44c 12%, #f59a3c 88%, #e0832a); } 50% { color: #fff; background: linear-gradient(180deg, #5f9cfb, #3c81f3 12%, #3a7ef2 88%, #2f6ad9); } 100% { color: #000; background: linear-gradient(180deg, #ffd9a8, #f9a44c 12%, #f59a3c 88%, #e0832a); } }
+.tray__timer { width: 16px; height: 16px; margin-right: 6px; padding: 0; background: transparent; border: 0; }
+.tray__timer img { display: block; image-rendering: pixelated; }
+.tray__timer.scene-hover { filter: brightness(1.15); }

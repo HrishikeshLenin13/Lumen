@@ -204,6 +204,10 @@ function writeAttribute(element, name, value) {
   if (element.getAttribute(name) !== value) element.setAttribute(name, value);
 }
 function paintTimer(root = open.get("focus")?.el.querySelector(".body")) {
+  const tray = document.getElementById("trayTimer");
+  const active = timer.running || (!timer.finished && timer.secondsLeft < timerMinutes() * 60);
+  tray.classList.toggle("hidden", !active);
+  if (active) writeAttribute(tray, "title", timerLabel() + ": " + formatTime(timer.secondsLeft) + (timer.running ? " left" : " left, paused"));
   if (!root) return;
   const readout = root.querySelector("#timer");
   const status = root.querySelector("[data-timer-status]");
@@ -241,6 +245,7 @@ function finishTimer() {
   renderSessionHistory();
   playSound("timer");
   showToast(message);
+  if (activeId !== "focus") open.get("focus")?.tab.classList.add("flashing");
   if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? "Time for a break." : "Ready for another focus session?",
@@ -1787,6 +1792,7 @@ function openApp(id, geometry) {
 function focusWin(id) {
   const selected = open.get(id);
   if (!selected) return;
+  selected.tab.classList.remove("flashing");
   selected.el.classList.remove("min");
   activeId = id;
   open.forEach((entry, key) => {
@@ -2441,6 +2447,7 @@ function tickClock() {
 }
 tickClock();
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
+document.getElementById("trayTimer").addEventListener("click", () => openApp("focus"));
 document.querySelector("[data-show-desktop]").addEventListener("click", toggleDesktop);
 function paintVolume() {
   const volume = document.getElementById("volume");
