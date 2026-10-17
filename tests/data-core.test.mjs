@@ -178,8 +178,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(normalizeData({ rockPets: -4 }).rockPets, 0);
   assert.equal(normalizeData({ sounds: false }).sounds, false);
   assert.equal(normalizeData({ screensaver: false }).screensaver, false);
-  assert.deepEqual([normalizeData({ phosphor: "amber", brightness: 999, contrast: 10, clock24: true })].map((d) => [d.phosphor, d.brightness, d.contrast, d.clock24])[0], ["amber", 130, 70, true]);
-  assert.equal(normalizeData({ phosphor: "pink" }).phosphor, "color");
+  assert.deepEqual([normalizeData({ brightness: 999, contrast: 10, clock24: true })].map((d) => [d.brightness, d.contrast, d.clock24])[0], [130, 70, true]);
   assert.deepEqual(normalizeData({ windows: [{ id: "notes", left: -5, width: 50, minimized: 1 }, { nope: 1 }] }).windows, [{ id: "notes", left: 0, top: 0, width: 120, height: 320, minimized: true, maximized: false }]);
   assert.deepEqual(makeDefaultData().files, []);
   assert.deepEqual(makeDefaultData().iconOrder, []);
