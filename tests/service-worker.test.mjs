@@ -40,3 +40,14 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   assert.match(source, /lumen-vintage\.css\?v=\w+/);
 });
 test('cache stamps match the current file contents', () => assert.equal(spawnSync(process.execPath, ['scripts/stamp-cache.mjs', '--check'], { cwd: new URL('..', import.meta.url) }).status, 0));
+test('content-hashed assets are served from cache without the network', async () => {
+  const listeners = {};
+  let fetched = 0;
+  const cache = { match: async () => new Response('cached'), put: async () => {} };
+  const context = { self: { location: new URL('https://lumen.test/'), addEventListener: (name, fn) => listeners[name] = fn }, caches: { open: async () => cache }, fetch: async () => { fetched += 1; return new Response('fresh'); }, URL, Request: class { constructor(request) { Object.assign(this, request); } }, Response };
+  vm.runInNewContext(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), context);
+  let promise;
+  listeners.fetch({ request: { url: 'https://lumen.test/css/lumen-vintage.css?v=abc', mode: 'cors', method: 'GET' }, respondWith: (p) => { promise = p; }, waitUntil() {} });
+  assert.equal(await (await promise).text(), 'cached');
+  assert.equal(fetched, 0);
+});
