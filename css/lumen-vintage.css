@@ -1603,3 +1603,5 @@ html[data-font-size="large"] .bar { font-size: 15px; }
 html[data-clock="off"] .tray__clock { display: none; }
 html[data-quick-launch="off"] .quick-launch { display: none; }
 .field--color { height: 23px; padding: 1px 2px; }
+.win.pinned { z-index: 1000000 !important; }
+.window-dialog__content > span { white-space: pre-line; }

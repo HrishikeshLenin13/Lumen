@@ -1702,6 +1702,7 @@ function toggleMaximize(id) {
   const button = entry.el.querySelector("[data-max]");
   button?.setAttribute("aria-pressed", String(maximized));
   button?.setAttribute("aria-label", maximized ? "restore window" : "maximize window");
+  button?.setAttribute("title", maximized ? "Restore Down" : "Maximize");
   if (!maximized) constrainWindow(entry.el);
   entry.el.classList.add("restoring");
   zoomRects(from, entry.el.getBoundingClientRect(), () => paintWindow(entry.el, "restoring"));
@@ -1758,7 +1759,7 @@ function openApp(id, geometry) {
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
   if (geometry) element.style.cssText += "left:" + geometry.left + "px;top:" + geometry.top + "px;width:" + geometry.width + "px;height:" + geometry.height + "px";
-  element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div><span class="win-grip" data-grip aria-hidden="true"></span>';
+  element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window" title="Minimize"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false" title="Maximize"></button><button type="button" class="x" data-close aria-label="close window" title="Close"></button></div></header><div class="body">' + app.html() + '</div><span class="win-grip" data-grip aria-hidden="true"></span>';
   wins.append(element);
   playSound("open");
   const tab = document.createElement("button");
@@ -1788,6 +1789,7 @@ function openApp(id, geometry) {
   barIcon.addEventListener("click", (event) => { event.stopPropagation(); focusWin(id); const box = barIcon.getBoundingClientRect(); showMenu(Math.round(box.left), Math.round(box.bottom) + 4, windowMenu(id)); });
   barIcon.addEventListener("dblclick", (event) => { event.stopPropagation(); hideMenu(); closeApp(id); });
   tab.addEventListener("contextmenu", openWindowMenu);
+  tab.addEventListener("mousedown", (event) => { if (event.button !== 1) return; event.preventDefault(); closeApp(id); });
   element.addEventListener("mousedown", () => focusWin(id));
   tab.addEventListener("click", () => {
     if (restoreApp(id)) return;
@@ -2290,9 +2292,27 @@ function showMenu(x, y, items) {
   contextMenu.style.top = Math.max(0, Math.min(Math.round(y) - desk.offsetTop, desk.clientHeight - document.querySelector(".taskbar").offsetHeight - contextMenu.offsetHeight)) + "px";
   contextMenu.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
 }
+function centerWindow(id) {
+  const node = open.get(id)?.el;
+  if (!node) return;
+  const from = node.getBoundingClientRect();
+  node.style.left = Math.max(0, Math.round((wins.clientWidth - node.offsetWidth) / 2)) + "px";
+  node.style.top = Math.max(0, Math.round((wins.clientHeight - node.offsetHeight) / 2)) + "px";
+  node.classList.add("restoring");
+  zoomRects(from, node.getBoundingClientRect(), () => paintWindow(node, "restoring"));
+  rememberWindows();
+}
+function showProperties(id) {
+  const app = apps.find((item) => item.id === id);
+  if (!app) return;
+  const key = Object.entries({ "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "files", "7": "settings", "8": "about" }).find(([, appId]) => appId === id)?.[0];
+  const size = app.size ? app.size.join(" by ") + " pixels" : "420 by 320 pixels";
+  showWindowDialog({ title: app.name + " Properties", message: "Type: LUMEN program\nOpens at: " + size + "\nShortcut key: " + (key ? "Alt+" + key : "None") + "\nRunning now: " + (open.has(id) ? "Yes" : "No") + "\nStorage: this browser only", onDesk: true });
+}
 function windowMenu(id) {
   const maximized = open.get(id)?.el.classList.contains("max");
-  return [{ label: "Restore", disabled: !maximized, run: () => toggleMaximize(id) }, { label: "Minimize", run: () => minimizeApp(id) }, { label: "Maximize", disabled: maximized, run: () => toggleMaximize(id) }, null, { label: "Close", run: () => closeApp(id) }];
+  const pinned = open.get(id)?.el.classList.contains("pinned");
+  return [{ label: "Restore", disabled: !maximized, run: () => toggleMaximize(id) }, { label: "Minimize", run: () => minimizeApp(id) }, { label: "Maximize", disabled: maximized, run: () => toggleMaximize(id) }, { label: "Move to center", disabled: maximized, run: () => centerWindow(id) }, { label: (pinned ? "✓ " : "") + "Always on top", run: () => open.get(id)?.el.classList.toggle("pinned") }, null, { label: "Close", run: () => closeApp(id) }];
 }
 function desktopMenu() {
   const effects = { full: "Realistic CRT", subtle: "Subtle scanlines", grid: "Gridlines", off: "Off" };
@@ -2358,7 +2378,7 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
-    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => openApp("settings") }]);
+    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => showProperties(id) }]);
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
