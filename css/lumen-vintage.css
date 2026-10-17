@@ -1479,3 +1479,14 @@ html.powered-off[data-curved-cursor="on"], html.powered-off[data-curved-cursor="
 @keyframes crt-off { 0% { transform: none; } 45% { transform: scale(1, 0.006); filter: brightness(4); } 75% { transform: scale(0.004, 0.006); opacity: 1; filter: brightness(6); } 100% { transform: scale(0); opacity: 0; } }
 .power-hint { position: fixed; right: 0; bottom: 24px; left: 0; margin: 0; color: #4a4a4a; font: 11px/13px var(--font); text-align: center; animation: power-hint 600ms 1200ms both; }
 @keyframes power-hint { from { opacity: 0; } }
+.tabs { position: relative; z-index: 1; display: flex; align-items: flex-end; height: 22px; margin-bottom: -1px; padding-left: 2px; }
+.tabs__tab { height: 20px; margin-right: -1px; padding: 0 8px; color: #000; background: linear-gradient(180deg, #fff, #f3f3ef 70%, #e6e5dd); border: 1px solid #919b9c; border-bottom: 0; border-radius: 3px 3px 0 0; font-size: 11px; line-height: 18px; }
+.tabs__tab.scene-hover { box-shadow: inset 0 2px #f9c55e; }
+.tabs__tab[aria-selected="true"] { position: relative; z-index: 1; height: 22px; padding: 0 9px 1px; background: #fcfcfe; box-shadow: inset 0 2px #e68b2c; }
+.tab-panel { padding: 10px 10px 2px; background: #fcfcfe; border: 1px solid #919b9c; box-shadow: 1px 1px #d0d0bf; }
+form > .tab-panel + .row--actions { margin-top: 8px; }
+.row--actions[hidden] { display: none; }
+[data-settings-actions] { justify-content: flex-end; align-items: center; }
+.group { min-width: 0; margin: 0 0 8px; padding: 2px 10px 8px; border: 1px solid #bcb9a8; border-radius: 4px; }
+.group legend { padding: 0 3px; color: #0046d5; }
+.group > .hint:first-of-type { margin-top: 2px; }
