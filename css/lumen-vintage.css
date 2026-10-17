@@ -893,6 +893,7 @@ select.field:focus {
 .paint__size .field { width: auto; min-height: 21px; margin: 0; padding: 1px 2px; }
 .paint__canvas { width: 320px; height: 208px; touch-action: none; image-rendering: pixelated; background: #fff; border: 2px solid; border-color: #808080 #fff #fff #808080; cursor: crosshair; }
 .paint__palette { display: grid; grid-template-columns: repeat(8, 16px); gap: 2px; }
+.paint__canvas:focus-visible { outline: 1px dotted #000; outline-offset: 2px; }
 .paint__swatch { width: 16px; height: 16px; padding: 0; background: var(--swatch); border: 1px solid #808080; box-shadow: inset 1px 1px #fff; }
 .paint__swatch[aria-checked="true"] { outline: 2px solid #000; outline-offset: 1px; }
 .files { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 6px; height: 100%; min-height: 260px; }

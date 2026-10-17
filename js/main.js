@@ -452,6 +452,7 @@ function bindFiles(root) {
   root.querySelector("[data-files-delete]").addEventListener("click", async () => { const item = selectedItem(); if (!item || !await showWindowDialog({ title: "Delete " + item.name, message: item.kind === "folder" ? "Delete this folder and everything inside it?" : "Delete this text file?", confirmLabel: "Delete", danger: true })) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
   list.addEventListener("keydown", (event) => { if (event.key === "Delete" && selectedItem()) root.querySelector("[data-files-delete]").click(); if (event.key === "Enter" && selectedItem()?.kind === "folder") { current = selected; selected = null; render(); list.querySelector("button")?.focus(); } });
   render();
+  return (flush = true) => { clearTimeout(saveTimer); if (flush) persistData(); };
 }
 async function clearAllData() {
   const confirmed = await showWindowDialog({ title: "Clear all data", message: "Clear all LUMEN notes, files, settings, and ship log entries?", confirmLabel: "Clear", danger: true });
@@ -596,6 +597,7 @@ const apps = [
         status.textContent = saved ? "Saved version restored." : "Version restored in this window but could not be saved.";
         area.focus();
       });
+      return (flush = true) => { clearTimeout(saveTimer); if (metadataFrame !== null) cancelAnimationFrame(metadataFrame); if (flush) commit(); };
     },
   },
   {
@@ -1019,6 +1021,7 @@ const apps = [
       let tool = "pencil";
       let color = "#000000";
       let last = null;
+      let sprayFrame = 0; let lastSpray = 0;
       let saveTimer = null;
       const undo = [];
       const undoButton = root.querySelector("[data-paint-undo]");
@@ -1028,6 +1031,7 @@ const apps = [
         saveTimer = setTimeout(() => {
           data.paintImage = canvas.toDataURL("image/png");
           writeText(status, savePaint(data.paintImage) ? "Saved on this device." : "This drawing could not be saved.");
+          saveTimer = null;
         }, 400);
       };
       const blank = () => {
@@ -1037,7 +1041,7 @@ const apps = [
       blank();
       if (data.paintImage) {
         const image = new Image();
-        image.addEventListener("load", () => context.drawImage(image, 0, 0));
+        image.addEventListener("load", () => { if (!undo.length) context.drawImage(image, 0, 0); });
         image.src = data.paintImage;
       }
       const point = (event) => {
@@ -1052,10 +1056,12 @@ const apps = [
       };
       const rgba = (value) => [1, 3, 5].map((offset) => parseInt(value.slice(offset, offset + 2), 16)).concat(255);
       const airbrush = ([x, y]) => { const radius = Number(sizeInput.value) * 2; context.fillStyle = color; for (let dot = 0; dot < radius * 2; dot += 1) { const angle = Math.random() * Math.PI * 2; const distance = Math.sqrt(Math.random()) * radius; context.fillRect(Math.round(x + Math.cos(angle) * distance), Math.round(y + Math.sin(angle) * distance), 1, 1); } };
+      const spray = (now) => { if (!last || tool !== "airbrush" || !canvas.isConnected || document.hidden) { sprayFrame = 0; return; } if (now - lastSpray >= 40) { airbrush(last); lastSpray = now; } sprayFrame = requestAnimationFrame(spray); };
       const smudge = ([x, y]) => { const size = Math.max(2, Number(sizeInput.value) * 2); const left = Math.max(0, x - Math.floor(size / 2)); const top = Math.max(0, y - Math.floor(size / 2)); const width = Math.min(size, canvas.width - left); const height = Math.min(size, canvas.height - top); const pixels = context.getImageData(left, top, width, height); const totals = [0, 0, 0, 0]; for (let offset = 0; offset < pixels.data.length; offset += 4) totals.forEach((_, channel) => totals[channel] += pixels.data[offset + channel]); for (let offset = 0; offset < pixels.data.length; offset += 4) totals.forEach((total, channel) => pixels.data[offset + channel] = Math.round((pixels.data[offset + channel] * 2 + total / (pixels.data.length / 4)) / 3)); context.putImageData(pixels, left, top); };
       canvas.addEventListener("pointerdown", (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
+        canvas.focus({ preventScroll: true });
         const at = point(event);
         if (tool === "picker") { const pixel = context.getImageData(at[0], at[1], 1, 1).data; color = "#" + [pixel[0], pixel[1], pixel[2]].map((value) => value.toString(16).padStart(2, "0")).join(""); root.querySelectorAll("[data-paint-color]").forEach((item) => item.setAttribute("aria-checked", String(item.dataset.paintColor === color))); writeText(status, "Picked " + color.toUpperCase() + "."); return; }
         snapshot();
@@ -1071,6 +1077,7 @@ const apps = [
         }
         last = at;
         (tool === "airbrush" ? airbrush : tool === "smudge" ? smudge : stamp)(at);
+        if (tool === "airbrush") { lastSpray = performance.now(); sprayFrame = requestAnimationFrame(spray); }
       });
       canvas.addEventListener("pointermove", (event) => {
         if (!last) return;
@@ -1079,12 +1086,14 @@ const apps = [
         last = at;
       });
       const end = () => {
+        cancelAnimationFrame(sprayFrame); sprayFrame = 0;
         if (!last) return;
         last = null;
         store();
       };
       canvas.addEventListener("pointerup", end);
       canvas.addEventListener("pointercancel", end);
+      canvas.addEventListener("lostpointercapture", end);
       root.querySelector("[data-paint-tools]").addEventListener("click", (event) => {
         const button = event.target.closest("[data-paint-tool]");
         if (!button) return;
@@ -1128,6 +1137,7 @@ const apps = [
           setTimeout(() => URL.revokeObjectURL(url), 0);
         }, "image/png");
       });
+      return (flush = true) => { const dirty = last || saveTimer !== null; last = null; cancelAnimationFrame(sprayFrame); clearTimeout(saveTimer); if (flush && dirty) { data.paintImage = canvas.toDataURL("image/png"); savePaint(data.paintImage); } };
     },
   },
   {
@@ -1634,7 +1644,7 @@ function openApp(id, geometry) {
   onOwnAnimationEnd(tab, () => tab.classList.remove("opening"));
   const entry = { el: element, tab, app, resizeObserver: null };
   open.set(id, entry);
-  app.bind(element.querySelector(".body"));
+  entry.cleanup = app.bind(element.querySelector(".body"));
   element.querySelector("[data-close]").addEventListener("click", () => closeApp(id));
   element.querySelector("[data-min]").addEventListener("click", () => minimizeApp(id));
   element.querySelector("[data-max]").addEventListener("click", () => toggleMaximize(id));
@@ -1681,6 +1691,7 @@ function focusWin(id) {
 function closeApp(id) {
   const entry = open.get(id);
   if (!entry || entry.el.classList.contains("closing")) return;
+  entry.cleanup?.(); entry.cleanup = null;
   entry.resizeObserver?.disconnect();
   entry.el.classList.remove("opening");
   const from = entry.el.getBoundingClientRect();
@@ -1704,6 +1715,7 @@ function closeApp(id) {
 
 function closeAllWindows() {
   open.forEach((entry) => {
+    entry.cleanup?.(false); entry.cleanup = null;
     entry.resizeObserver?.disconnect();
     entry.el.remove();
     entry.tab.remove();
