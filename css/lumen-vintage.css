@@ -1126,7 +1126,7 @@ body::after {
 }
 
 html[data-effects="subtle"] body::before {
-  opacity: 0.07;
+  opacity: 0.14;
 }
 
 html[data-effects="subtle"] body::after {
@@ -1137,6 +1137,10 @@ html[data-effects="off"] body::before,
 html[data-effects="off"] body::after {
   display: none;
 }
+html[data-effects="full"] body::before { opacity: 0.55; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255, 32, 32, 0.12) 0 1px, rgba(32, 255, 96, 0.09) 1px 2px, rgba(32, 112, 255, 0.12) 2px 3px); mix-blend-mode: multiply; animation: crt-flicker 7s steps(1) infinite; }
+html[data-effects="full"] body::after { background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.045) 50%, transparent) 0 -160px / 100% 160px no-repeat, radial-gradient(ellipse at center, transparent 56%, rgba(0, 0, 0, 0.2) 86%, rgba(0, 0, 0, 0.62) 100%); box-shadow: inset 0 0 64px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(0, 0, 0, 0.7), inset 1px 0 rgba(255, 32, 32, 0.12), inset -1px 0 rgba(28, 112, 255, 0.14); animation: crt-roll 9s linear infinite; }
+html[data-effects="full"] .desktop { filter: saturate(1.14) contrast(1.06) brightness(1.03); }
+html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.36) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.36) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
 
 .smooth-cursor {
   position: fixed;
@@ -1203,6 +1207,8 @@ html[data-effects="off"] body::after {
   to { transform: translateX(136px); }
 }
 
+@keyframes crt-flicker { 0%, 100% { opacity: 0.55; } 31% { opacity: 0.5; } 32% { opacity: 0.58; } 64% { opacity: 0.52; } 65% { opacity: 0.56; } }
+@keyframes crt-roll { from { background-position: 0 -160px, 0 0; } to { background-position: 0 calc(100vh + 160px), 0 0; } }
 @keyframes window-open {
   from { opacity: 0; transform: translateY(16px) scale(0.9); }
   75% { opacity: 1; transform: translateY(-1px) scale(1.005); }
@@ -1299,6 +1305,7 @@ html[data-effects="off"] body::after {
   .smooth-cursor {
     display: none;
   }
+  html[data-effects] body::before, html[data-effects] body::after { animation: none; }
 
   .boot.fade,
   .boot-track span,
