@@ -1505,3 +1505,5 @@ html[data-theme="light"] .quick-launch { border-right-color: #9a9cad; box-shadow
 .tray__timer { width: 16px; height: 16px; margin-right: 6px; padding: 0; background: transparent; border: 0; }
 .tray__timer img { display: block; image-rendering: pixelated; }
 .tray__timer.scene-hover { filter: brightness(1.15); }
+.icons.free { inset: 0 0 var(--taskbar-height); display: block; max-width: none; max-height: none; }
+.icons.free .icon { position: absolute; }

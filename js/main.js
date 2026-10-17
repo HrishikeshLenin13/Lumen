@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f9ccc414";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=14b9a91768";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1738,7 +1738,7 @@ function openApp(id, geometry) {
   element.setAttribute("role", "dialog");
   element.setAttribute("aria-modal", "false");
   element.setAttribute("aria-label", app.name);
-  element.style.left = (window.innerWidth <= 640 ? 8 : icons.offsetLeft + icons.offsetWidth + 12) + offset + "px";
+  element.style.left = (window.innerWidth <= 640 ? 8 : iconEdge() + 12) + offset + "px";
   element.style.top = (window.innerWidth <= 640 ? icons.offsetTop + icons.offsetHeight + 8 : 40) + offset + "px";
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
@@ -2040,21 +2040,115 @@ const orderedApps = [...apps].sort((a, b) => { const ai = data.iconOrder.indexOf
 orderedApps.forEach((app) => {
   const button = document.createElement("button");
   button.type = "button";
-  button.draggable = true;
   button.className = "icon";
   button.dataset.appId = app.id;
   button.setAttribute("aria-label", "Open " + app.name);
-  button.addEventListener("dragstart", (event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", app.id); });
   button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
-  button.addEventListener("click", () => {
+  button.addEventListener("click", (event) => {
+    if (iconDragged || event.ctrlKey || event.metaKey) return;
     selectIcons(new Set([app.id]));
-    openApp(app.id);
+    if (!icons.classList.contains("free")) openApp(app.id);
   });
+  button.addEventListener("dblclick", () => openApp(app.id));
+  button.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); openApp(app.id); } });
   iconButtons.set(app.id, button);
   icons.append(button);
 });
-icons.addEventListener("dragover", (event) => { if (event.target.closest(".icon")) event.preventDefault(); });
-icons.addEventListener("drop", (event) => { const dragged = event.dataTransfer.getData("text/plain"); const target = event.target.closest(".icon")?.dataset.appId; if (!dragged || !target || dragged === target || !iconButtons.has(dragged)) return; event.preventDefault(); icons.insertBefore(iconButtons.get(dragged), iconButtons.get(target)); data.iconOrder = Array.from(icons.querySelectorAll(".icon"), (button) => button.dataset.appId); persistData(); });
+const ICON_STEP_X = 92;
+const ICON_STEP_Y = 76;
+let iconDragged = false;
+const freeIcons = window.matchMedia("(min-width: 641px)");
+function layoutIcons() {
+  icons.classList.toggle("free", freeIcons.matches);
+  if (!freeIcons.matches) return iconButtons.forEach((button) => { button.style.left = ""; button.style.top = ""; });
+  const width = icons.clientWidth;
+  const height = icons.clientHeight;
+  if (!width || !height) return;
+  const rows = Math.max(1, Math.floor((height - 10) / ICON_STEP_Y));
+  const saved = Object.values(data.iconPositions);
+  let slot = 0;
+  icons.querySelectorAll(".icon").forEach((button) => {
+    let spot = data.iconPositions[button.dataset.appId];
+    while (!spot) {
+      const candidate = { x: 8 + Math.floor(slot / rows) * ICON_STEP_X, y: 10 + (slot % rows) * ICON_STEP_Y };
+      slot += 1;
+      if (!saved.some((item) => Math.abs(item.x - candidate.x) < 46 && Math.abs(item.y - candidate.y) < 38)) spot = candidate;
+    }
+    button.style.left = Math.max(0, Math.min(spot.x, width - 88)) + "px";
+    button.style.top = Math.max(0, Math.min(spot.y, height - 72)) + "px";
+  });
+}
+function iconEdge() {
+  if (!icons.classList.contains("free")) return icons.offsetLeft + icons.offsetWidth;
+  return Math.min(320, Math.max(8, ...Array.from(iconButtons.values(), (button) => button.offsetLeft < 300 ? button.offsetLeft + button.offsetWidth : 0)));
+}
+icons.addEventListener("pointerdown", (event) => {
+  const button = event.target.closest(".icon");
+  if (!button || event.button !== 0 || !icons.classList.contains("free")) return;
+  const id = button.dataset.appId;
+  if (event.ctrlKey || event.metaKey) {
+    button.classList.toggle("selected");
+    return;
+  }
+  if (!button.classList.contains("selected")) selectIcons(new Set([id]));
+  const starts = Array.from(icons.querySelectorAll(".icon.selected"), (item) => [item, item.offsetLeft, item.offsetTop]);
+  const [startX, startY] = toScene(event.clientX, event.clientY);
+  let dragging = false;
+  let frame = 0;
+  let shiftX = 0;
+  let shiftY = 0;
+  const clampX = (value) => Math.max(0, Math.min(value, icons.clientWidth - 88));
+  const clampY = (value) => Math.max(0, Math.min(value, icons.clientHeight - 72));
+  const paint = () => {
+    frame = 0;
+    starts.forEach(([item, left, top]) => { item.style.left = clampX(left + shiftX) + "px"; item.style.top = clampY(top + shiftY) + "px"; });
+  };
+  const move = (moveEvent) => {
+    if (moveEvent.pointerId !== event.pointerId) return;
+    const [x, y] = toScene(moveEvent.clientX, moveEvent.clientY);
+    shiftX = x - startX;
+    shiftY = y - startY;
+    if (!dragging && Math.abs(shiftX) + Math.abs(shiftY) < 5) return;
+    if (!dragging) {
+      dragging = true;
+      iconButtons.forEach((item, itemId) => { if (!data.iconPositions[itemId]) data.iconPositions[itemId] = { x: item.offsetLeft, y: item.offsetTop }; });
+      document.body.classList.add("dragging");
+      desk.classList.add("moving");
+    }
+    if (!frame) frame = requestAnimationFrame(paint);
+  };
+  const stop = (stopEvent) => {
+    if (stopEvent.pointerId !== event.pointerId) return;
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", stop);
+    window.removeEventListener("pointercancel", stop);
+    cancelAnimationFrame(frame);
+    if (!dragging) return;
+    document.body.classList.remove("dragging");
+    desk.classList.remove("moving");
+    iconDragged = true;
+    window.setTimeout(() => { iconDragged = false; }, 0);
+    starts.forEach(([item, left, top]) => {
+      let x = clampX(left + shiftX);
+      let y = clampY(top + shiftY);
+      if (data.iconGrid) {
+        x = clampX(8 + Math.round((x - 8) / ICON_STEP_X) * ICON_STEP_X);
+        y = clampY(10 + Math.round((y - 10) / ICON_STEP_Y) * ICON_STEP_Y);
+      }
+      const clash = Object.entries(data.iconPositions).find(([other, spot]) => other !== item.dataset.appId && spot.x === x && spot.y === y && !starts.some(([moving]) => moving.dataset.appId === other));
+      if (clash) data.iconPositions[clash[0]] = { x: left, y: top };
+      data.iconPositions[item.dataset.appId] = { x, y };
+    });
+    persistData();
+    layoutIcons();
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", stop);
+  window.addEventListener("pointercancel", stop);
+});
+freeIcons.addEventListener("change", layoutIcons);
+window.addEventListener("resize", () => requestAnimationFrame(layoutIcons));
+layoutIcons();
 
 const desk = document.getElementById("desk");
 const marquee = document.createElement("div");
@@ -2192,8 +2286,12 @@ function desktopMenu() {
       const order = Array.from(iconButtons.values());
       if (iconsByName) order.sort((a, b) => a.textContent.localeCompare(b.textContent));
       order.forEach((button) => icons.append(button));
-      data.iconOrder = Array.from(icons.querySelectorAll(".icon"), (button) => button.dataset.appId); persistData();
+      data.iconOrder = Array.from(icons.querySelectorAll(".icon"), (button) => button.dataset.appId);
+      data.iconPositions = {};
+      persistData();
+      layoutIcons();
     } },
+    { label: (data.iconGrid ? "✓ " : "") + "Align icons to grid", run: () => { data.iconGrid = !data.iconGrid; persistData(); } },
     { label: "Refresh", run: () => {
       icons.classList.remove("refreshing");
       void icons.offsetWidth;
@@ -2206,8 +2304,8 @@ function desktopMenu() {
     } },
     { label: "New text file", run: () => { openApp("files"); open.get("files")?.el.querySelector("[data-files-new-text]")?.click(); } },
     { label: "New event today", run: () => openApp("calendar") },
-    ...arrangeMenu(),
     null,
+    ...arrangeMenu(),
     null,
     { label: "Next screen effect: " + effects[nextEffect], run: () => {
       data.effects = nextEffect;
@@ -2565,6 +2663,7 @@ async function boot() {
   document.querySelector("[data-boot-brand]").classList.remove("hidden");
   document.getElementById("desk").classList.remove("hidden");
   bendScreen();
+  layoutIcons();
   await wait(700);
   document.getElementById("boot").classList.add("fade");
   await wait(420);

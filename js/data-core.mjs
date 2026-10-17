@@ -24,6 +24,8 @@ export function makeDefaultData() {
     recycle: [],
     files: [],
     iconOrder: [],
+    iconPositions: {},
+    iconGrid: true,
   };
 }
 
@@ -337,6 +339,8 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     windows: Array.isArray(source.windows) ? source.windows.filter((item) => item && typeof item.id === "string" && item.id).slice(0, 20).map((item) => ({ id: item.id.slice(0, 40), left: clampNumber(item.left, 0, 10000, 0), top: clampNumber(item.top, 0, 10000, 0), width: clampNumber(item.width, 120, 10000, 420), height: clampNumber(item.height, 100, 10000, 320), minimized: Boolean(item.minimized), maximized: Boolean(item.maximized) })) : [],
     files: files.map((item) => ({ ...item, parent: safeFileParent(item, filesById) })),
     recycle: Array.isArray(source.recycle) ? source.recycle.filter((entry) => entry && typeof entry === "object").map((entry) => ({ id: typeof entry.id === "string" && entry.id ? entry.id.slice(0, 80) : makeId(), deletedAt: typeof entry.deletedAt === "string" ? entry.deletedAt.slice(0, 40) : "", items: cleanFiles(entry.items, makeId) })).filter((entry) => entry.items.length).slice(0, 50) : [],
+    iconPositions: source.iconPositions && typeof source.iconPositions === "object" && !Array.isArray(source.iconPositions) ? Object.fromEntries(Object.entries(source.iconPositions).filter(([id, spot]) => id && spot && typeof spot === "object").slice(0, 100).map(([id, spot]) => [id.slice(0, 40), { x: clampNumber(spot.x, 0, 10000, 0), y: clampNumber(spot.y, 0, 10000, 0) }])) : {},
+    iconGrid: source.iconGrid !== false,
     iconOrder: Array.isArray(source.iconOrder) ? [...new Set(source.iconOrder.filter((id) => typeof id === "string" && id).map((id) => id.slice(0, 40)))].slice(0, 100) : [],
     logs,
     sessions,
