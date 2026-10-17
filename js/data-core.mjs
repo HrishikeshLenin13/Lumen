@@ -14,6 +14,7 @@ export function makeDefaultData() {
     rockPets: 0,
     sounds: true,
     mineBest: 0,
+    paintImage: "",
   };
 }
 
@@ -202,6 +203,50 @@ export function revealArea(field, width, height, start, revealed = new Set(), fl
   }
   return next;
 }
+export function floodFill(pixels, width, height, x, y, color) {
+  if (x < 0 || y < 0 || x >= width || y >= height) return 0;
+  const start = (y * width + x) * 4;
+  const target = Array.from(pixels.slice(start, start + 4));
+  if (target.every((value, index) => value === color[index])) return 0;
+  const stack = [y * width + x];
+  let painted = 0;
+  while (stack.length) {
+    const index = stack.pop();
+    const offset = index * 4;
+    if (pixels[offset] !== target[0] || pixels[offset + 1] !== target[1] || pixels[offset + 2] !== target[2] || pixels[offset + 3] !== target[3]) continue;
+    pixels.set(color, offset);
+    painted += 1;
+    const column = index % width;
+    if (column > 0) stack.push(index - 1);
+    if (column < width - 1) stack.push(index + 1);
+    if (index >= width) stack.push(index - width);
+    if (index < width * (height - 1)) stack.push(index + width);
+  }
+  return painted;
+}
+export function linePoints(x0, y0, x1, y1) {
+  const points = [];
+  const dx = Math.abs(x1 - x0);
+  const dy = -Math.abs(y1 - y0);
+  const stepX = x0 < x1 ? 1 : -1;
+  const stepY = y0 < y1 ? 1 : -1;
+  let error = dx + dy;
+  let x = x0;
+  let y = y0;
+  for (;;) {
+    points.push([x, y]);
+    if (x === x1 && y === y1) return points;
+    const doubled = 2 * error;
+    if (doubled >= dy) {
+      error += dy;
+      x += stepX;
+    }
+    if (doubled <= dx) {
+      error += dx;
+      y += stepY;
+    }
+  }
+}
 export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
   const defaults = makeDefaultData();
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -258,6 +303,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     rockPets: clampNumber(source.rockPets, 0, 1000000000, defaults.rockPets),
     sounds: source.sounds !== false,
     mineBest: clampNumber(source.mineBest, 0, 999, defaults.mineBest),
+    paintImage: typeof source.paintImage === "string" && source.paintImage.startsWith("data:image/png;base64,") && source.paintImage.length < 300000 ? source.paintImage : defaults.paintImage,
     logs,
     sessions,
     tasks,

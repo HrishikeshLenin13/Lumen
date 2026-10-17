@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
   assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
@@ -187,4 +187,16 @@ test("revealing an empty square floods to numbered edges and skips flags", () =>
   field[7].count = 1;
   const revealed = revealArea(field, 3, 3, 0, new Set(), new Set([2]));
   assert.deepEqual([...revealed].sort(), [0, 1, 3, 4, 5, 6, 7]);
+});
+test("flood fill paints only the connected region of the clicked color", () => {
+  const pixels = new Uint8ClampedArray(3 * 3 * 4).fill(255);
+  [1, 4, 7].forEach((index) => pixels.set([0, 0, 0, 255], index * 4));
+  assert.equal(floodFill(pixels, 3, 3, 0, 0, [255, 0, 0, 255]), 3);
+  assert.deepEqual(Array.from(pixels.slice(0, 4)), [255, 0, 0, 255]);
+  assert.deepEqual(Array.from(pixels.slice(8, 12)), [255, 255, 255, 255]);
+  assert.equal(floodFill(pixels, 3, 3, 0, 0, [255, 0, 0, 255]), 0);
+});
+test("line points connect fast strokes without gaps", () => {
+  assert.deepEqual(linePoints(0, 0, 3, 1), [[0, 0], [1, 0], [2, 1], [3, 1]]);
+  assert.deepEqual(linePoints(2, 2, 2, 2), [[2, 2]]);
 });

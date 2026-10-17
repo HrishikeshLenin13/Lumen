@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea } from "./data-core.mjs?v=514f46e2ee";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints } from "./data-core.mjs?v=24e2d1701d";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -904,6 +904,123 @@ const apps = [
       });
       root.querySelector("[data-mine-reset]").addEventListener("click", reset);
       reset();
+    },
+  },
+  {
+    id: "paint",
+    name: "Paint",
+    icon: "icons/paint.png?v=65c80a1be7",
+    size: [372, 404],
+    html() {
+      const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
+      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Your drawing is kept on this device.</span></div></div>';
+    },
+    bind(root) {
+      const canvas = root.querySelector("[data-paint-canvas]");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      const sizeInput = root.querySelector("[data-paint-size]");
+      const status = root.querySelector("[data-paint-status]");
+      let tool = "pencil";
+      let color = "#000000";
+      let last = null;
+      let saveTimer = null;
+      const store = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          data.paintImage = canvas.toDataURL("image/png");
+          writeText(status, persistData() ? "Saved on this device." : "This drawing could not be saved.");
+        }, 400);
+      };
+      const blank = () => {
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      };
+      blank();
+      if (data.paintImage) {
+        const image = new Image();
+        image.addEventListener("load", () => context.drawImage(image, 0, 0));
+        image.src = data.paintImage;
+      }
+      const point = (event) => {
+        const box = canvas.getBoundingClientRect();
+        return [Math.floor((event.clientX - box.left) / box.width * canvas.width), Math.floor((event.clientY - box.top) / box.height * canvas.height)];
+      };
+      const stamp = ([x, y]) => {
+        const size = Number(sizeInput.value);
+        context.fillStyle = tool === "eraser" ? "#ffffff" : color;
+        context.fillRect(x - Math.floor(size / 2), y - Math.floor(size / 2), size, size);
+      };
+      const rgba = (value) => [1, 3, 5].map((offset) => parseInt(value.slice(offset, offset + 2), 16)).concat(255);
+      canvas.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const at = point(event);
+        if (tool === "fill") {
+          const image = context.getImageData(0, 0, canvas.width, canvas.height);
+          if (floodFill(image.data, canvas.width, canvas.height, at[0], at[1], rgba(color))) context.putImageData(image, 0, 0);
+          return store();
+        }
+        try {
+          canvas.setPointerCapture(event.pointerId);
+        } catch {
+          return;
+        }
+        last = at;
+        stamp(at);
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (!last) return;
+        const at = point(event);
+        linePoints(last[0], last[1], at[0], at[1]).forEach(stamp);
+        last = at;
+      });
+      const end = () => {
+        if (!last) return;
+        last = null;
+        store();
+      };
+      canvas.addEventListener("pointerup", end);
+      canvas.addEventListener("pointercancel", end);
+      root.querySelector("[data-paint-tools]").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-paint-tool]");
+        if (!button) return;
+        tool = button.dataset.paintTool;
+        root.querySelectorAll("[data-paint-tool]").forEach((item) => {
+          item.classList.toggle("active", item === button);
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+      });
+      root.querySelector("[data-paint-palette]").addEventListener("click", (event) => {
+        const swatch = event.target.closest("[data-paint-color]");
+        if (!swatch) return;
+        color = swatch.dataset.paintColor;
+        root.querySelectorAll("[data-paint-color]").forEach((item) => item.setAttribute("aria-checked", String(item === swatch)));
+        if (tool === "eraser") root.querySelector('[data-paint-tool="pencil"]').click();
+      });
+      root.querySelector("[data-paint-clear]").addEventListener("click", () => {
+        if (!window.confirm("Clear the whole drawing?")) return;
+        blank();
+        store();
+      });
+      root.querySelector("[data-paint-save]").addEventListener("click", () => {
+        const large = document.createElement("canvas");
+        large.width = canvas.width * 4;
+        large.height = canvas.height * 4;
+        const largeContext = large.getContext("2d");
+        largeContext.imageSmoothingEnabled = false;
+        largeContext.drawImage(canvas, 0, 0, large.width, large.height);
+        large.toBlob((blob) => {
+          if (!blob) return showToast("The drawing could not be exported.");
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "lumen-paint-" + new Date().toISOString().slice(0, 10) + ".png";
+          document.body.append(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 0);
+        }, "image/png");
+      });
     },
   },
   {
