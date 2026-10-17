@@ -31,6 +31,22 @@ function loadData() {
   }
 }
 let data = normalizeData(loadData(), makeId);
+const PAINT_KEY = KEY + "-paint";
+function savePaint(image) {
+  try {
+    if (image) localStorage.setItem(PAINT_KEY, image);
+    else localStorage.removeItem(PAINT_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+try {
+  data.paintImage = normalizeData({ paintImage: localStorage.getItem(PAINT_KEY) || data.paintImage }).paintImage;
+} catch {
+  data.paintImage = "";
+}
+savePaint(data.paintImage);
 let toastTimer = null;
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -42,7 +58,7 @@ function showToast(message) {
 }
 function persistData() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem(KEY, JSON.stringify({ ...data, paintImage: "" }));
     return true;
   } catch {
     showToast("LUMEN could not save data in this browser.");
@@ -336,6 +352,7 @@ async function importBackup(file) {
     const confirmed = window.confirm("Importing this backup will replace the current desk data. Continue?");
     if (!confirmed) return;
     data = normalizeData(imported);
+    savePaint(data.paintImage);
     shipFilter = "";
     editingLogId = null;
     selectedLogIds.clear();
@@ -354,6 +371,7 @@ function clearAllData() {
   if (!confirmed) return;
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(PAINT_KEY);
   } catch {
     return;
   }
@@ -910,7 +928,7 @@ const apps = [
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
           data.paintImage = canvas.toDataURL("image/png");
-          writeText(status, persistData() ? "Saved on this device." : "This drawing could not be saved.");
+          writeText(status, savePaint(data.paintImage) ? "Saved on this device." : "This drawing could not be saved.");
         }, 400);
       };
       const blank = () => {
