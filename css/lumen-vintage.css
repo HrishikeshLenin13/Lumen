@@ -23,7 +23,7 @@
   --title-bar-bg: linear-gradient(180deg, #0997ff, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7);
   --frame: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd;
   --frame-inactive: inset -1px -1px #6582d6, inset 1px 1px #7d9ae4, inset -2px -2px #7590dd, inset 2px 2px #a6bdf0, inset -3px -3px #8aa5e8, inset 3px 3px #9db4ec;
-  --desktop-bg: #3a6ea5 url("../icons/wallpaper.png?v=01c59e11e7") center / cover no-repeat;
+  --desktop-bg: #3a6ea5 url("../icons/wallpaper.png?v=5e0b52de42") center / cover no-repeat;
 }
 
 html[data-theme="light"] {
