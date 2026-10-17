@@ -73,7 +73,8 @@ body {
   background: #000;
   color: var(--window-text);
   font-family: var(--font);
-  font-size: 12px;
+  font-size: 11px;
+  -webkit-font-smoothing: none;
 }
 
 body {
@@ -443,14 +444,14 @@ select.field {
   background: var(--field-bg);
   border: 1px solid #7f9db9;
   border-radius: 0;
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
 }
 
 .body textarea:focus,
 .field:focus,
 select.field:focus {
-  border-color: #2b72d6;
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(82, 145, 236, 0.45);
+  border-color: #7f9db9;
+  box-shadow: none;
 }
 
 .body textarea {
@@ -583,8 +584,8 @@ select.field:focus {
 }
 
 .field {
-  min-height: 27px;
-  padding: 5px 6px;
+  min-height: 23px;
+  padding: 3px 4px;
   margin: 5px 0 7px;
 }
 
@@ -601,24 +602,23 @@ select.field:focus {
 }
 
 .btn {
-  min-height: 25px;
+  min-height: 23px;
   padding: 3px 12px;
-  color: #111;
-  background: linear-gradient(#fff, #f5f2df 42%, #e7e2c8);
+  color: #000;
+  background: linear-gradient(180deg, #fff, #ecebe5 86%, #d8d0c4);
   border: 1px solid #003c74;
   border-radius: 3px;
-  box-shadow: inset 1px 1px #fff, inset -1px -1px #aca899;
+  box-shadow: none;
 }
 
 .btn:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 2px #f2c14e, inset 1px 1px #fff, inset -1px -1px #aca899;
+  box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
 }
 
 .btn:active:not(:disabled),
 .btn.active {
-  background: #e3dfcf;
-  box-shadow: inset 1px 1px #aca899;
-  transform: translateY(1px);
+  background: linear-gradient(180deg, #cdcac3, #e3e3db 8%, #e5e5de 94%, #f2f2f1);
+  box-shadow: none;
 }
 
 .btn.danger {
@@ -634,7 +634,7 @@ select.field:focus {
 
 .hint {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .hint--flush {
@@ -643,7 +643,7 @@ select.field:focus {
 
 .form-label {
   display: block;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .about-title,
@@ -805,7 +805,7 @@ select.field:focus {
   border: 1px solid var(--card-border);
   border-radius: 2px;
   box-shadow: inset 1px 1px rgba(255, 255, 255, 0.12);
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .log-item.selected {
@@ -870,7 +870,7 @@ select.field:focus {
 
 .shortcut-list {
   padding-left: 20px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .shortcut-list li {
@@ -1219,14 +1219,15 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 }
 
 *::-webkit-scrollbar-track {
-  background: #f1efe2;
-  border: 1px solid #aca899;
+  background: linear-gradient(90deg, #f3f1ec, #fefefb);
+  border: 0;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #c6c2b2;
-  border: 1px solid #7f7f7f;
-  box-shadow: inset 1px 1px #fff;
+  background: #c8d6fb;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  box-shadow: inset -3px 0 #bad1fc, inset 1px 1px #b7caf5;
 }
 
 @keyframes boot-progress {
