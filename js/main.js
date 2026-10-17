@@ -1763,6 +1763,29 @@ function closeApp(id) {
   zoomRects(from, launcherRect(id), finish);
 }
 
+function arrangeWindows(mode) {
+  const list = Array.from(open.entries()).filter(([, entry]) => !entry.el.classList.contains("min") && !entry.el.classList.contains("minimizing")).sort((a, b) => Number(a[1].el.style.zIndex) - Number(b[1].el.style.zIndex));
+  if (!list.length) return showToast("There are no open windows to arrange.");
+  const area = wins.getBoundingClientRect();
+  const columns = Math.ceil(Math.sqrt(list.length));
+  const rows = Math.ceil(list.length / columns);
+  list.forEach(([id, entry], index) => {
+    const from = entry.el.getBoundingClientRect();
+    entry.el.classList.remove("max");
+    entry.el.querySelector("[data-max]")?.setAttribute("aria-pressed", "false");
+    const step = index * 24;
+    const size = apps.find((app) => app.id === id)?.size || [420, 320];
+    const box = mode === "cascade" ? [12 + step, 12 + step, Math.min(size[0], Math.floor(area.width) - 24 - step), Math.min(size[1], Math.floor(area.height) - 24 - step)] : [Math.floor(index % columns * area.width / columns), Math.floor(Math.floor(index / columns) * area.height / rows), Math.floor(area.width / columns), Math.floor(area.height / rows)];
+    entry.el.style.cssText += "left:" + box[0] + "px;top:" + box[1] + "px;width:" + Math.max(160, box[2]) + "px;height:" + Math.max(120, box[3]) + "px";
+    entry.el.classList.add("restoring");
+    zoomRects(from, entry.el.getBoundingClientRect(), () => paintWindow(entry.el, "restoring"));
+    focusWin(id);
+  });
+  rememberWindows();
+}
+function arrangeMenu() {
+  return [{ label: "Cascade windows", run: () => arrangeWindows("cascade") }, { label: "Tile windows", run: () => arrangeWindows("tile") }, { label: "Show the desktop", run: () => open.forEach((entry, id) => { if (!entry.el.classList.contains("min")) minimizeApp(id); }) }];
+}
 function closeAllWindows() {
   open.forEach((entry) => {
     entry.cleanup?.(false); entry.cleanup = null;
@@ -2106,6 +2129,8 @@ function desktopMenu() {
     } },
     { label: "New text file", run: () => { openApp("files"); open.get("files")?.el.querySelector("[data-files-new-text]")?.click(); } },
     { label: "New event today", run: () => openApp("calendar") },
+    ...arrangeMenu(),
+    null,
     null,
     { label: "Next screen effect: " + effects[nextEffect], run: () => {
       data.effects = nextEffect;
@@ -2145,6 +2170,7 @@ desk.addEventListener("contextmenu", (event) => {
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
+document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), arrangeMenu()); });
 startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
