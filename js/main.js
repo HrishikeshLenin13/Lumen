@@ -1795,6 +1795,7 @@ function retarget(event) {
   if (event.type === "mousedown") {
     const focusable = target.closest("input, textarea, select, button, [tabindex]");
     if (focusable) focusable.focus({ preventScroll: true });
+    if (focusable?.tagName === "SELECT") try { focusable.showPicker(); } catch {}
     else if (desk.contains(document.activeElement)) document.activeElement.blur();
   }
   const init = { bubbles: true, cancelable: true, composed: true, view: window, detail: event.detail, screenX: event.screenX, screenY: event.screenY, clientX: event.clientX, clientY: event.clientY, ctrlKey: event.ctrlKey, shiftKey: event.shiftKey, altKey: event.altKey, metaKey: event.metaKey, button: event.button, buttons: event.buttons };
