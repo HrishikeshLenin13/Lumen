@@ -1033,6 +1033,9 @@ kbd {
   font-weight: 700;
   text-transform: uppercase;
 }
+.start-menu__search { display: block; padding: 6px 7px 2px; }
+.start-menu__search .field { width: 100%; }
+.start-menu [data-open-app].hidden { display: none; }
 
 .start-menu button {
   display: flex;

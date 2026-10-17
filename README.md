@@ -1,5 +1,6 @@
 # LUMEN
 Lumen is an installable offline workspace for notes, task tracking, focus sessions, and work logs.
+Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 
 ## Features
 

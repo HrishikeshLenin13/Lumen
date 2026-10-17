@@ -1042,12 +1042,28 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt=""><span data-install-label>Install LUMEN...</span></button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt=""><span data-install-label>Install LUMEN...</span></button>';
+const startSearch = startMenu.querySelector("[data-app-search]");
+function filterStartMenu(query) {
+  const needle = query.trim().toLocaleLowerCase();
+  startMenu.querySelectorAll("[data-open-app]").forEach((button) => button.classList.toggle("hidden", !button.textContent.toLocaleLowerCase().includes(needle)));
+}
+startSearch.addEventListener("input", () => filterStartMenu(startSearch.value));
+startSearch.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  const firstMatch = startMenu.querySelector("[data-open-app]:not(.hidden)");
+  if (!firstMatch) return;
+  firstMatch.click();
+});
 
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
   startBtn.setAttribute("aria-expanded", String(show));
-  if (show) startMenu.querySelector("button")?.focus();
+  if (show) {
+    startSearch.value = "";
+    filterStartMenu("");
+    startSearch.focus();
+  }
 }
 
 startBtn.addEventListener("click", () => setStartMenu(startMenu.classList.contains("hidden")));
