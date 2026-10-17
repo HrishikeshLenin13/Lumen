@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=50371b188f";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=17d0f9db98";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -115,6 +115,25 @@ function playFinishedSound() {
     gain.connect(audioContext.destination);
     oscillator.start(now);
     oscillator.stop(now + 0.5);
+  } catch {
+    return;
+  }
+}
+function systemSound(frequency, duration = 0.06) {
+  if (!data.sounds || !audioContext) return;
+  try {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(frequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency / 2, now + duration);
+    gain.gain.setValueAtTime(0.035, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration);
   } catch {
     return;
   }
@@ -850,7 +869,7 @@ const apps = [
       const midnightWallpaperSelected = data.wallpaper === "midnight" ? " selected" : "";
       const auroraWallpaperSelected = data.wallpaper === "aurora" ? " selected" : "";
       const graphiteWallpaperSelected = data.wallpaper === "graphite" ? " selected" : "";
-      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label settings-grid__wide">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
+      return '<form data-settings-form><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark"' + darkSelected + '>Luna Blue</option><option value="light"' + lightSelected + '>Silver</option></select></label><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div><div class="row row--actions"><button type="submit" class="btn primary">Apply</button><span class="hint hint--flush" data-settings-status aria-live="polite"></span></div></form><hr class="separator"><h3 class="section-title">Backup and Restore</h3><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div><h3 class="section-title">Install LUMEN</h3><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button><hr class="separator"><h3 class="section-title">Reset</h3><button type="button" class="btn danger" data-clear-data>Clear all data...</button>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -864,6 +883,7 @@ const apps = [
         data.theme = root.querySelector("#themeChoice").value;
         data.effects = root.querySelector("#effectsChoice").value;
         data.wallpaper = root.querySelector("#wallpaperChoice").value;
+        data.sounds = root.querySelector("#soundsChoice").value === "on";
         persistData();
         applyTheme();
         resetTimer(timer.mode);
@@ -887,7 +907,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
     bind() {},
   },
@@ -980,6 +1000,7 @@ function minimizeApp(id) {
   if (!entry || entry.el.classList.contains("minimizing")) return;
   const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("minimizing");
+  systemSound(520, 0.05);
   zoomRects(from, entry.tab.getBoundingClientRect(), () => entry.el.classList.replace("minimizing", "min"));
   entry.el.classList.remove("focus");
   entry.tab.classList.remove("on");
@@ -995,6 +1016,7 @@ function restoreApp(id) {
   if (!entry?.el.classList.contains("min")) return false;
   const to = entry.el.getBoundingClientRect();
   entry.el.classList.replace("min", "restoring");
+  systemSound(620, 0.05);
   zoomRects(entry.tab.getBoundingClientRect(), to, () => paintWindow(entry.el, "restoring"));
   focusWin(id);
   if (id === "focus") paintTimer(entry.el.querySelector(".body"));
@@ -1024,6 +1046,7 @@ function openApp(id) {
   element.style.zIndex = String(++z);
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
+  systemSound(740);
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on opening";
@@ -1077,6 +1100,7 @@ function closeApp(id) {
   entry.el.classList.remove("opening");
   const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("closing");
+  systemSound(370);
   entry.tab.classList.add("closing");
   let finished = false;
   const finish = () => {
@@ -1159,7 +1183,7 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
@@ -1268,12 +1292,31 @@ function tickClock() {
 tickClock();
 setInterval(tickClock, 30_000);
 window.addEventListener("beforeunload", persistData);
+document.addEventListener("pointerdown", primeAudio);
 
 async function boot() {
-  await new Promise((resolve) => setTimeout(resolve, 900));
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const post = document.querySelector("[data-boot-post]");
+  const print = (line) => {
+    post.textContent += line + "\n";
+  };
+  print("LUMEN BIOS v1.04  Copyright 1987 Lumen Systems");
+  print("");
+  print("Main processor: Lumen 386 at 33 MHz");
+  for (let memory = 0; memory <= 640; memory += 64) {
+    post.textContent = post.textContent.replace(/Memory test: \d+K( OK)?\n$/, "") + "Memory test: " + memory + "K" + (memory === 640 ? " OK" : "") + "\n";
+    await wait(28);
+  }
+  for (const line of ["Detecting floppy drive A: ... 1.44 MB", "Detecting hard disk C: ... LUMEN DESK", "Checking local storage ... private", "", "Starting LUMEN..."]) {
+    print(line);
+    await wait(90);
+  }
+  post.remove();
+  document.querySelector("[data-boot-brand]").classList.remove("hidden");
+  await wait(700);
   document.getElementById("boot").classList.add("fade");
   document.getElementById("desk").classList.replace("hidden", "power-on");
-  await new Promise((resolve) => setTimeout(resolve, 400));
+  await wait(120);
   document.getElementById("boot").remove();
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
   openApp(apps.some((app) => app.id === requestedApp) ? requestedApp : "about");

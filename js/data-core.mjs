@@ -12,6 +12,7 @@ export function makeDefaultData() {
     effects: "full",
     wallpaper: "classic",
     rockPets: 0,
+    sounds: true,
   };
 }
 
@@ -222,6 +223,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     effects: ["full", "subtle", "grid", "off"].includes(source.effects) ? source.effects : defaults.effects,
     wallpaper: ["classic", "midnight", "aurora", "graphite"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
     rockPets: clampNumber(source.rockPets, 0, 1000000000, defaults.rockPets),
+    sounds: source.sounds !== false,
     logs,
     sessions,
     tasks,

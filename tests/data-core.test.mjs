@@ -170,4 +170,5 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(makeDefaultData().timerState, null);
   assert.deepEqual(makeDefaultData().noteHistory, []);
   assert.equal(normalizeData({ rockPets: -4 }).rockPets, 0);
+  assert.equal(normalizeData({ sounds: false }).sounds, false);
 });
