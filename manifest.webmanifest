@@ -21,6 +21,7 @@
     { "name": "Focus timer", "url": "./#focus" },
     { "name": "Ship Log", "url": "./#shiplog" },
     { "name": "Checklist", "url": "./#checklist" },
-    { "name": "Calculator", "url": "./#calculator" }
+    { "name": "Calculator", "url": "./#calculator" },
+    { "name": "Files", "url": "./#files" }
   ]
 }

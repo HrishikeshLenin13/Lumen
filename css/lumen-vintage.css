@@ -895,6 +895,16 @@ select.field:focus {
 .paint__palette { display: grid; grid-template-columns: repeat(8, 16px); gap: 2px; }
 .paint__swatch { width: 16px; height: 16px; padding: 0; background: var(--swatch); border: 1px solid #808080; box-shadow: inset 1px 1px #fff; }
 .paint__swatch[aria-checked="true"] { outline: 2px solid #000; outline-offset: 1px; }
+.files { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 6px; height: 100%; min-height: 260px; }
+.files__toolbar, .files__address { display: flex; align-items: center; gap: 4px; }
+.files__path { flex: 1; min-width: 0; padding: 3px 6px; overflow: hidden; color: #000; background: #fff; border: 2px solid; border-color: #808080 #fff #fff #808080; white-space: nowrap; text-overflow: ellipsis; }
+.files__main { display: grid; grid-template-columns: minmax(150px, 2fr) minmax(180px, 3fr); min-height: 0; border: 2px solid; border-color: #808080 #fff #fff #808080; }
+.files__list { margin: 0; padding: 2px; overflow: auto; background: #fff; list-style: none; }
+.files__item { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; width: 100%; min-height: 30px; padding: 2px 4px; color: #000; background: transparent; border: 0; text-align: left; }
+.files__item.selected, .files__item.scene-hover { color: #fff; background: #316ac5; }
+.files__glyph { display: grid; place-items: center; width: 22px; height: 20px; color: #000; background: #fff; border: 1px solid #000; font-size: 8px; }
+.files__editor { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; padding: 6px; background: #d4d0c8; border-left: 1px solid #808080; }
+.files__editor textarea { width: 100%; min-height: 0; resize: none; font: inherit; }
 .cal { display: grid; gap: 6px; }
 .cal__head { display: flex; align-items: center; gap: 4px; }
 .cal__title { flex: 1; text-align: center; }

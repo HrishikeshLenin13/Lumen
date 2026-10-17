@@ -11,6 +11,7 @@ Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 - Calendar with local events, opened from the taskbar clock
 - Command Prompt that opens apps, does math, and adds tasks and notes
 - Paint with pencil, eraser, fill, airbrush, smudge, undo, a VGA palette, and PNG export
+- Files with folders, autosaved text documents, rename, move, and delete controls
 - Minesweeper with a safe first click, flags, and a saved best time
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 

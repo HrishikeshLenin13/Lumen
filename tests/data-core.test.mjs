@@ -173,6 +173,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(normalizeData({ sounds: false }).sounds, false);
   assert.equal(normalizeData({ screensaver: false }).screensaver, false);
   assert.deepEqual(normalizeData({ windows: [{ id: "notes", left: -5, width: 50, minimized: 1 }, { nope: 1 }] }).windows, [{ id: "notes", left: 0, top: 0, width: 120, height: 320, minimized: true, maximized: false }]);
+  assert.deepEqual(makeDefaultData().files, []);
 });
 test("minefields keep the first click and its neighbors safe and count nearby mines", () => {
   const field = createMinefield(9, 9, 10, 40, () => 0.5);
@@ -213,3 +214,4 @@ test("calendar events keep only dated text entries", () => {
   const events = normalizeData({ events: [{ date: "2026-10-17", text: "  Ship  " }, { date: "soon", text: "x" }, { date: "2026-10-18", text: " " }] }, () => "id").events;
   assert.deepEqual(events, [{ id: "id", date: "2026-10-17", text: "Ship" }]);
 });
+test("virtual files keep safe folders and text documents", () => assert.deepEqual(normalizeData({ files: [{ id: "docs", kind: "folder", name: " Docs " }, { id: "note", kind: "text", name: "ideas/txt", parent: "docs", content: "hello" }, { id: "bad", kind: "image", name: "no" }] }).files, [{ id: "docs", kind: "folder", name: "Docs", parent: null, content: "" }, { id: "note", kind: "text", name: "ideas-txt", parent: "docs", content: "hello" }]));

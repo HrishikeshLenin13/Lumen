@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=2ac9a8036c";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=bed915515a";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -386,6 +386,38 @@ async function importBackup(file) {
   } catch (error) {
     showToast(error.message || "That backup could not be imported.");
   }
+}
+function filesHtml() { return '<div class="files"><div class="files__toolbar"><button type="button" class="btn" data-files-new-folder>New folder</button><button type="button" class="btn" data-files-new-text>New text file</button><button type="button" class="btn" data-files-rename disabled>Rename</button><button type="button" class="btn" data-files-move disabled>Move...</button><button type="button" class="btn danger" data-files-delete disabled>Delete</button></div><div class="files__address"><button type="button" class="btn" data-files-up disabled>Up</button><span class="files__path" data-files-path>C:\\</span></div><div class="files__main"><ul class="files__list" data-files-list aria-label="Files"></ul><section class="files__editor"><strong data-files-editor-name>Select a text file</strong><textarea class="field" data-files-content disabled aria-label="Text file contents"></textarea></section></div><span class="hint hint--flush" data-files-status aria-live="polite"></span></div>'; }
+function bindFiles(root) {
+  const list = root.querySelector("[data-files-list]");
+  const content = root.querySelector("[data-files-content]");
+  let current = null;
+  let selected = null;
+  let saveTimer = null;
+  const selectedItem = () => data.files.find((item) => item.id === selected);
+  const folderPath = () => { const names = []; let id = current; while (id) { const folder = data.files.find((item) => item.id === id && item.kind === "folder"); if (!folder) break; names.unshift(folder.name); id = folder.parent; } return "C:\\" + names.join("\\"); };
+  const render = () => {
+    const items = data.files.filter((item) => item.parent === current).sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1));
+    list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><span class="files__glyph">' + (item.kind === "folder" ? "DIR" : "TXT") + '</span><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
+    root.querySelector("[data-files-path]").textContent = folderPath();
+    root.querySelector("[data-files-up]").disabled = current === null;
+    root.querySelectorAll("[data-files-rename],[data-files-move],[data-files-delete]").forEach((button) => button.disabled = !selectedItem());
+    const item = selectedItem();
+    root.querySelector("[data-files-editor-name]").textContent = item?.kind === "text" ? item.name : "Select a text file";
+    content.disabled = item?.kind !== "text";
+    content.value = item?.kind === "text" ? item.content : "";
+  };
+  const createItem = (kind) => { const proposed = window.prompt(kind === "folder" ? "Folder name:" : "Text file name:", kind === "folder" ? "New Folder" : "New Text File.txt"); const name = proposed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; const item = { id: makeId(), kind, name, parent: current, content: "" }; data.files.push(item); selected = item.id; persistData(); render(); if (kind === "text") content.focus(); };
+  root.querySelector("[data-files-new-folder]").addEventListener("click", () => createItem("folder"));
+  root.querySelector("[data-files-new-text]").addEventListener("click", () => createItem("text"));
+  list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button) return; selected = button.dataset.fileId; render(); });
+  list.addEventListener("dblclick", (event) => { const item = data.files.find((candidate) => candidate.id === event.target.closest("[data-file-id]")?.dataset.fileId); if (!item) return; if (item.kind === "folder") { current = item.id; selected = null; render(); } else content.focus(); });
+  root.querySelector("[data-files-up]").addEventListener("click", () => { current = data.files.find((item) => item.id === current)?.parent ?? null; selected = null; render(); });
+  content.addEventListener("input", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; item.content = content.value.slice(0, 200000); clearTimeout(saveTimer); saveTimer = setTimeout(() => { persistData(); root.querySelector("[data-files-status]").textContent = "Saved."; }, 300); });
+  root.querySelector("[data-files-rename]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const name = window.prompt("New name:", item.name)?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
+  root.querySelector("[data-files-move]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const folders = data.files.filter((candidate) => candidate.kind === "folder" && candidate.id !== item.id); const choices = ["Desktop", ...folders.map((folder) => folder.name)]; const choice = window.prompt("Move to:\n" + choices.map((name, index) => index + ": " + name).join("\n"), "0"); if (choice === null || !/^\d+$/.test(choice) || Number(choice) >= choices.length) return; item.parent = Number(choice) === 0 ? null : folders[Number(choice) - 1].id; persistData(); selected = null; render(); });
+  root.querySelector("[data-files-delete]").addEventListener("click", () => { const item = selectedItem(); if (!item || !window.confirm('Delete "' + item.name + '"' + (item.kind === "folder" ? " and everything inside it?" : "?"))) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
+  render();
 }
 function clearAllData() {
   const confirmed = window.confirm("Clear all LUMEN notes, settings, and ship log entries?");
@@ -1399,11 +1431,14 @@ const apps = [
     },
   },
   {
+    id: "files", name: "Files", icon: "icons/files.png", size: [560, 420], html: filesHtml, bind: bindFiles,
+  },
+  {
     id: "about",
     name: "About",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
     },
     bind() {},
   },
@@ -2074,7 +2109,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-    const shortcuts = { "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "settings", "7": "about" };
+    const shortcuts = { "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "files", "7": "settings", "8": "about" };
     const appId = shortcuts[event.key];
     if (appId) {
       event.preventDefault();
