@@ -42,11 +42,12 @@ function savePaint(image) {
   }
 }
 try {
-  data.paintImage = normalizeData({ paintImage: localStorage.getItem(PAINT_KEY) || data.paintImage }).paintImage;
+  const storedPaint = localStorage.getItem(PAINT_KEY);
+  data.paintImage = normalizeData({ paintImage: storedPaint || data.paintImage }).paintImage;
+  if (storedPaint !== data.paintImage) savePaint(data.paintImage);
 } catch {
   data.paintImage = "";
 }
-savePaint(data.paintImage);
 let toastTimer = null;
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -56,9 +57,12 @@ function showToast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), 3200);
 }
+let lastSaved = "";
 function persistData() {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ ...data, paintImage: "" }));
+    const serialized = JSON.stringify({ ...data, paintImage: "" });
+    if (serialized !== lastSaved) localStorage.setItem(KEY, serialized);
+    lastSaved = serialized;
     return true;
   } catch {
     showToast("LUMEN could not save data in this browser.");
@@ -375,6 +379,7 @@ function clearAllData() {
   try {
     localStorage.removeItem(KEY);
     localStorage.removeItem(PAINT_KEY);
+    lastSaved = "";
   } catch {
     return;
   }
