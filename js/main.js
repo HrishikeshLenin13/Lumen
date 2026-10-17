@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=7cd4b29ecd";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=50371b188f";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -365,7 +365,7 @@ const apps = [
     glyph: "N",
     icon: "icons/notes.png?v=8c65e95fff",
     html() {
-      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button></span></div>';
+      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
     },
     bind(root) {
       const area = root.querySelector("#notesArea");
@@ -427,6 +427,18 @@ const apps = [
         status.textContent = saved ? (data.noteHistory[0]?.id === before ? "This version is already saved." : "Version saved.") : "Version could not be saved.";
       };
       root.querySelector("[data-save-note-version]").addEventListener("click", saveVersion);
+      root.querySelector("[data-note-trim]").addEventListener("click", () => {
+        area.value = area.value.split("\n").map((line) => line.trim()).join("\n").trim();
+        area.dispatchEvent(new Event("input"));
+      });
+      root.querySelector("[data-note-copy]").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(area.value);
+          showToast("Note copied.");
+        } catch {
+          showToast("Copy failed. Select the text and copy it manually.");
+        }
+      });
       area.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
           event.preventDefault();
@@ -708,34 +720,118 @@ const apps = [
     },
   },
   {
-    id: "texttools",
-    name: "Text Tools",
-    glyph: "T",
-    icon: "icons/text-tools.png?v=e557672a22",
+    id: "petrock",
+    name: "Pet Rock",
+    glyph: "R",
+    icon: "icons/pet-rock.png?v=65c80a1be7",
     html() {
-      return '<textarea class="text-tools-area" data-text-tools aria-label="Text to inspect" placeholder="Paste or type text"></textarea><div class="row text-tools-bar"><span class="hint hint--flush" data-text-stats>0 words · 0 characters · 0 lines</span><button type="button" class="btn" data-text-trim>Trim lines</button><button type="button" class="btn primary" data-text-copy>Copy</button></div>';
+      return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite">Your rock is resting.</p><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><p class="hint hint--flush" data-rock-count></p></div>';
     },
     bind(root) {
-      const area = root.querySelector("[data-text-tools]");
-      const stats = root.querySelector("[data-text-stats]");
+      const mood = root.querySelector("[data-rock-mood]");
+      const count = root.querySelector("[data-rock-count]");
+      const moods = ["The rock remains a rock.", "The rock appreciates you, probably.", "The rock is unmoved.", "The rock has achieved inner peace.", "The rock did not notice.", "The rock is thinking about geology."];
       const render = () => {
-        const values = noteStats(area.value);
-        stats.textContent = values.words + " words · " + values.characters + " characters · " + values.lines + " lines";
+        count.textContent = data.rockPets === 1 ? "Petted once." : "Petted " + data.rockPets + " times.";
       };
-      area.addEventListener("input", render);
-      root.querySelector("[data-text-trim]").addEventListener("click", () => {
-        area.value = area.value.split("\n").map((line) => line.trim()).join("\n").trim();
+      root.querySelector("[data-rock-pet]").addEventListener("click", () => {
+        data.rockPets += 1;
+        persistData();
+        mood.textContent = moods[data.rockPets % moods.length];
         render();
       });
-      root.querySelector("[data-text-copy]").addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(area.value);
-          showToast("Text copied.");
-        } catch {
-          showToast("Copy failed. Select the text and copy it manually.");
-        }
-      });
       render();
+    },
+  },
+  {
+    id: "fortune",
+    name: "Fortune",
+    glyph: "?",
+    icon: "icons/fortune.png?v=65c80a1be7",
+    html() {
+      return '<div class="toy"><p class="toy__slip" data-fortune aria-live="polite"></p><button type="button" class="btn primary" data-fortune-next>Crack another cookie</button></div>';
+    },
+    bind(root) {
+      const slip = root.querySelector("[data-fortune]");
+      const fortunes = ["You will close this window soon.", "A bug you fixed last week has quietly returned.", "Your next commit message will be fix.", "Someone nearby is also pretending to work.", "The cache was the problem all along.", "You will find it in the last place you look.", "Today is a good day to restart something.", "Your rock misses you.", "A meeting will be scheduled to plan a meeting.", "Lucky numbers: 0, 1, and undefined."];
+      const next = () => {
+        slip.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
+      };
+      root.querySelector("[data-fortune-next]").addEventListener("click", next);
+      next();
+    },
+  },
+  {
+    id: "coinflip",
+    name: "Coin Flip",
+    glyph: "O",
+    icon: "icons/coin.png?v=65c80a1be7",
+    html() {
+      return '<div class="toy"><output class="toy__coin" data-coin aria-live="polite">?</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
+    },
+    bind(root) {
+      const face = root.querySelector("[data-coin]");
+      const tally = root.querySelector("[data-coin-tally]");
+      const button = root.querySelector("[data-coin-flip]");
+      const counts = { Heads: 0, Tails: 0 };
+      button.addEventListener("click", () => {
+        button.disabled = true;
+        let spins = 0;
+        const spin = setInterval(() => {
+          spins += 1;
+          face.textContent = spins % 2 ? "Tails" : "Heads";
+          if (spins < 7) return;
+          clearInterval(spin);
+          const result = Math.random() < 0.5 ? "Heads" : "Tails";
+          counts[result] += 1;
+          face.textContent = result;
+          tally.textContent = counts.Heads + " heads · " + counts.Tails + " tails";
+          button.disabled = false;
+        }, 70);
+      });
+    },
+  },
+  {
+    id: "busywork",
+    name: "Busy Work",
+    glyph: "B",
+    icon: "icons/busy.png?v=65c80a1be7",
+    html() {
+      return '<p class="hint" data-busy-task aria-live="polite">Ready to look busy.</p><div class="busy-bar" role="progressbar" aria-label="Busy work progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-busy-bar><span></span></div><div class="row row--actions"><button type="button" class="btn primary" data-busy-start>Look busy</button><button type="button" class="btn" data-busy-stop disabled>Stop</button></div>';
+    },
+    bind(root) {
+      const task = root.querySelector("[data-busy-task]");
+      const bar = root.querySelector("[data-busy-bar]");
+      const start = root.querySelector("[data-busy-start]");
+      const stop = root.querySelector("[data-busy-stop]");
+      const jobs = ["Reticulating splines", "Defragmenting the desk", "Polishing pixels", "Counting to infinity", "Reindexing the rock", "Warming up the vacuum tubes", "Aligning the scanlines", "Degaussing the monitor"];
+      let progress = 0;
+      let job = 0;
+      let busy = null;
+      const paint = () => {
+        bar.firstElementChild.style.width = progress + "%";
+        bar.setAttribute("aria-valuenow", String(progress));
+        task.textContent = busy ? jobs[job % jobs.length] + "... " + progress + "%" : "Ready to look busy.";
+      };
+      const halt = () => {
+        clearInterval(busy);
+        busy = null;
+        start.disabled = false;
+        stop.disabled = true;
+        paint();
+      };
+      start.addEventListener("click", () => {
+        start.disabled = true;
+        stop.disabled = false;
+        busy = setInterval(() => {
+          if (!root.isConnected) return halt();
+          progress = progress >= 99 ? 0 : Math.min(99, progress + Math.ceil(Math.random() * 9));
+          if (progress === 0) job += 1;
+          paint();
+        }, 420);
+        paint();
+      });
+      stop.addEventListener("click", halt);
     },
   },
   {
@@ -791,7 +887,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, text tools, and work logs in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Text Tools</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
+      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
     bind() {},
   },
@@ -1114,7 +1210,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-    const shortcuts = { "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "texttools", "7": "settings", "8": "about" };
+    const shortcuts = { "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "settings", "7": "about" };
     const appId = shortcuts[event.key];
     if (appId) {
       event.preventDefault();
@@ -1179,12 +1275,12 @@ async function boot() {
   document.getElementById("desk").classList.replace("hidden", "power-on");
   await new Promise((resolve) => setTimeout(resolve, 400));
   document.getElementById("boot").remove();
-  const requestedApp = location.hash.slice(1);
+  const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
   openApp(apps.some((app) => app.id === requestedApp) ? requestedApp : "about");
   refreshInstallControls();
 }
 window.addEventListener("hashchange", () => {
-  const requestedApp = location.hash.slice(1);
+  const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
   if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

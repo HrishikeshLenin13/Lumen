@@ -11,6 +11,7 @@ export function makeDefaultData() {
     theme: "dark",
     effects: "full",
     wallpaper: "classic",
+    rockPets: 0,
   };
 }
 
@@ -220,6 +221,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     theme: source.theme === "light" ? "light" : "dark",
     effects: ["full", "subtle", "grid", "off"].includes(source.effects) ? source.effects : defaults.effects,
     wallpaper: ["classic", "midnight", "aurora", "graphite"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
+    rockPets: clampNumber(source.rockPets, 0, 1000000000, defaults.rockPets),
     logs,
     sessions,
     tasks,

@@ -4,11 +4,11 @@ Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 
 ## Features
 
-- Notes with automatic saving, Markdown outlines, statistics, and version history
+- Notes with automatic saving, Markdown outlines, statistics, line trimming, copying, and version history
 
 - Checklist with persistent completion state
 - Calculator for constrained arithmetic expressions
-- Text Tools with live counts, line trimming, and clipboard copying
+- Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 
 - Focus and break timers with notifications and session history
 - Ship Log with projects, tags, filtering, bulk actions, and CSV export

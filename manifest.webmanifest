@@ -2,7 +2,7 @@
   "id": "./",
   "name": "LUMEN - Builder Desk",
   "short_name": "LUMEN",
-  "description": "An offline workspace for notes, tasks, calculations, focus sessions, text tools, and work logs.",
+  "description": "An offline workspace for notes, tasks, calculations, focus sessions, work logs, and pointless toys.",
   "start_url": "./?v=15",
   "scope": "./",
   "display": "standalone",
