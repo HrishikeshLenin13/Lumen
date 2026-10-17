@@ -8,8 +8,8 @@ const screenCursor = document.querySelector("[data-screen-cursor]");
 let cursorFrame = 0;
 let cursorX = -40;
 let cursorY = -40;
-function angleCursor(x, y) { const matrix = cursorSurfaceMatrix(x, y, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
-document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; screenCursor.classList.remove("hidden"); if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
+function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < 0 || surfaceX >= innerWidth || surfaceY >= innerHeight); const matrix = cursorSurfaceMatrix(x, y, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
+document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, width: 1, height: 1 };
 document.documentElement.dataset.curvedCursor = "on";
