@@ -31,8 +31,8 @@ html[data-theme="light"] {
   --title-start: #7088ad;
   --title-mid: #9eb0cd;
   --title-end: #5a7198;
-  --inactive-start: #bcc8d8;
-  --inactive-end: #8798b1;
+  --inactive-start: #f4f4f7;
+  --inactive-end: #dcdde4;
   --task-start: #8499b8;
   --task-mid: #697fa2;
   --task-end: #4e6484;
@@ -43,8 +43,8 @@ html[data-theme="light"] {
   --card-bg: #fffef5;
   --card-border: #aca899;
   --danger: #9c1428;
-  --title-bar-bg: linear-gradient(180deg, #b7c3d8, #8597b8 8%, #7a8db0 40%, #6d82a8 88%, #6a7fa5 93%, #5d7299 96%, #52678d);
-  --frame: inset -1px -1px #3f526f, inset 1px 1px #6f84a6, inset -2px -2px #52668a, inset 2px 2px #b6c3d8, inset -3px -3px #6a7fa3, inset 3px 3px #93a5c2;
+  --title-bar-bg: linear-gradient(180deg, #fff, #eeeff4 8%, #dcdde5 40%, #cbccd7 88%, #c2c3cf 93%, #b3b4c2 96%, #9fa1b2);
+  --frame: inset -1px -1px #5f6274, inset 1px 1px #babcc9, inset -2px -2px #8e91a3, inset 2px 2px #fff, inset -3px -3px #b4b6c4, inset 3px 3px #e3e4ea;
   --frame-inactive: inset -1px -1px #8a97ab, inset 1px 1px #a3afc2, inset -2px -2px #97a3b7, inset 2px 2px #d3dae5, inset -3px -3px #a9b4c6, inset 3px 3px #c0c9d7;
 }
 
@@ -1421,3 +1421,18 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 .charmap__side { display: grid; justify-items: center; align-content: start; gap: 6px; }
 .charmap__zoom { display: grid; place-items: center; width: 88px; height: 88px; color: #000; font: 52px/1 "Lucida Sans Unicode", "Segoe UI Symbol", var(--font); background: #fff; border: 1px solid #7f9db9; box-shadow: 2px 2px rgba(0, 0, 0, 0.25); }
 .charmap__text { flex: 1 1 0; width: auto; min-width: 0; }
+html[data-theme="light"] .bar { color: #000; text-shadow: 1px 1px rgba(255, 255, 255, 0.7); }
+html[data-theme="light"] .win:not(.focus) .bar { color: #7d7f8c; text-shadow: none; }
+html[data-theme="light"] .dots button, html[data-theme="light"] .dots .x { background: linear-gradient(180deg, #fff, #e6e7ee 45%, #c9cad6); border-color: #fff; box-shadow: inset -1px -1px #a3a5b4, 0 0 0 1px #6f7387; }
+html[data-theme="light"] .dots .m::after, html[data-theme="light"] .dots .q[aria-pressed="true"]::before { background: #2c2f3d; }
+html[data-theme="light"] .dots .q::after, html[data-theme="light"] .dots .q[aria-pressed="true"]::before, html[data-theme="light"] .dots .q[aria-pressed="true"]::after { border-color: #2c2f3d; }
+html[data-theme="light"] .dots .q[aria-pressed="true"]::before { background: transparent; }
+html[data-theme="light"] .dots .x::after { color: #2c2f3d; }
+html[data-theme="light"] .dots button.scene-hover { background: linear-gradient(180deg, #fff, #f3f4f8 45%, #dadbe5); }
+html[data-theme="light"] .taskbar { background: linear-gradient(180deg, #8a8d9e 0, #f2f2f6 3%, #e4e5ec 10%, #d4d6df 50%, #c7c9d4 88%, #a9abba 97%, #8a8d9e 100%); }
+html[data-theme="light"] .task { color: #000; background: linear-gradient(180deg, #fff, #e5e6ed 60%, #d2d3dd); box-shadow: inset 0 0 0 1px #9ea1b1; }
+html[data-theme="light"] .task.scene-hover { background: linear-gradient(180deg, #fff, #f1f2f6 60%, #e0e1e9); }
+html[data-theme="light"] .task.on { background: linear-gradient(180deg, #b9bbc8, #cfd0da 20%, #d9dae2); box-shadow: inset 0 0 0 1px #7d8093, inset 1px 1px #8e91a3; }
+html[data-theme="light"] .tray { color: #000; background: linear-gradient(180deg, #a8aab9 0, #f6f6f9 6%, #e8e9ef 40%, #d9dae2 90%, #b5b7c4 100%); border-left-color: #9a9cad; box-shadow: inset 1px 0 #fff; }
+html[data-theme="light"] .btn { border-color: #6f7387; background: linear-gradient(180deg, #fff, #eeeef2 86%, #d6d7df); }
+html[data-theme="light"] .btn.scene-hover:not(:disabled) { box-shadow: inset 0 0 0 1px #fff, inset 0 0 0 2px #b9bccc; }
