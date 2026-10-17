@@ -1,6 +1,7 @@
 export function makeDefaultData() {
   return {
     notes: "Project notes...\nWhat are you building today?",
+    noteHistory: [],
     logs: [],
     sessions: [],
     timerState: null,
@@ -9,6 +10,52 @@ export function makeDefaultData() {
     theme: "dark",
     effects: "full",
   };
+}
+
+export function noteStats(value) {
+  const text = String(value ?? "");
+  const words = text.trim() ? text.trim().split(/\s+/u).length : 0;
+  return { words, characters: [...text].length, lines: text ? text.split("\n").length : 0 };
+}
+
+const MAX_NOTE_REVISIONS = 20;
+const MAX_NOTE_REVISION_CHARACTERS = 100_000;
+const MAX_NOTE_HISTORY_CHARACTERS = 500_000;
+
+function limitNoteHistory(revisions) {
+  const limited = [];
+  let characters = 0;
+  for (const revision of revisions) {
+    if (limited.length === MAX_NOTE_REVISIONS) break;
+    if (!revision || typeof revision.text !== "string") continue;
+    if (revision.text.length > MAX_NOTE_REVISION_CHARACTERS) continue;
+    if (limited[limited.length - 1]?.text === revision.text) continue;
+    if (characters + revision.text.length > MAX_NOTE_HISTORY_CHARACTERS) continue;
+    limited.push(revision);
+    characters += revision.text.length;
+  }
+  return limited;
+}
+
+export function appendNoteRevision(history, text, at = new Date().toISOString(), id = `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
+  const previous = Array.isArray(history) ? history : [];
+  const content = String(text ?? "");
+  if (!content.trim() || content.length > MAX_NOTE_REVISION_CHARACTERS || previous[0]?.text === content) return limitNoteHistory(previous);
+  const revision = { id, text: content, at, ...noteStats(content) };
+  return limitNoteHistory([revision, ...previous]);
+}
+
+export function restoreNoteRevision(history, currentText, revisionId, at = new Date().toISOString(), id = `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
+  const previous = Array.isArray(history) ? history : [];
+  const revision = previous.find((candidate) => candidate?.id === revisionId && typeof candidate.text === "string");
+  const current = String(currentText ?? "");
+  if (!revision) return { ok: false, reason: "missing", text: current, history: limitNoteHistory(previous) };
+  const nextHistory = appendNoteRevision(previous, current, at, id);
+  const needsSnapshot = current.trim() && current !== revision.text;
+  if (needsSnapshot && nextHistory[0]?.text !== current) {
+    return { ok: false, reason: "current-too-large", text: current, history: limitNoteHistory(previous) };
+  }
+  return { ok: true, reason: null, text: revision.text, history: nextHistory };
 }
 
 export function clampNumber(value, minimum, maximum, fallback) {
@@ -35,11 +82,11 @@ export function extractNoteHeadings(value) {
   let offset = 0;
   let codeFence = null;
   lines.forEach((line, index) => {
-    const fence = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    const fence = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (fence) {
       const marker = fence[1][0];
       if (!codeFence) codeFence = { marker, length: fence[1].length };
-      else if (marker === codeFence.marker && fence[1].length >= codeFence.length) codeFence = null;
+      else if (marker === codeFence.marker && fence[1].length >= codeFence.length && !fence[2].trim()) codeFence = null;
       offset += line.length + 1;
       return;
     }
@@ -131,6 +178,16 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     return { mode: session.mode, minutes: Math.min(180, Math.round(minutes)), at: typeof session.at === "string" ? session.at : new Date().toISOString() };
   }).filter(Boolean).slice(0, 50) : [];
   const savedTimer = source.timerState && typeof source.timerState === "object" ? source.timerState : null;
+  const noteHistory = Array.isArray(source.noteHistory) ? limitNoteHistory(source.noteHistory.map((revision) => {
+    if (!revision || typeof revision.text !== "string" || !revision.text.trim()) return null;
+    const stats = noteStats(revision.text);
+    return {
+      id: typeof revision.id === "string" && revision.id ? revision.id : makeId(),
+      text: revision.text,
+      at: typeof revision.at === "string" ? revision.at : new Date().toISOString(),
+      ...stats,
+    };
+  }).filter(Boolean)) : [];
   const hasEndAt = savedTimer?.endAt !== null && savedTimer?.endAt !== undefined && Number.isFinite(Number(savedTimer.endAt));
   const finished = Boolean(savedTimer?.finished);
   const running = Boolean(savedTimer?.running && hasEndAt && !finished);
@@ -145,6 +202,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     : null;
   return {
     notes: typeof source.notes === "string" ? source.notes : defaults.notes,
+    noteHistory,
     focusMin: clampNumber(source.focusMin, 1, 180, defaults.focusMin),
     breakMin: clampNumber(source.breakMin, 1, 60, defaults.breakMin),
     theme: source.theme === "light" ? "light" : "dark",

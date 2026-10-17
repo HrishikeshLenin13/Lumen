@@ -448,11 +448,32 @@ select.field:focus {
   resize: vertical;
 }
 
-.notes-outline {
+.notes-sidebar {
   min-width: 0;
   overflow: auto;
   padding-left: 10px;
   border-left: 1px solid var(--card-border);
+}
+
+.notes-history {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--card-border);
+}
+
+.notes-history__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notes-history__clear {
+  padding: 0;
+  color: var(--window-muted);
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
 }
 
 .notes-outline__title {
@@ -461,13 +482,19 @@ select.field:focus {
   font-size: 0.9rem;
 }
 
-.notes-outline ol {
+.notes-history__header .notes-outline__title {
+  flex: 1;
+}
+
+.notes-outline ol,
+.notes-history ol {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.notes-outline li + li {
+.notes-outline li + li,
+.notes-history li + li {
   margin-top: 4px;
 }
 
@@ -490,6 +517,41 @@ select.field:focus {
 .notes-outline__item small {
   flex: none;
   color: var(--window-muted);
+}
+
+.notes-outline__limit {
+  margin-top: 8px;
+}
+
+.notes-history__item {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-align: left;
+}
+
+.notes-history__item span,
+.notes-history__item small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-history__item small {
+  margin-top: 2px;
+  color: #333;
+}
+
+.notes-status-row {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notes-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .field {
@@ -1158,7 +1220,7 @@ html[data-effects="off"] body::after {
     height: auto;
   }
 
-  .notes-outline {
+  .notes-sidebar {
     padding: 10px 0 0;
     border-top: 1px solid var(--card-border);
     border-left: 0;

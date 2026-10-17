@@ -1,17 +1,56 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
-  assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
+  assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
     { level: 2, title: "Plan", line: 2, start: 8, end: 18, contentStart: 11 },
     { level: 1, title: "Indented", line: 4, start: 24, end: 37, contentStart: 29 },
     { level: 3, title: "Done", line: 5, start: 38, end: 46, contentStart: 42 },
-    { level: 1, title: "Final", line: 13, start: 103, end: 112, contentStart: 107 },
+    { level: 1, title: "Final", line: 15, start: 132, end: 141, contentStart: 136 },
   ]);
   assert.deepEqual(extractNoteHeadings("## \n####### not a heading\n# Works"), [
     { level: 1, title: "Works", line: 3, start: 26, end: 33, contentStart: 28 },
   ]);
+});
+
+test("notes statistics count Unicode characters and human-readable words", () => {
+  assert.deepEqual(noteStats("Hello  world\n🚀 launch"), { words: 4, characters: 21, lines: 2 });
+  assert.deepEqual(noteStats(""), { words: 0, characters: 0, lines: 0 });
+});
+
+test("notes version history skips blanks and duplicates and keeps twenty snapshots", () => {
+  assert.deepEqual(appendNoteRevision([], "   ", "now", "blank"), []);
+  const first = appendNoteRevision([], "# Plan\nShip it", "2026-01-01", "one");
+  assert.deepEqual(first[0], { id: "one", text: "# Plan\nShip it", at: "2026-01-01", words: 4, characters: 14, lines: 2 });
+  assert.deepEqual(appendNoteRevision(first, "# Plan\nShip it", "later", "duplicate"), first);
+  let history = first;
+  for (let index = 0; index < 25; index += 1) history = appendNoteRevision(history, `Revision ${index}`, `time-${index}`, `id-${index}`);
+  assert.equal(history.length, 20);
+  assert.equal(history[0].id, "id-24");
+  assert.equal(history.at(-1).id, "id-5");
+  assert.deepEqual(appendNoteRevision(history, "x".repeat(100_001), "huge", "huge"), history);
+});
+
+test("restoring a note version preserves the current editor text as a new snapshot", () => {
+  const history = appendNoteRevision([], "Old note", "old-time", "old");
+  const restored = restoreNoteRevision(history, "Current draft", "old", "restore-time", "current");
+  assert.equal(restored.ok, true);
+  assert.equal(restored.reason, null);
+  assert.equal(restored.text, "Old note");
+  assert.equal(restored.history[0].id, "current");
+  assert.equal(restored.history[0].text, "Current draft");
+  assert.deepEqual(restoreNoteRevision(history, "Current draft", "missing", "now", "new"), {
+    ok: false,
+    reason: "missing",
+    text: "Current draft",
+    history,
+  });
+  const oversized = "x".repeat(100_001);
+  const rejected = restoreNoteRevision(history, oversized, "old", "now", "large");
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.reason, "current-too-large");
+  assert.equal(rejected.text, oversized);
 });
 
 test("migration preserves existing logs and supplies empty project metadata", () => {
@@ -20,6 +59,28 @@ test("migration preserves existing logs and supplies empty project metadata", ()
   assert.deepEqual(migrated.logs[0], { id: "old", h: 1.5, text: "Fixed the header", at: "2026-01-02T03:04:00.000Z", project: "", tags: [] });
   assert.deepEqual(migrated.sessions, []);
   assert.equal(migrated.timerState, null);
+  assert.deepEqual(migrated.noteHistory, []);
+});
+
+test("migration repairs note version metadata and rejects invalid versions", () => {
+  const migrated = normalizeData({ noteHistory: [
+    { id: "old", text: "One two", at: "2026-01-02", words: 900 },
+    { text: "" },
+    null,
+  ] }, () => "generated");
+  assert.deepEqual(migrated.noteHistory, [{ id: "old", text: "One two", at: "2026-01-02", words: 2, characters: 7, lines: 1 }]);
+});
+
+test("migration deduplicates adjacent note versions and caps stored text", () => {
+  const versions = [
+    { id: "one", text: "same", at: "one" },
+    { id: "two", text: "same", at: "two" },
+    { id: "huge", text: "x".repeat(100_001), at: "three" },
+    { id: "three", text: "different", at: "four" },
+  ];
+  assert.deepEqual(normalizeData({ noteHistory: versions }).noteHistory.map((revision) => revision.id), ["one", "three"]);
+  const largeVersions = Array.from({ length: 6 }, (_, index) => ({ id: `large-${index}`, text: String(index).repeat(100_000), at: "now" }));
+  assert.equal(normalizeData({ noteHistory: largeVersions }).noteHistory.length, 5);
 });
 
 test("timer state survives normalization for resume and clamps corrupted values", () => {
@@ -98,4 +159,5 @@ test("Ship Log search and date ranges compose before export", () => {
 test("fresh installs include both feature stores", () => {
   assert.deepEqual(makeDefaultData().sessions, []);
   assert.equal(makeDefaultData().timerState, null);
+  assert.deepEqual(makeDefaultData().noteHistory, []);
 });

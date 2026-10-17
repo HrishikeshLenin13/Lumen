@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "./data-core.mjs";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "./data-core.mjs";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -239,9 +239,26 @@ function formatHours(value) {
 function renderNoteOutline(nav, notes) {
   if (!nav) return;
   const headings = extractNoteHeadings(notes);
-  nav.innerHTML = headings.length
-    ? '<h3 class="notes-outline__title">In this note</h3><ol>' + headings.map((heading, index) => '<li><button type="button" class="btn notes-outline__item" data-note-heading="' + index + '" style="--heading-indent:' + ((heading.level - 1) * 8) + 'px" aria-label="Go to ' + escapeHtml(heading.title) + ', line ' + heading.line + '"><span>' + escapeHtml(heading.title) + '</span><small>' + heading.line + '</small></button></li>').join("") + '</ol>'
+  const visibleHeadings = headings.slice(0, 200);
+  nav.innerHTML = visibleHeadings.length
+    ? '<h3 class="notes-outline__title">In this note</h3><ol>' + visibleHeadings.map((heading, index) => '<li><button type="button" class="btn notes-outline__item" data-note-heading="' + index + '" style="--heading-indent:' + ((heading.level - 1) * 8) + 'px" aria-label="Go to ' + escapeHtml(heading.title) + ', line ' + heading.line + '"><span>' + escapeHtml(heading.title) + '</span><small>' + heading.line + '</small></button></li>').join("") + '</ol>' + (headings.length > visibleHeadings.length ? '<p class="hint notes-outline__limit">Showing the first 200 of ' + headings.length + ' headings.</p>' : '')
     : '<p class="hint">Add Markdown headings like <code># Today</code> to build an outline.</p>';
+}
+function noteRevisionLabel(revision) {
+  const firstLine = revision.text.split("\n").find((line) => line.trim())?.trim() || "Untitled note";
+  return firstLine.length > 36 ? firstLine.slice(0, 35) + "…" : firstLine;
+}
+function renderNoteHistory(container) {
+  if (!container) return;
+  const revisions = data.noteHistory;
+  container.innerHTML = revisions.length
+    ? '<div class="notes-history__header"><h3 class="notes-outline__title">Recent versions (' + revisions.length + ')</h3><button type="button" class="notes-history__clear" data-clear-note-history>Clear</button></div><ol>' + revisions.map((revision) => '<li><button type="button" class="btn notes-history__item" data-note-revision="' + escapeHtml(revision.id) + '"><span>' + escapeHtml(noteRevisionLabel(revision)) + '</span><small>' + escapeHtml(formatLogDate(revision.at)) + ' · ' + revision.words + ' words</small></button></li>').join("") + '</ol>'
+    : '<p class="hint">Earlier saved versions will appear here.</p>';
+}
+function renderNoteStats(element, notes) {
+  if (!element) return;
+  const stats = noteStats(notes);
+  element.textContent = stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines";
 }
 // Search, date presets, the visible list, and CSV all use this one result set.
 function filteredLogs() {
@@ -350,27 +367,74 @@ const apps = [
     glyph: "N",
     icon: "icons/notes.png?v=12",
     html() {
-      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav></div><div class="row row--actions"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span></div>';
+      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button></span></div>';
     },
     bind(root) {
       const area = root.querySelector("#notesArea");
       const status = root.querySelector("[data-notes-status]");
       const outline = root.querySelector("[data-note-outline]");
+      const history = root.querySelector("[data-note-history]");
+      const stats = root.querySelector("[data-note-stats]");
       let saveTimer = null;
-      renderNoteOutline(outline, area.value);
+      let metadataFrame = null;
+      let savedNotes = data.notes;
+      const renderEditorMetadata = () => {
+        if (metadataFrame !== null) cancelAnimationFrame(metadataFrame);
+        metadataFrame = null;
+        renderNoteOutline(outline, area.value);
+        renderNoteStats(stats, area.value);
+      };
+      const scheduleEditorMetadata = () => {
+        if (metadataFrame !== null) return;
+        metadataFrame = requestAnimationFrame(renderEditorMetadata);
+      };
+      renderEditorMetadata();
+      renderNoteHistory(history);
+      const stageEditorValue = () => {
+        if (area.value === savedNotes) return false;
+        data.noteHistory = appendNoteRevision(data.noteHistory, savedNotes, new Date().toISOString(), makeId());
+        data.notes = area.value;
+        return true;
+      };
       const commit = () => {
         clearTimeout(saveTimer);
-        data.notes = area.value;
-        if (persistData()) status.textContent = "All changes saved.";
+        if (!stageEditorValue()) {
+          status.textContent = "All changes saved.";
+          return;
+        }
+        if (persistData()) {
+          savedNotes = area.value;
+          status.textContent = "All changes saved.";
+          renderNoteHistory(history);
+        } else {
+          status.textContent = "Save failed. Your edits remain open.";
+        }
       };
       area.addEventListener("input", () => {
         data.notes = area.value;
         status.textContent = "Saving…";
-        renderNoteOutline(outline, area.value);
+        scheduleEditorMetadata();
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(commit, 450);
+        saveTimer = setTimeout(commit, 900);
       });
       area.addEventListener("blur", commit);
+      const saveVersion = () => {
+        clearTimeout(saveTimer);
+        stageEditorValue();
+        const before = data.noteHistory[0]?.id;
+        data.noteHistory = appendNoteRevision(data.noteHistory, area.value, new Date().toISOString(), makeId());
+        const saved = persistData();
+        if (saved) savedNotes = area.value;
+        renderNoteHistory(history);
+        status.textContent = saved ? (data.noteHistory[0]?.id === before ? "This version is already saved." : "Version saved.") : "Version could not be saved.";
+      };
+      root.querySelector("[data-save-note-version]").addEventListener("click", saveVersion);
+      area.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
+          event.preventDefault();
+          saveVersion();
+        }
+      });
       outline.addEventListener("click", (event) => {
         const button = event.target.closest("[data-note-heading]");
         if (!button) return;
@@ -378,6 +442,34 @@ const apps = [
         if (!heading) return;
         area.focus();
         area.setSelectionRange(heading.start, heading.end);
+      });
+      history.addEventListener("click", (event) => {
+        if (event.target.closest("[data-clear-note-history]")) {
+          if (!window.confirm("Clear all saved note versions? Your current note will not change.")) return;
+          data.noteHistory = [];
+          const saved = persistData();
+          renderNoteHistory(history);
+          status.textContent = saved ? "Version history cleared." : "Version history could not be cleared.";
+          return;
+        }
+        const button = event.target.closest("[data-note-revision]");
+        if (!button) return;
+        if (!window.confirm("Restore this saved version? Your current note will remain in version history.")) return;
+        const restored = restoreNoteRevision(data.noteHistory, area.value, button.dataset.noteRevision, new Date().toISOString(), makeId());
+        if (!restored.ok) {
+          showToast(restored.reason === "current-too-large" ? "This note is too large to preserve as a version." : "That saved version is no longer available.");
+          renderNoteHistory(history);
+          return;
+        }
+        data.noteHistory = restored.history;
+        area.value = restored.text;
+        data.notes = restored.text;
+        const saved = persistData();
+        if (saved) savedNotes = restored.text;
+        renderEditorMetadata();
+        renderNoteHistory(history);
+        status.textContent = saved ? "Saved version restored." : "Version restored in this window but could not be saved.";
+        area.focus();
       });
     },
   },
