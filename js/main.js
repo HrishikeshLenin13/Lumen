@@ -86,9 +86,9 @@ function showToast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), 3200);
 }
-function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false } = {}) {
+function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false } = {}) {
   return new Promise((resolve) => {
-    const host = activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
+    const host = !onDesk && activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
     const previousFocus = document.activeElement;
     if (host.querySelector(".window-dialog")) return resolve(null);
     const overlay = document.createElement("div");
@@ -2243,7 +2243,7 @@ desk.addEventListener("contextmenu", (event) => {
 });
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), arrangeMenu()); });
 const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned">' + ["notes", "checklist", "calculator", "paint", "focus", "shiplog"].map((id) => startItem(id)).join("") + '</div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"], ["terminal", "Run..."]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned">' + ["notes", "checklist", "calculator", "paint", "focus", "shiplog"].map((id) => startItem(id)).join("") + '</div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
@@ -2282,11 +2282,23 @@ startMenu.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-all-programs]")) writeText(startMenu.querySelector("[data-all-programs] span"), startMenu.classList.toggle("show-all") ? "Back" : "All Programs");
   if (event.target.closest("[data-log-off]")) { setStartMenu(false); logOff(); }
+  if (event.target.closest("[data-run]")) { setStartMenu(false); runDialog(); }
   if (event.target.closest("[data-power-off]")) { setStartMenu(false); turnOffDialog(); }
 });
 document.addEventListener("mousedown", (event) => {
   if (!event.target.closest(".start-wrap")) setStartMenu(false);
 });
+const runAliases = { notepad: "notes", calc: "calculator", mspaint: "paint", cmd: "terminal", command: "terminal", winmine: "minesweeper", explorer: "files", control: "settings", desk: "settings", timedate: "calendar", winver: "about", sol: "busywork", recycler: "recycle" };
+let lastRun = "";
+async function runDialog() {
+  const typed = await showWindowDialog({ title: "Run", message: "Type the name of a program, and LUMEN will open it for you.", value: lastRun, onDesk: true });
+  if (!typed || !typed.trim()) return;
+  const name = typed.trim().toLowerCase().replace(/\.exe$/, "");
+  const app = apps.find((item) => item.id === (runAliases[name] || name) || item.name.toLowerCase() === name) || apps.find((item) => item.name.toLowerCase().startsWith(name));
+  if (!app) return showToast("LUMEN cannot find " + typed.trim() + ". Check the spelling and try again.");
+  lastRun = typed.trim();
+  openApp(app.id);
+}
 async function logOff() {
   if (!open.size) return showToast("There is nothing open to log off from.");
   if (!await showWindowDialog({ title: "Log Off LUMEN", message: "Close every open window? Your notes, files, and drawings stay saved.", confirmLabel: "Log Off" })) return;
