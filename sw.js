@@ -1,5 +1,5 @@
-const CACHE_NAME = "lumen-app-v33";
-const APP_SHELL = ["./", "./index.html", "./css/lumen-vintage.css?v=29", "./js/main.js?v=30", "./js/data-core.mjs", "./manifest.webmanifest?v=14", "./icons/l.png?v=12", "./icons/favicon.png?v=12", "./icons/app-icon.png?v=12", "./icons/notes.png?v=12", "./icons/timer.png?v=12", "./icons/logs.png?v=12", "./icons/checklist.png?v=1", "./icons/calculator.png?v=1", "./icons/text-tools.png?v=1", "./icons/help.png?v=12", "./icons/info.png?v=12", "./icons/cursor.png?v=12", "./icons/wallpaper.png?v=12", "./icons/wallpaper-midnight.png?v=1", "./icons/wallpaper-aurora.png?v=1", "./icons/wallpaper-graphite.png?v=1"];
+const CACHE_NAME = "lumen-app-v34";
+const APP_SHELL = ["./", "./index.html", "./css/lumen-vintage.css?v=30", "./js/main.js?v=30", "./js/data-core.mjs", "./manifest.webmanifest?v=14", "./icons/l.png?v=12", "./icons/favicon.png?v=12", "./icons/app-icon.png?v=12", "./icons/notes.png?v=12", "./icons/timer.png?v=12", "./icons/logs.png?v=12", "./icons/checklist.png?v=1", "./icons/calculator.png?v=1", "./icons/text-tools.png?v=1", "./icons/help.png?v=12", "./icons/info.png?v=12", "./icons/cursor.png?v=12", "./icons/wallpaper.png?v=12", "./icons/wallpaper-midnight.png?v=1", "./icons/wallpaper-aurora.png?v=1", "./icons/wallpaper-graphite.png?v=1"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

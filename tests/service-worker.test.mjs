@@ -34,7 +34,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   assert.match(source, /\.\/icons\/checklist\.png\?v=1/);
   assert.match(source, /\.\/icons\/calculator\.png\?v=1/);
   assert.match(source, /\.\/icons\/text-tools\.png\?v=1/);
-  assert.match(source, /lumen-app-v33/);
+  assert.match(source, /lumen-app-v34/);
   assert.match(html, /<script type="module" src="js\/main\.js\?v=30"><\/script>/);
-  assert.match(source, /lumen-vintage\.css\?v=29/);
+  assert.match(source, /lumen-vintage\.css\?v=30/);
 });
