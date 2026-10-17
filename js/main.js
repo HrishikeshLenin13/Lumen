@@ -2769,7 +2769,11 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") rememberWindows();
 });
 async function boot() {
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  let skipping = false;
+  const skip = (event) => { if (event.type === "pointerdown" || event.key === "Escape" || event.key === "Enter" || event.key === " ") skipping = true; };
+  document.addEventListener("keydown", skip);
+  document.addEventListener("pointerdown", skip);
+  const wait = (ms) => skipping ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
   const post = document.querySelector("[data-boot-post]");
   const print = (line) => {
     post.textContent += line + "\n";
@@ -2777,6 +2781,7 @@ async function boot() {
   print("LUMEN BIOS v1.04  Copyright 1987 Lumen Systems");
   print("");
   print("Main processor: Lumen 386 at 33 MHz");
+  print("Press Esc to skip");
   for (let memory = 0; memory <= 640; memory += 64) {
     post.textContent = post.textContent.replace(/Memory test: \d+K( OK)?\n$/, "") + "Memory test: " + memory + "K" + (memory === 640 ? " OK" : "") + "\n";
     await wait(28);
@@ -2790,6 +2795,8 @@ async function boot() {
   document.getElementById("desk").classList.remove("hidden");
   bendScreen();
   layoutIcons();
+  document.removeEventListener("keydown", skip);
+  document.removeEventListener("pointerdown", skip);
   await wait(700);
   document.getElementById("boot").classList.add("fade");
   await wait(420);
