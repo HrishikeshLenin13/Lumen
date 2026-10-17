@@ -216,4 +216,5 @@ test("calendar events keep only dated text entries", () => {
   assert.deepEqual(events, [{ id: "id", date: "2026-10-17", text: "Ship" }]);
 });
 test("virtual files keep safe folders and text documents", () => assert.deepEqual(normalizeData({ files: [{ id: "docs", kind: "folder", name: " Docs " }, { id: "note", kind: "text", name: "ideas/txt", parent: "docs", content: "hello" }, { id: "bad", kind: "image", name: "no" }] }).files, [{ id: "docs", kind: "folder", name: "Docs", parent: null, content: "" }, { id: "note", kind: "text", name: "ideas-txt", parent: "docs", content: "hello" }]));
+test("virtual folders repair cyclic parent relationships", () => assert.deepEqual(normalizeData({ files: [{ id: "a", kind: "folder", name: "A", parent: "b" }, { id: "b", kind: "folder", name: "B", parent: "a" }] }).files.map((item) => item.parent), [null, null]));
 test("desktop icon order removes duplicates and invalid values", () => assert.deepEqual(normalizeData({ iconOrder: ["paint", "files", "paint", 4, ""] }).iconOrder, ["paint", "files"]));

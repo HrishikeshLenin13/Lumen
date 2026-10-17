@@ -260,6 +260,7 @@ export function monthGrid(year, month) {
     return { date: day.toISOString().slice(0, 10), day: day.getUTCDate(), inMonth: day.getUTCMonth() === anchor.getUTCMonth() };
   });
 }
+function safeFileParent(item, files) { if (!item.parent || !files.some((folder) => folder.id === item.parent && folder.kind === "folder" && folder.id !== item.id)) return null; const visited = new Set([item.id]); let parent = item.parent; while (parent) { if (visited.has(parent)) return null; visited.add(parent); parent = files.find((candidate) => candidate.id === parent)?.parent || null; } return item.parent; }
 export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
   const files = Array.isArray(value?.files) ? value.files.filter((item) => item && (item.kind === "folder" || item.kind === "text") && typeof item.name === "string" && item.name.trim()).slice(0, 500).map((item) => ({ id: typeof item.id === "string" && item.id ? item.id.slice(0, 80) : makeId(), kind: item.kind, name: item.name.trim().replace(/[\\/]/g, "-").slice(0, 80), parent: typeof item.parent === "string" ? item.parent.slice(0, 80) : null, content: item.kind === "text" && typeof item.content === "string" ? item.content.slice(0, 200000) : "" })) : [];
   const defaults = makeDefaultData();
@@ -321,7 +322,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     events: Array.isArray(source.events) ? source.events.filter((event) => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date) && typeof event.text === "string" && event.text.trim()).map((event) => ({ id: typeof event.id === "string" && event.id ? event.id : makeId(), date: event.date, text: event.text.trim().slice(0, 160) })).slice(0, 500) : [],
     screensaver: source.screensaver !== false,
     windows: Array.isArray(source.windows) ? source.windows.filter((item) => item && typeof item.id === "string" && item.id).slice(0, 20).map((item) => ({ id: item.id.slice(0, 40), left: clampNumber(item.left, 0, 10000, 0), top: clampNumber(item.top, 0, 10000, 0), width: clampNumber(item.width, 120, 10000, 420), height: clampNumber(item.height, 100, 10000, 320), minimized: Boolean(item.minimized), maximized: Boolean(item.maximized) })) : [],
-    files: files.map((item) => ({ ...item, parent: item.parent && files.some((folder) => folder.id === item.parent && folder.kind === "folder" && folder.id !== item.id) ? item.parent : null })),
+    files: files.map((item) => ({ ...item, parent: safeFileParent(item, files) })),
     iconOrder: Array.isArray(source.iconOrder) ? [...new Set(source.iconOrder.filter((id) => typeof id === "string" && id).map((id) => id.slice(0, 40)))].slice(0, 100) : [],
     logs,
     sessions,

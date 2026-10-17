@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=c172f423d5";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=4d423de9b0";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -420,6 +420,7 @@ function bindFiles(root) {
   const descendantsOf = (id) => { const descendants = new Set([id]); let changed = true; while (changed) { changed = false; data.files.forEach((item) => { if (item.parent && descendants.has(item.parent) && !descendants.has(item.id)) { descendants.add(item.id); changed = true; } }); } return descendants; };
   root.querySelector("[data-files-move]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choices = ["Desktop", ...folders.map((folder) => folder.name)]; const choice = window.prompt("Move to:\n" + choices.map((name, index) => index + ": " + name).join("\n"), "0"); if (choice === null || !/^\d+$/.test(choice) || Number(choice) >= choices.length) return; item.parent = Number(choice) === 0 ? null : folders[Number(choice) - 1].id; persistData(); selected = null; render(); });
   root.querySelector("[data-files-delete]").addEventListener("click", () => { const item = selectedItem(); if (!item || !window.confirm('Delete "' + item.name + '"' + (item.kind === "folder" ? " and everything inside it?" : "?"))) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
+  list.addEventListener("keydown", (event) => { if (event.key === "Delete" && selectedItem()) root.querySelector("[data-files-delete]").click(); if (event.key === "Enter" && selectedItem()?.kind === "folder") { current = selected; selected = null; render(); list.querySelector("button")?.focus(); } });
   render();
 }
 function clearAllData() {
@@ -2004,6 +2005,7 @@ function desktopMenu() {
       openApp("checklist");
       open.get("checklist")?.el.querySelector("[data-task-input]")?.focus();
     } },
+    { label: "New text file", run: () => { openApp("files"); open.get("files")?.el.querySelector("[data-files-new-text]")?.click(); } },
     { label: "New event today", run: () => openApp("calendar") },
     null,
     { label: "Next screen effect: " + effects[nextEffect], run: () => {
