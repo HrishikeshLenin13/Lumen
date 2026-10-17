@@ -51,6 +51,7 @@ function persistData() {
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
   document.documentElement.dataset.effects = data.effects;
+  bendScreen();
   document.documentElement.dataset.wallpaper = data.wallpaper;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = data.theme === "light" ? "#6f84a9" : "#245edb";
@@ -1440,6 +1441,7 @@ function bendScreen() {
   const lens = document.querySelector("[data-crt-lens]");
   const bend = document.querySelector("[data-crt-bend]");
   if (!lens || !bend) return;
+  if (document.documentElement.dataset.effects !== "full") return;
   const strength = 0.028;
   const width = 160;
   const height = Math.max(1, Math.round(width * window.innerHeight / window.innerWidth));
@@ -1465,12 +1467,11 @@ function bendScreen() {
   lens.setAttribute("href", canvas.toDataURL());
   bend.setAttribute("scale", String(scale));
 }
-let bendFrame = 0;
+let bendTimer = 0;
 window.addEventListener("resize", () => {
-  cancelAnimationFrame(bendFrame);
-  bendFrame = requestAnimationFrame(bendScreen);
+  clearTimeout(bendTimer);
+  bendTimer = window.setTimeout(bendScreen, 160);
 });
-bendScreen();
 async function boot() {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const post = document.querySelector("[data-boot-post]");
