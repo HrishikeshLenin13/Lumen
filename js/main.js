@@ -800,6 +800,7 @@ const apps = [
 const wins = document.getElementById("wins");
 const tasks = document.getElementById("tasks");
 const open = new Map();
+const iconButtons = new Map();
 if (timer.running) {
   if (timer.secondsLeft <= 0) updateTimer();
   else timer.intervalId = setInterval(updateTimer, TIMER_TICK_MS);
@@ -829,6 +830,29 @@ function onOwnAnimationEnd(element, callback) {
   window.setTimeout(finish, 500);
 }
 
+function zoomRects(from, to, done) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return void done?.();
+  const frames = [];
+  const at = (start, end, step) => Math.round(start + (end - start) * step / 8);
+  const draw = (step) => {
+    const frame = document.createElement("div");
+    frame.className = "zoom-rect";
+    frame.style.cssText = "left:" + at(from.left, to.left, step) + "px;top:" + at(from.top, to.top, step) + "px;width:" + at(from.width, to.width, step) + "px;height:" + at(from.height, to.height, step) + "px";
+    document.body.append(frame);
+    frames.push(frame);
+    if (frames.length > 3) frames.shift().remove();
+    if (step < 8) window.setTimeout(() => draw(step + 1), 22);
+    else window.setTimeout(() => { frames.forEach((item) => item.remove()); done?.(); }, 22);
+  };
+  draw(1);
+}
+function paintWindow(element, phase) {
+  if (!element.classList.replace(phase, "painting")) return;
+  onOwnAnimationEnd(element, () => element.classList.remove("painting"));
+}
+function launcherRect(id) {
+  return (iconButtons.get(id) || startBtn).getBoundingClientRect();
+}
 function activateTopWindow() {
   const next = visibleWindowsByZ()[0];
   if (next) focusWin(next[0]);
@@ -845,25 +869,22 @@ function constrainWindow(node) {
 function toggleMaximize(id) {
   const entry = open.get(id);
   if (!entry) return;
+  const from = entry.el.getBoundingClientRect();
   const maximized = entry.el.classList.toggle("max");
   const button = entry.el.querySelector("[data-max]");
   button?.setAttribute("aria-pressed", String(maximized));
   button?.setAttribute("aria-label", maximized ? "restore window" : "maximize window");
-  if (!maximized) requestAnimationFrame(() => constrainWindow(entry.el));
+  if (!maximized) constrainWindow(entry.el);
+  entry.el.classList.add("restoring");
+  zoomRects(from, entry.el.getBoundingClientRect(), () => paintWindow(entry.el, "restoring"));
 }
 
-function setGenieTarget(entry) {
-  const windowRect = entry.el.getBoundingClientRect();
-  const taskRect = entry.tab.getBoundingClientRect();
-  entry.el.style.setProperty("--genie-x", Math.round(taskRect.left + taskRect.width / 2 - windowRect.left - windowRect.width / 2) + "px");
-  entry.el.style.setProperty("--genie-y", Math.round(taskRect.top + taskRect.height / 2 - windowRect.top - windowRect.height / 2) + "px");
-}
 function minimizeApp(id) {
   const entry = open.get(id);
   if (!entry || entry.el.classList.contains("minimizing")) return;
-  setGenieTarget(entry);
+  const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("minimizing");
-  onOwnAnimationEnd(entry.el, () => entry.el.classList.replace("minimizing", "min"));
+  zoomRects(from, entry.tab.getBoundingClientRect(), () => entry.el.classList.replace("minimizing", "min"));
   entry.el.classList.remove("focus");
   entry.tab.classList.remove("on");
   entry.tab.setAttribute("aria-selected", "false");
@@ -876,9 +897,9 @@ function minimizeApp(id) {
 function restoreApp(id) {
   const entry = open.get(id);
   if (!entry?.el.classList.contains("min")) return false;
-  setGenieTarget(entry);
+  const to = entry.el.getBoundingClientRect();
   entry.el.classList.replace("min", "restoring");
-  onOwnAnimationEnd(entry.el, () => entry.el.classList.remove("restoring"));
+  zoomRects(entry.tab.getBoundingClientRect(), to, () => paintWindow(entry.el, "restoring"));
   focusWin(id);
   if (id === "focus") paintTimer(entry.el.querySelector(".body"));
   return true;
@@ -907,7 +928,6 @@ function openApp(id) {
   element.style.zIndex = String(++z);
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
-  onOwnAnimationEnd(element, () => element.classList.remove("opening"));
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on opening";
@@ -935,7 +955,8 @@ function openApp(id) {
     entry.resizeObserver = new ResizeObserver(() => constrainWindow(element));
     entry.resizeObserver.observe(element);
   }
-  requestAnimationFrame(() => constrainWindow(element));
+  constrainWindow(element);
+  zoomRects(launcherRect(id), element.getBoundingClientRect(), () => paintWindow(element, "opening"));
   focusWin(id);
 }
 
@@ -958,6 +979,7 @@ function closeApp(id) {
   if (!entry || entry.el.classList.contains("closing")) return;
   entry.resizeObserver?.disconnect();
   entry.el.classList.remove("opening");
+  const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("closing");
   entry.tab.classList.add("closing");
   let finished = false;
@@ -972,10 +994,7 @@ function closeApp(id) {
       activateTopWindow();
     }
   };
-  onOwnAnimationEnd(entry.el, finish);
-  window.setTimeout(() => {
-    if (open.get(id) === entry) finish();
-  }, 220);
+  zoomRects(from, launcherRect(id), finish);
 }
 
 function closeAllWindows() {
@@ -1040,6 +1059,7 @@ apps.forEach((app) => {
   button.setAttribute("aria-label", "Open " + app.name);
   button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
   button.addEventListener("click", () => openApp(app.id));
+  iconButtons.set(app.id, button);
   icons.append(button);
 });
 
@@ -1156,7 +1176,7 @@ window.addEventListener("beforeunload", persistData);
 async function boot() {
   await new Promise((resolve) => setTimeout(resolve, 900));
   document.getElementById("boot").classList.add("fade");
-  document.getElementById("desk").classList.remove("hidden");
+  document.getElementById("desk").classList.replace("hidden", "power-on");
   await new Promise((resolve) => setTimeout(resolve, 400));
   document.getElementById("boot").remove();
   const requestedApp = location.hash.slice(1);

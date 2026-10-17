@@ -1166,18 +1166,18 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 }
 
 .win.opening {
-  transform-origin: 50% 100%;
-  animation: window-open 170ms cubic-bezier(0.2, 0.82, 0.25, 1) both;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .win.closing {
   pointer-events: none;
-  transform-origin: 50% 100%;
-  animation: window-close 150ms cubic-bezier(0.55, 0, 0.9, 0.35) both;
+  visibility: hidden;
 }
-.win.minimizing { pointer-events: none; animation: window-genie 320ms cubic-bezier(0.5, 0, 0.85, 0.45) both; }
-.win.restoring { animation: window-genie 360ms cubic-bezier(0.16, 0.8, 0.25, 1) reverse both; }
-.win.minimizing, .win.restoring { transform-origin: center; will-change: transform, clip-path, opacity; }
+.win.minimizing, .win.restoring { visibility: hidden; pointer-events: none; }
+.win.painting { animation: window-paint 210ms steps(7, end) both; }
+.zoom-rect { position: fixed; z-index: 9990; pointer-events: none; border: 2px solid #fff; mix-blend-mode: difference; }
+.desktop.power-on { animation: crt-on 560ms steps(12, end) backwards; }
 
 .task.opening {
   transform-origin: left center;
@@ -1212,17 +1212,8 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
 
 @keyframes crt-flicker { 0%, 100% { opacity: 0.55; } 31% { opacity: 0.5; } 32% { opacity: 0.58; } 64% { opacity: 0.52; } 65% { opacity: 0.56; } }
 @keyframes crt-roll { from { background-position: 0 -160px, 0 0, 0 0; } to { background-position: 0 calc(100vh + 160px), 0 0, 0 0; } }
-@keyframes window-open {
-  from { opacity: 0; transform: translateY(16px) scale(0.9); }
-  75% { opacity: 1; transform: translateY(-1px) scale(1.005); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes window-close {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(18px) scale(0.84); }
-}
-@keyframes window-genie { 0% { opacity: 1; transform: translate(0, 0) scale(1); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } 38% { opacity: 1; transform: translateY(8px) scale(0.94, 0.88); clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%); } 72% { opacity: 0.9; transform: translate(var(--genie-x), calc(var(--genie-y) - 18px)) scale(0.16, 0.34) skewX(-8deg); clip-path: polygon(28% 0, 72% 0, 92% 100%, 8% 100%); } 100% { opacity: 0; transform: translate(var(--genie-x), var(--genie-y)) scale(0.03, 0.06); clip-path: polygon(44% 0, 56% 0, 54% 100%, 46% 100%); } }
+@keyframes window-paint { 0% { clip-path: inset(0 0 100% 0); filter: brightness(1.8); } 100% { clip-path: inset(0); filter: none; } }
+@keyframes crt-on { 0% { transform: scale(1, 0.004); filter: brightness(5); } 40% { transform: scale(1, 0.004); filter: brightness(3); } 70% { transform: scale(1, 1.03); filter: brightness(1.7); } 100% { transform: scale(1, 1); filter: brightness(1); } }
 
 @keyframes task-open {
   from { opacity: 0; transform: scaleX(0.25); max-width: 0; min-width: 0; padding-inline: 0; }
