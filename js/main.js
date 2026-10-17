@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=bed915515a";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=c172f423d5";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -415,7 +415,8 @@ function bindFiles(root) {
   root.querySelector("[data-files-up]").addEventListener("click", () => { current = data.files.find((item) => item.id === current)?.parent ?? null; selected = null; render(); });
   content.addEventListener("input", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; item.content = content.value.slice(0, 200000); clearTimeout(saveTimer); saveTimer = setTimeout(() => { persistData(); root.querySelector("[data-files-status]").textContent = "Saved."; }, 300); });
   root.querySelector("[data-files-rename]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const name = window.prompt("New name:", item.name)?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
-  root.querySelector("[data-files-move]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const folders = data.files.filter((candidate) => candidate.kind === "folder" && candidate.id !== item.id); const choices = ["Desktop", ...folders.map((folder) => folder.name)]; const choice = window.prompt("Move to:\n" + choices.map((name, index) => index + ": " + name).join("\n"), "0"); if (choice === null || !/^\d+$/.test(choice) || Number(choice) >= choices.length) return; item.parent = Number(choice) === 0 ? null : folders[Number(choice) - 1].id; persistData(); selected = null; render(); });
+  const descendantsOf = (id) => { const descendants = new Set([id]); let changed = true; while (changed) { changed = false; data.files.forEach((item) => { if (item.parent && descendants.has(item.parent) && !descendants.has(item.id)) { descendants.add(item.id); changed = true; } }); } return descendants; };
+  root.querySelector("[data-files-move]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choices = ["Desktop", ...folders.map((folder) => folder.name)]; const choice = window.prompt("Move to:\n" + choices.map((name, index) => index + ": " + name).join("\n"), "0"); if (choice === null || !/^\d+$/.test(choice) || Number(choice) >= choices.length) return; item.parent = Number(choice) === 0 ? null : folders[Number(choice) - 1].id; persistData(); selected = null; render(); });
   root.querySelector("[data-files-delete]").addEventListener("click", () => { const item = selectedItem(); if (!item || !window.confirm('Delete "' + item.name + '"' + (item.kind === "folder" ? " and everything inside it?" : "?"))) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
   render();
 }
@@ -1833,12 +1834,16 @@ window.addEventListener("resize", () => {
 const icons = document.getElementById("icons");
 const startBtn = document.getElementById("startBtn");
 const startMenu = document.getElementById("startMenu");
+const orderedApps = [...apps].sort((a, b) => { const ai = data.iconOrder.indexOf(a.id); const bi = data.iconOrder.indexOf(b.id); return (ai < 0 ? apps.length + apps.indexOf(a) : ai) - (bi < 0 ? apps.length + apps.indexOf(b) : bi); });
 
-apps.forEach((app) => {
+orderedApps.forEach((app) => {
   const button = document.createElement("button");
   button.type = "button";
+  button.draggable = true;
   button.className = "icon";
+  button.dataset.appId = app.id;
   button.setAttribute("aria-label", "Open " + app.name);
+  button.addEventListener("dragstart", (event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", app.id); });
   button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
   button.addEventListener("click", () => {
     selectIcons(new Set([app.id]));
@@ -1847,6 +1852,8 @@ apps.forEach((app) => {
   iconButtons.set(app.id, button);
   icons.append(button);
 });
+icons.addEventListener("dragover", (event) => { if (event.target.closest(".icon")) event.preventDefault(); });
+icons.addEventListener("drop", (event) => { const dragged = event.dataTransfer.getData("text/plain"); const target = event.target.closest(".icon")?.dataset.appId; if (!dragged || !target || dragged === target || !iconButtons.has(dragged)) return; event.preventDefault(); icons.insertBefore(iconButtons.get(dragged), iconButtons.get(target)); data.iconOrder = Array.from(icons.querySelectorAll(".icon"), (button) => button.dataset.appId); persistData(); });
 
 const desk = document.getElementById("desk");
 const marquee = document.createElement("div");
@@ -1983,6 +1990,7 @@ function desktopMenu() {
       const order = Array.from(iconButtons.values());
       if (iconsByName) order.sort((a, b) => a.textContent.localeCompare(b.textContent));
       order.forEach((button) => icons.append(button));
+      data.iconOrder = Array.from(icons.querySelectorAll(".icon"), (button) => button.dataset.appId); persistData();
     } },
     { label: "Refresh", run: () => {
       icons.classList.remove("refreshing");

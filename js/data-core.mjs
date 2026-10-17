@@ -19,6 +19,7 @@ export function makeDefaultData() {
     screensaver: true,
     windows: [],
     files: [],
+    iconOrder: [],
   };
 }
 
@@ -321,6 +322,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     screensaver: source.screensaver !== false,
     windows: Array.isArray(source.windows) ? source.windows.filter((item) => item && typeof item.id === "string" && item.id).slice(0, 20).map((item) => ({ id: item.id.slice(0, 40), left: clampNumber(item.left, 0, 10000, 0), top: clampNumber(item.top, 0, 10000, 0), width: clampNumber(item.width, 120, 10000, 420), height: clampNumber(item.height, 100, 10000, 320), minimized: Boolean(item.minimized), maximized: Boolean(item.maximized) })) : [],
     files: files.map((item) => ({ ...item, parent: item.parent && files.some((folder) => folder.id === item.parent && folder.kind === "folder" && folder.id !== item.id) ? item.parent : null })),
+    iconOrder: Array.isArray(source.iconOrder) ? [...new Set(source.iconOrder.filter((id) => typeof id === "string" && id).map((id) => id.slice(0, 40)))].slice(0, 100) : [],
     logs,
     sessions,
     tasks,

@@ -1318,6 +1318,7 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
     grid-template-columns: 1fr;
   }
   .checklist-toolbar { flex-wrap: wrap; }
+  .files__main { grid-template-columns: 1fr; grid-template-rows: minmax(100px, 1fr) minmax(140px, 1fr); }
 
   .log-entry-form {
     grid-template-columns: 1fr;
