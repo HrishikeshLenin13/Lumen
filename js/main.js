@@ -4,7 +4,12 @@ const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
 const TIMER_TICK_MS = 1000;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const screenCursor = document.querySelector("[data-screen-cursor]");
+function angleCursor(x, y) { const nx = x / innerWidth * 2 - 1; const ny = y / innerHeight * 2 - 1; screenCursor.style.setProperty("--cursor-x", Math.round(x) + "px"); screenCursor.style.setProperty("--cursor-y", Math.round(y) + "px"); screenCursor.style.setProperty("--cursor-rx", Math.round(-ny * 12) + "deg"); screenCursor.style.setProperty("--cursor-ry", Math.round(nx * 12) + "deg"); screenCursor.style.setProperty("--cursor-rz", Math.round(nx * 5) + "deg"); }
+document.addEventListener("pointermove", (event) => { angleCursor(event.clientX, event.clientY); screenCursor.classList.remove("hidden"); }, { passive: true });
+document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, width: 1, height: 1 };
+document.documentElement.dataset.curvedCursor = "on";
 function toScene(x, y) {
   if (!lens.strength || document.documentElement.dataset.effects !== "full") return [x, y];
   const nx = x / lens.width * 2 - 1;
@@ -69,6 +74,22 @@ function showToast(message) {
   toast.classList.remove("hidden");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), 3200);
+}
+function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false } = {}) {
+  return new Promise((resolve) => {
+    const host = activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
+    const overlay = document.createElement("div");
+    overlay.className = "window-dialog";
+    overlay.setAttribute("role", "presentation");
+    const control = Array.isArray(options) ? '<select class="field" data-dialog-value>' + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join("") + "</select>" : value !== undefined ? '<input class="field" data-dialog-value value="' + escapeHtml(value) + '">' : "";
+    overlay.innerHTML = '<form class="window-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="windowDialogTitle"><strong class="window-dialog__title" id="windowDialogTitle">' + escapeHtml(title) + '</strong><div class="window-dialog__content"><span>' + escapeHtml(message) + '</span>' + control + '<div class="window-dialog__actions"><button type="button" class="btn" data-dialog-cancel>Cancel</button><button type="submit" class="btn' + (danger ? " danger" : " primary") + '">' + escapeHtml(confirmLabel) + "</button></div></div></form>";
+    const settle = (result) => { overlay.remove(); resolve(result); };
+    host.append(overlay);
+    overlay.querySelector("form").addEventListener("submit", (event) => { event.preventDefault(); settle(overlay.querySelector("[data-dialog-value]")?.value ?? true); });
+    overlay.querySelector("[data-dialog-cancel]").addEventListener("click", () => settle(null));
+    overlay.addEventListener("keydown", (event) => { if (event.key === "Escape") settle(null); });
+    (overlay.querySelector("[data-dialog-value]") || overlay.querySelector("button[type=submit]")).focus();
+  });
 }
 let lastSaved = "";
 function persistData() {
@@ -370,7 +391,7 @@ async function importBackup(file) {
     const imported = parsed?.app === "LUMEN" && parsed.data ? parsed.data : parsed;
     const valid = imported && typeof imported === "object" && !Array.isArray(imported) && ("notes" in imported || "logs" in imported);
     if (!valid) throw new Error("This file does not contain LUMEN desk data.");
-    const confirmed = window.confirm("Importing this backup will replace the current desk data. Continue?");
+    const confirmed = await showWindowDialog({ title: "Restore backup", message: "Importing this backup will replace the current desk data.", confirmLabel: "Import", danger: true });
     if (!confirmed) return;
     data = normalizeData(imported);
     savePaint(data.paintImage);
@@ -408,7 +429,7 @@ function bindFiles(root) {
     root.querySelector("[data-files-download]").disabled = item?.kind !== "text";
     content.value = item?.kind === "text" ? item.content : "";
   };
-  const createItem = (kind) => { const proposed = window.prompt(kind === "folder" ? "Folder name:" : "Text file name:", kind === "folder" ? "New Folder" : "New Text File.txt"); const name = proposed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; const item = { id: makeId(), kind, name, parent: current, content: "" }; data.files.push(item); selected = item.id; persistData(); render(); if (kind === "text") content.focus(); };
+  const createItem = async (kind) => { const proposed = await showWindowDialog({ title: kind === "folder" ? "New folder" : "New text file", message: "Enter a name.", value: kind === "folder" ? "New Folder" : "New Text File.txt", confirmLabel: "Create" }); const name = proposed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; const item = { id: makeId(), kind, name, parent: current, content: "" }; data.files.push(item); selected = item.id; persistData(); render(); if (kind === "text") content.focus(); };
   root.querySelector("[data-files-new-folder]").addEventListener("click", () => createItem("folder"));
   root.querySelector("[data-files-new-text]").addEventListener("click", () => createItem("text"));
   list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button) return; selected = button.dataset.fileId; render(); });
@@ -418,15 +439,15 @@ function bindFiles(root) {
   root.querySelector("[data-files-up]").addEventListener("click", () => { current = data.files.find((item) => item.id === current)?.parent ?? null; selected = null; render(); });
   content.addEventListener("input", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; item.content = content.value.slice(0, 200000); clearTimeout(saveTimer); saveTimer = setTimeout(() => { persistData(); root.querySelector("[data-files-status]").textContent = "Saved."; }, 300); });
   root.querySelector("[data-files-download]").addEventListener("click", () => { const item = selectedItem(); if (!item || item.kind !== "text") return; const url = URL.createObjectURL(new Blob([item.content], { type: "text/plain;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = item.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 0); });
-  root.querySelector("[data-files-rename]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const name = window.prompt("New name:", item.name)?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
+  root.querySelector("[data-files-rename]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const renamed = await showWindowDialog({ title: "Rename", message: "Enter a new name.", value: item.name, confirmLabel: "Rename" }); const name = renamed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; item.name = name; persistData(); render(); });
   const descendantsOf = (id) => { const descendants = new Set([id]); let changed = true; while (changed) { changed = false; data.files.forEach((item) => { if (item.parent && descendants.has(item.parent) && !descendants.has(item.id)) { descendants.add(item.id); changed = true; } }); } return descendants; };
-  root.querySelector("[data-files-move]").addEventListener("click", () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choices = ["Desktop", ...folders.map((folder) => folder.name)]; const choice = window.prompt("Move to:\n" + choices.map((name, index) => index + ": " + name).join("\n"), "0"); if (choice === null || !/^\d+$/.test(choice) || Number(choice) >= choices.length) return; item.parent = Number(choice) === 0 ? null : folders[Number(choice) - 1].id; persistData(); selected = null; render(); });
-  root.querySelector("[data-files-delete]").addEventListener("click", () => { const item = selectedItem(); if (!item || !window.confirm('Delete "' + item.name + '"' + (item.kind === "folder" ? " and everything inside it?" : "?"))) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
+  root.querySelector("[data-files-move]").addEventListener("click", async () => { const item = selectedItem(); if (!item) return; const blocked = item.kind === "folder" ? descendantsOf(item.id) : new Set(); const folders = data.files.filter((candidate) => candidate.kind === "folder" && !blocked.has(candidate.id)); const choice = await showWindowDialog({ title: "Move " + item.name, message: "Choose a destination.", options: [{ value: "", label: "Desktop" }, ...folders.map((folder) => ({ value: folder.id, label: folder.name }))], confirmLabel: "Move" }); if (choice === null) return; item.parent = choice || null; persistData(); selected = null; render(); });
+  root.querySelector("[data-files-delete]").addEventListener("click", async () => { const item = selectedItem(); if (!item || !await showWindowDialog({ title: "Delete " + item.name, message: item.kind === "folder" ? "Delete this folder and everything inside it?" : "Delete this text file?", confirmLabel: "Delete", danger: true })) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); });
   list.addEventListener("keydown", (event) => { if (event.key === "Delete" && selectedItem()) root.querySelector("[data-files-delete]").click(); if (event.key === "Enter" && selectedItem()?.kind === "folder") { current = selected; selected = null; render(); list.querySelector("button")?.focus(); } });
   render();
 }
-function clearAllData() {
-  const confirmed = window.confirm("Clear all LUMEN notes, settings, and ship log entries?");
+async function clearAllData() {
+  const confirmed = await showWindowDialog({ title: "Clear all data", message: "Clear all LUMEN notes, files, settings, and ship log entries?", confirmLabel: "Clear", danger: true });
   if (!confirmed) return;
   try {
     localStorage.removeItem(KEY);
@@ -540,9 +561,9 @@ const apps = [
         area.focus();
         area.setSelectionRange(heading.start, heading.end);
       });
-      history.addEventListener("click", (event) => {
+      history.addEventListener("click", async (event) => {
         if (event.target.closest("[data-clear-note-history]")) {
-          if (!window.confirm("Clear all saved note versions? Your current note will not change.")) return;
+          if (!await showWindowDialog({ title: "Clear version history", message: "Clear all saved note versions? Your current note will not change.", confirmLabel: "Clear", danger: true })) return;
           data.noteHistory = [];
           const saved = persistData();
           renderNoteHistory(history);
@@ -551,7 +572,7 @@ const apps = [
         }
         const button = event.target.closest("[data-note-revision]");
         if (!button) return;
-        if (!window.confirm("Restore this saved version? Your current note will remain in version history.")) return;
+        if (!await showWindowDialog({ title: "Restore note version", message: "Restore this saved version? Your current note will remain in version history.", confirmLabel: "Restore" })) return;
         const restored = restoreNoteRevision(data.noteHistory, area.value, button.dataset.noteRevision, new Date().toISOString(), makeId());
         if (!restored.ok) {
           showToast(restored.reason === "current-too-large" ? "This note is too large to preserve as a version." : "That saved version is no longer available.");
@@ -670,7 +691,7 @@ const apps = [
           render();
         }
       });
-      list.addEventListener("click", (event) => {
+      list.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-log-action]");
         if (!button) return;
         const action = button.dataset.logAction;
@@ -687,7 +708,7 @@ const apps = [
         }
         if (action === "delete-selected") {
           const count = selectedLogIds.size;
-          if (!count || !window.confirm("Delete " + count + " selected ship log " + (count === 1 ? "entry" : "entries") + "?")) return;
+          if (!count || !await showWindowDialog({ title: "Delete ship log entries", message: "Delete " + count + " selected ship log " + (count === 1 ? "entry?" : "entries?"), confirmLabel: "Delete", danger: true })) return;
           data.logs = data.logs.filter((item) => !selectedLogIds.has(item.id));
           if (editingLogId && selectedLogIds.has(editingLogId)) editingLogId = null;
           selectedLogIds.clear();
@@ -710,7 +731,7 @@ const apps = [
           return;
         }
         if (action === "delete") {
-          if (!window.confirm("Delete this ship log entry?")) return;
+          if (!await showWindowDialog({ title: "Delete ship log entry", message: "Delete this ship log entry?", confirmLabel: "Delete", danger: true })) return;
           data.logs = data.logs.filter((item) => item.id !== id);
           selectedLogIds.delete(id);
           if (editingLogId === id) editingLogId = null;
@@ -1073,8 +1094,8 @@ const apps = [
       });
       undoButton.addEventListener("click", () => { const image = undo.pop(); if (!image) return; context.putImageData(image, 0, 0); undoButton.disabled = undo.length === 0; store(); });
       canvas.addEventListener("keydown", (event) => { if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z" || undoButton.disabled) return; event.preventDefault(); undoButton.click(); });
-      root.querySelector("[data-paint-clear]").addEventListener("click", () => {
-        if (!window.confirm("Clear the whole drawing?")) return;
+      root.querySelector("[data-paint-clear]").addEventListener("click", async () => {
+        if (!await showWindowDialog({ title: "Paint", message: "Clear the whole drawing?", confirmLabel: "Clear", danger: true })) return;
         snapshot();
         blank();
         store();

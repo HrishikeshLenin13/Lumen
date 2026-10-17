@@ -1168,6 +1168,11 @@ kbd {
   box-shadow: 2px 3px 5px rgba(0, 0, 0, 0.35);
   font-size: 11px;
 }
+.window-dialog { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; padding: 12px; background: rgba(0, 0, 0, 0.35); }
+.window-dialog__panel { width: min(340px, 100%); padding: 2px; color: #000; background: #d4d0c8; border: 2px solid; border-color: #fff #404040 #404040 #fff; box-shadow: 2px 2px 0 #000; }
+.window-dialog__title { display: block; padding: 3px 5px; color: #fff; background: #0a246a; }
+.window-dialog__content { display: grid; gap: 8px; padding: 12px; }
+.window-dialog__actions { display: flex; justify-content: flex-end; gap: 6px; }
 
 .sr-only {
   position: absolute !important;
@@ -1189,6 +1194,10 @@ select,
 .icon {
   cursor: url("../icons/cursor-2x.png?v=f168de4de6") 0 0, default;
 }
+.screen-cursor { display: none; }
+@media (pointer: fine) { html[data-curved-cursor="on"], html[data-curved-cursor="on"] * { cursor: none !important; } }
+@media (pointer: fine) { .screen-cursor { position: fixed; left: 0; top: 0; z-index: 20000; display: block; width: 32px; height: 32px; pointer-events: none; background: url("../icons/cursor-2x.png?v=f168de4de6") 0 0 / 32px 32px no-repeat; image-rendering: pixelated; transform: translate3d(var(--cursor-x, -40px), var(--cursor-y, -40px), 0) perspective(80px) rotateX(var(--cursor-rx, 0deg)) rotateY(var(--cursor-ry, 0deg)) rotateZ(var(--cursor-rz, 0deg)); transform-origin: 0 0; } }
+.screen-cursor.hidden { display: none; }
 
 body::before,
 body::after {

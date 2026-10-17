@@ -41,6 +41,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   assert.match(source, /lumen-vintage\.css\?v=\w+/);
 });
 test('cache stamps match the current file contents', () => assert.equal(spawnSync(process.execPath, ['scripts/stamp-cache.mjs', '--check'], { cwd: new URL('..', import.meta.url) }).status, 0));
+test('the interface owns its cursor and dialogs', () => { const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'); const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8'); const css = readFileSync(new URL('../css/lumen-vintage.css', import.meta.url), 'utf8'); assert.doesNotMatch(main, /window\.(?:prompt|confirm|alert)/); assert.match(html, /data-screen-cursor/); assert.match(css, /rotateX\(var\(--cursor-rx/); });
 test('content-hashed assets are served from cache without the network', async () => {
   const listeners = {};
   let fetched = 0;
