@@ -1759,6 +1759,14 @@ desk.addEventListener("pointerdown", (event) => {
   desk.addEventListener("pointerup", stop);
   desk.addEventListener("pointercancel", stop);
 });
+let scrollSettle = 0;
+document.addEventListener("scroll", () => {
+  if (!desk.classList.contains("moving")) desk.classList.add("moving");
+  clearTimeout(scrollSettle);
+  scrollSettle = window.setTimeout(() => {
+    if (!document.body.classList.contains("dragging") && marquee.classList.contains("hidden") && !wins.querySelector("[data-flinging]")) desk.classList.remove("moving");
+  }, 160);
+}, { capture: true, passive: true });
 const contextMenu = document.createElement("div");
 contextMenu.className = "context-menu hidden";
 contextMenu.setAttribute("role", "menu");
