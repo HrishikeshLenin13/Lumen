@@ -8,7 +8,7 @@ const stale = [];
 for (const file of ["css/lumen-vintage.css", "js/main.js", "index.html", "sw.js"]) {
   const url = new URL(file, root);
   const source = readFileSync(url, "utf8");
-  const stamped = source.replace(/([\w./-]+\.(?:css|mjs|js|png|webmanifest))\?v=[\w-]+/g, (match, ref) => { const target = locate(ref, url); return target ? ref + "?v=" + digest(readFileSync(target)) : match; });
+  const stamped = source.replace(/([\w./-]+\.(?:css|mjs|js|png|mp3|webmanifest))\?v=[\w-]+/g, (match, ref) => { const target = locate(ref, url); return target ? ref + "?v=" + digest(readFileSync(target)) : match; });
   const next = stamped.replace(/lumen-app-[\w-]+/, () => "lumen-app-" + digest(stamped.replace(/lumen-app-[\w-]+/, "")));
   if (next === source) continue;
   stale.push(file);

@@ -102,43 +102,25 @@ function primeAudio() {
     audioContext = null;
   }
 }
-function playFinishedSound() {
-  if (!audioContext) return;
-  try {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const now = audioContext.currentTime;
-    oscillator.frequency.setValueAtTime(880, now);
-    oscillator.frequency.setValueAtTime(660, now + 0.2);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.5);
-  } catch {
-    return;
-  }
+const sounds = { open: "sounds/open.mp3", close: "sounds/close.mp3", minimize: "sounds/minimize.mp3", restore: "sounds/restore.mp3", thud: "sounds/thud.mp3", win: "sounds/win.mp3", boom: "sounds/boom.mp3", degauss: "sounds/degauss.mp3", timer: "sounds/timer.mp3" };
+const soundBuffers = new Map();
+function loadSound(name) {
+  if (!audioContext || !sounds[name]) return Promise.resolve(null);
+  if (!soundBuffers.has(name)) soundBuffers.set(name, fetch(sounds[name]).then((response) => response.arrayBuffer()).then((bytes) => audioContext.decodeAudioData(bytes)).catch(() => null));
+  return soundBuffers.get(name);
 }
-function systemSound(frequency, duration = 0.06) {
-  if (!data.sounds || !audioContext) return;
-  try {
-    const oscillator = audioContext.createOscillator();
+function playSound(name) {
+  if (!data.sounds) return;
+  primeAudio();
+  loadSound(name).then((buffer) => {
+    if (!buffer || !audioContext) return;
+    const source = audioContext.createBufferSource();
     const gain = audioContext.createGain();
-    const now = audioContext.currentTime;
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(frequency, now);
-    oscillator.frequency.exponentialRampToValueAtTime(frequency / 2, now + duration);
-    gain.gain.setValueAtTime(0.035, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + duration);
-  } catch {
-    return;
-  }
+    gain.gain.value = 0.5;
+    source.buffer = buffer;
+    source.connect(gain).connect(audioContext.destination);
+    source.start();
+  });
 }
 function requestNotificationPermission() {
   if ("Notification" in window && Notification.permission === "default") {
@@ -188,7 +170,7 @@ function finishTimer() {
   document.title = "✓ " + message + " - LUMEN";
   paintTimer();
   renderSessionHistory();
-  playFinishedSound();
+  playSound("timer");
   showToast(message);
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
@@ -856,13 +838,13 @@ const apps = [
           if (best) data.mineBest = seconds;
           persistData();
           writeText(status, "Cleared in " + seconds + "s." + (best ? " New best time." : " Best is " + data.mineBest + "s."));
-          systemSound(880, 0.12);
+          playSound("win");
         } else {
           field.forEach((info, index) => {
             if (info.mine) revealed.add(index);
           });
           writeText(status, "Boom. Press the face for a new game.");
-          systemSound(90, 0.4);
+          playSound("boom");
         }
         paint();
       };
@@ -1438,7 +1420,7 @@ function minimizeApp(id) {
   if (!entry || entry.el.classList.contains("minimizing")) return;
   const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("minimizing");
-  systemSound(520, 0.05);
+  playSound("minimize");
   zoomRects(from, entry.tab.getBoundingClientRect(), () => entry.el.classList.replace("minimizing", "min"));
   entry.el.classList.remove("focus");
   entry.tab.classList.remove("on");
@@ -1454,7 +1436,7 @@ function restoreApp(id) {
   if (!entry?.el.classList.contains("min")) return false;
   const to = entry.el.getBoundingClientRect();
   entry.el.classList.replace("min", "restoring");
-  systemSound(620, 0.05);
+  playSound("restore");
   zoomRects(entry.tab.getBoundingClientRect(), to, () => paintWindow(entry.el, "restoring"));
   focusWin(id);
   if (id === "focus") paintTimer(entry.el.querySelector(".body"));
@@ -1485,7 +1467,7 @@ function openApp(id) {
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
-  systemSound(740);
+  playSound("open");
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on opening";
@@ -1539,7 +1521,7 @@ function closeApp(id) {
   entry.el.classList.remove("opening");
   const from = entry.el.getBoundingClientRect();
   entry.el.classList.add("closing");
-  systemSound(370);
+  playSound("close");
   entry.tab.classList.add("closing");
   let finished = false;
   const finish = () => {
@@ -1571,7 +1553,7 @@ function impact(node, speed, origin, horizontal) {
   const squash = Math.min(0.08, speed * 0.025);
   const scale = horizontal ? "scale(" + (1 - squash) + ", " + (1 + squash / 2) + ")" : "scale(" + (1 + squash / 2) + ", " + (1 - squash) + ")";
   node.animate([{ transformOrigin: origin, transform: scale }, { transformOrigin: origin, transform: "none" }], { duration: 170, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" });
-  systemSound(horizontal ? 180 : 150, 0.035);
+  playSound("thud");
 }
 let flingCount = 0;
 function flingWindow(node, velocityX, velocityY) {
@@ -1786,7 +1768,7 @@ function degauss() {
   if (desk.classList.contains("degauss") || reducedMotion.matches) return;
   desk.classList.add("degauss");
   primeAudio();
-  systemSound(110, 0.6);
+  playSound("degauss");
   window.setTimeout(() => desk.classList.remove("degauss"), 900);
 }
 document.addEventListener("keydown", (event) => {
@@ -1872,6 +1854,7 @@ tickClock();
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
 window.addEventListener("beforeunload", persistData);
 document.addEventListener("pointerdown", primeAudio);
+document.addEventListener("pointerdown", () => Object.keys(sounds).forEach(loadSound), { once: true });
 
 function bendScreen() {
   const lens = document.querySelector("[data-crt-lens]");
