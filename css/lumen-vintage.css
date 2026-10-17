@@ -219,12 +219,14 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   text-shadow: 1px 1px #000;
 }
 
-.icon:focus span {
+.icon:focus span,
+.icon.selected span {
   background: #0b61ff;
   outline: 1px dotted #fff;
 }
 .icon:focus-visible { outline: none; }
-.icon:focus .desktop-icon { filter: brightness(0.75) sepia(1) hue-rotate(185deg) saturate(5); }
+.marquee { position: absolute; z-index: 2; pointer-events: none; background: rgba(49, 106, 197, 0.32); border: 1px solid #316ac5; }
+.icon:focus .desktop-icon, .icon.selected .desktop-icon { filter: brightness(0.75) sepia(1) hue-rotate(185deg) saturate(5); }
 
 .desktop-icon {
   width: 32px;

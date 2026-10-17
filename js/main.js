@@ -910,7 +910,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
     },
     bind() {},
   },
@@ -1134,12 +1134,51 @@ function closeAllWindows() {
   activeId = null;
 }
 
+let flingCount = 0;
+function flingWindow(node, velocityX, velocityY) {
+  const token = String(++flingCount);
+  const maximumLeft = Math.max(0, wins.clientWidth - node.offsetWidth);
+  const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
+  let x = node.offsetLeft;
+  let y = node.offsetTop;
+  let vx = Math.max(-4, Math.min(4, velocityX));
+  let vy = Math.max(-4, Math.min(4, velocityY));
+  let last = performance.now();
+  node.dataset.flinging = token;
+  const step = (now) => {
+    if (!node.isConnected || node.classList.contains("max") || node.dataset.flinging !== token) return;
+    const elapsed = Math.min(32, now - last);
+    last = now;
+    x += vx * elapsed;
+    y += vy * elapsed;
+    if (x < 0 || x > maximumLeft) {
+      x = Math.max(0, Math.min(maximumLeft, x));
+      vx = -vx * 0.55;
+      systemSound(180, 0.035);
+    }
+    if (y < 0 || y > maximumTop) {
+      y = Math.max(0, Math.min(maximumTop, y));
+      vy = -vy * 0.55;
+      systemSound(150, 0.035);
+    }
+    const friction = Math.pow(0.9945, elapsed);
+    vx *= friction;
+    vy *= friction;
+    node.style.left = Math.round(x) + "px";
+    node.style.top = Math.round(y) + "px";
+    if (Math.hypot(vx, vy) > 0.04) requestAnimationFrame(step);
+    else delete node.dataset.flinging;
+  };
+  requestAnimationFrame(step);
+}
 function drag(node) {
   const bar = node.querySelector(".bar");
   bar.addEventListener("pointerdown", (event) => {
     if (event.button !== 0 || event.target.closest("button") || node.classList.contains("max")) return;
     event.preventDefault();
     focusWin(node.dataset.appId);
+    delete node.dataset.flinging;
+    const samples = [];
     const pointerId = event.pointerId;
     const startX = event.clientX;
     const startY = event.clientY;
@@ -1159,6 +1198,8 @@ function drag(node) {
     document.body.classList.add("dragging");
     const move = (moveEvent) => {
       if (moveEvent.pointerId !== pointerId) return;
+      samples.push([moveEvent.clientX, moveEvent.clientY, moveEvent.timeStamp]);
+      if (samples.length > 6) samples.shift();
       pendingLeft = Math.round(Math.min(maximumLeft, Math.max(0, startLeft + moveEvent.clientX - startX)));
       pendingTop = Math.round(Math.min(maximumTop, Math.max(0, startTop + moveEvent.clientY - startY)));
       if (!dragFrame) dragFrame = requestAnimationFrame(applyDrag);
@@ -1172,7 +1213,12 @@ function drag(node) {
       bar.removeEventListener("pointermove", move);
       bar.removeEventListener("pointerup", stop);
       bar.removeEventListener("pointercancel", stop);
-      constrainWindow(node);
+      const recent = samples.filter((sample) => stopEvent.timeStamp - sample[2] < 90);
+      const span = recent.length > 1 ? recent[recent.length - 1][2] - recent[0][2] : 0;
+      const velocityX = span ? (recent[recent.length - 1][0] - recent[0][0]) / span : 0;
+      const velocityY = span ? (recent[recent.length - 1][1] - recent[0][1]) / span : 0;
+      if (Math.hypot(velocityX, velocityY) > 1.2 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) flingWindow(node, velocityX, velocityY);
+      else constrainWindow(node);
     };
     bar.addEventListener("pointermove", move);
     bar.addEventListener("pointerup", stop);
@@ -1194,11 +1240,67 @@ apps.forEach((app) => {
   button.className = "icon";
   button.setAttribute("aria-label", "Open " + app.name);
   button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
-  button.addEventListener("click", () => openApp(app.id));
+  button.addEventListener("click", () => {
+    selectIcons(new Set([app.id]));
+    openApp(app.id);
+  });
   iconButtons.set(app.id, button);
   icons.append(button);
 });
 
+const desk = document.getElementById("desk");
+const marquee = document.createElement("div");
+marquee.className = "marquee hidden";
+marquee.setAttribute("aria-hidden", "true");
+desk.append(marquee);
+function selectIcons(ids) {
+  iconButtons.forEach((button, id) => button.classList.toggle("selected", ids.has(id)));
+}
+function selectedIconIds() {
+  return Array.from(iconButtons).filter(([, button]) => button.classList.contains("selected")).map(([id]) => id);
+}
+desk.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || (event.target !== desk && event.target !== icons)) return;
+  event.preventDefault();
+  document.activeElement?.blur();
+  selectIcons(new Set());
+  const pointerId = event.pointerId;
+  const originX = Math.round(event.clientX);
+  const originY = Math.round(event.clientY);
+  const boxes = Array.from(iconButtons, ([id, button]) => [id, button.getBoundingClientRect()]);
+  let pointerX = originX;
+  let pointerY = originY;
+  let frame = 0;
+  const paint = () => {
+    frame = 0;
+    const left = Math.min(originX, pointerX);
+    const top = Math.min(originY, pointerY);
+    const right = Math.max(originX, pointerX);
+    const bottom = Math.max(originY, pointerY);
+    marquee.style.cssText = "left:" + left + "px;top:" + top + "px;width:" + (right - left) + "px;height:" + (bottom - top) + "px";
+    marquee.classList.remove("hidden");
+    selectIcons(new Set(boxes.filter(([, box]) => box.right > left && box.left < right && box.bottom > top && box.top < bottom).map(([id]) => id)));
+  };
+  const move = (moveEvent) => {
+    if (moveEvent.pointerId !== pointerId) return;
+    pointerX = Math.round(moveEvent.clientX);
+    pointerY = Math.round(moveEvent.clientY);
+    if (!frame) frame = requestAnimationFrame(paint);
+  };
+  const stop = (stopEvent) => {
+    if (stopEvent.pointerId !== pointerId) return;
+    cancelAnimationFrame(frame);
+    marquee.classList.add("hidden");
+    if (desk.hasPointerCapture(pointerId)) desk.releasePointerCapture(pointerId);
+    desk.removeEventListener("pointermove", move);
+    desk.removeEventListener("pointerup", stop);
+    desk.removeEventListener("pointercancel", stop);
+  };
+  desk.setPointerCapture(pointerId);
+  desk.addEventListener("pointermove", move);
+  desk.addEventListener("pointerup", stop);
+  desk.addEventListener("pointercancel", stop);
+});
 startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
@@ -1240,7 +1342,13 @@ document.addEventListener("mousedown", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.target.closest("input, textarea, select, button, a") && selectedIconIds().length) {
+    event.preventDefault();
+    selectedIconIds().forEach((id) => openApp(id));
+    return;
+  }
   if (event.key === "Escape") {
+    selectIcons(new Set());
     if (!startMenu.classList.contains("hidden")) {
       setStartMenu(false);
       startBtn.focus();
