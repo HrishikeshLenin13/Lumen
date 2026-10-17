@@ -3,6 +3,7 @@ import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNote
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
 const TIMER_TICK_MS = 1000;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function escapeHtml(value) {
   return String(value)
@@ -944,7 +945,7 @@ function onOwnAnimationEnd(element, callback) {
 }
 
 function zoomRects(from, to, done) {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return void done?.();
+  if (reducedMotion.matches) return void done?.();
   const frames = [];
   const at = (start, end, step) => Math.round(start + (end - start) * step / 8);
   const draw = (step) => {
@@ -1210,7 +1211,7 @@ function drag(node) {
       const span = recent.length > 1 ? recent[recent.length - 1][2] - recent[0][2] : 0;
       const velocityX = span ? (recent[recent.length - 1][0] - recent[0][0]) / span : 0;
       const velocityY = span ? (recent[recent.length - 1][1] - recent[0][1]) / span : 0;
-      if (Math.hypot(velocityX, velocityY) > 1.2 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) flingWindow(node, velocityX, velocityY);
+      if (Math.hypot(velocityX, velocityY) > 1.2 && !reducedMotion.matches) flingWindow(node, velocityX, velocityY);
       else constrainWindow(node);
     };
     bar.addEventListener("pointermove", move);
@@ -1337,7 +1338,7 @@ document.addEventListener("mousedown", (event) => {
 const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
 let konamiStep = 0;
 function degauss() {
-  if (desk.classList.contains("degauss") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (desk.classList.contains("degauss") || reducedMotion.matches) return;
   desk.classList.add("degauss");
   primeAudio();
   systemSound(110, 0.6);
