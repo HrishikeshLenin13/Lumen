@@ -1435,6 +1435,31 @@ const apps = [
     },
   },
   {
+    id: "charmap",
+    name: "Character Map",
+    icon: "icons/charmap.png?v=65c80a1be7",
+    size: [430, 312],
+    html() {
+      return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set><option value="symbols">Symbols</option><option value="arrows">Arrows</option><option value="math">Math</option><option value="currency">Currency</option><option value="box">Box drawing</option><option value="accents">Accents</option><option value="greek">Greek</option></select></label><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
+    },
+    bind(root) {
+      const sets = { symbols: "§¶†‡•…‰′″‹›«»©®™°±·¿¡♠♣♥♦♪♫☺☻☼★☆✓✗※", arrows: "←↑→↓↔↕↖↗↘↙⇐⇑⇒⇓⇔↩↪↺↻⇄⇅➔➜▲▼◀▶△▽◁▷", math: "±×÷√∛∞≈≠≡≤≥∑∏∫∂∆∇∈∉∩∪⊂⊃∧∨¬∀∃∅πµ½⅓¼¾²³", currency: "$¢£¤¥€₹₽₩₪₫₱₿ƒ₴₺", box: "─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬░▒▓█▄▀▌▐■□▪▫", accents: "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ", greek: "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω" };
+      const pick = root.querySelector("[data-charmap-set]");
+      const grid = root.querySelector("[data-charmap-grid]");
+      const zoom = root.querySelector("[data-charmap-zoom]");
+      const code = root.querySelector("[data-charmap-code]");
+      const text = root.querySelector("[data-charmap-text]");
+      const show = (char) => { zoom.textContent = char; code.textContent = "U+" + char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"); };
+      const render = () => { const chars = [...sets[pick.value]]; grid.innerHTML = chars.map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join(""); show(chars[0]); };
+      pick.addEventListener("change", render);
+      grid.addEventListener("focusin", (event) => { if (event.target.dataset.char) show(event.target.dataset.char); });
+      grid.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); });
+      root.querySelector("[data-charmap-clear]").addEventListener("click", () => { text.value = ""; });
+      root.querySelector("[data-charmap-copy]").addEventListener("click", async () => { if (!text.value) return showToast("Pick some characters first."); try { await navigator.clipboard.writeText(text.value); showToast("Copied " + text.value + " to the clipboard."); } catch { text.select(); showToast("Press Ctrl+C to copy the selection."); } });
+      render();
+    },
+  },
+  {
     id: "settings",
     name: "Settings",
     icon: "icons/help.png?v=aa753d325e",

@@ -17,6 +17,8 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Files with folders, autosaved text documents, drag-in import, download, and keyboard navigation; use F2 to rename, Enter to open, and Backspace to go up
 - Minesweeper with a safe first click, flags, and a saved best time
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
+- Character Map for copying arrows, box drawing, currency, accents, and math symbols
+- Monitor settings with color, amber, or green phosphor, brightness and contrast knobs, and a 12 or 24-hour clock
 
 - Focus and break timers with notifications and session history
 - Ship Log with projects, tags, filtering, bulk actions, and CSV export
