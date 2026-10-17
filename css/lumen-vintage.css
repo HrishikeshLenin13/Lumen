@@ -240,7 +240,7 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   max-width: 82px;
   padding: 1px 3px;
   font-size: 11px;
-  line-height: 1.15;
+  line-height: 13px;
   text-align: center;
 }
 

@@ -1480,7 +1480,7 @@ function openApp(id) {
   element.setAttribute("aria-modal", "false");
   element.setAttribute("aria-label", app.name);
   element.style.left = (window.innerWidth <= 640 ? 8 : icons.offsetLeft + icons.offsetWidth + 12) + offset + "px";
-  element.style.top = 40 + offset + "px";
+  element.style.top = (window.innerWidth <= 640 ? icons.offsetTop + icons.offsetHeight + 8 : 40) + offset + "px";
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
