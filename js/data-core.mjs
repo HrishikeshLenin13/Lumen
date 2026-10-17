@@ -66,6 +66,17 @@ export function clampNumber(value, minimum, maximum, fallback) {
   return Math.min(maximum, Math.max(minimum, Math.round(number)));
 }
 
+export function calculateExpression(value) {
+  const expression = String(value ?? "").trim();
+  if (!expression || expression.length > 120 || !/^[\d\s()+\-*/%.]+$/.test(expression)) return { ok: false, error: "Use numbers and + - * / % ( )." };
+  try {
+    const result = Function('"use strict"; return (' + expression + ")")();
+    if (typeof result !== "number" || !Number.isFinite(result)) return { ok: false, error: "That calculation has no finite result." };
+    return { ok: true, value: Math.round((result + Number.EPSILON) * 1e12) / 1e12 };
+  } catch {
+    return { ok: false, error: "Check the expression and try again." };
+  }
+}
 export function normalizeTags(value) {
   const input = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
   const unique = new Set();

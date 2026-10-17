@@ -845,6 +845,10 @@ select.field:focus {
 .text-tools-area { width: 100%; min-height: 190px; resize: vertical; padding: 8px; color: var(--window-text); background: var(--field-bg); border: 1px solid var(--panel-line); font: inherit; }
 .text-tools-bar { align-items: center; margin-top: 8px; }
 .text-tools-bar [data-text-stats] { flex: 1 1 auto; }
+.calculator { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+.calculator .form-label { min-width: 0; }
+.calculator-result { grid-column: 1 / -1; min-height: 70px; padding: 12px; overflow-wrap: anywhere; color: var(--window-heading); background: var(--field-bg); border: 1px solid var(--panel-line); font-size: 30px; font-weight: 700; text-align: right; }
+.calculator-input { font-variant-numeric: tabular-nums; }
 
 .settings-grid .form-label:last-child {
   grid-column: auto;

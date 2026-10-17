@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "./data-core.mjs";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -689,6 +689,25 @@ const apps = [
     },
   },
   {
+    id: "calculator",
+    name: "Calculator",
+    glyph: "=",
+    icon: "icons/calculator.png?v=1",
+    html() {
+      return '<form class="calculator" data-calculator><label class="form-label">Expression<input class="field calculator-input" type="text" inputmode="decimal" maxlength="120" placeholder="(12 + 3) * 2" data-calculator-input required></label><button type="submit" class="btn primary">Calculate</button><output class="calculator-result" data-calculator-result aria-live="polite">0</output></form>';
+    },
+    bind(root) {
+      const form = root.querySelector("[data-calculator]");
+      const input = root.querySelector("[data-calculator-input]");
+      const result = root.querySelector("[data-calculator-result]");
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const calculated = calculateExpression(input.value);
+        result.textContent = calculated.ok ? String(calculated.value) : calculated.error;
+      });
+    },
+  },
+  {
     id: "texttools",
     name: "Text Tools",
     glyph: "T",
@@ -771,7 +790,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=12",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, focus sessions, text tools, and work logs in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Text Tools</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
+      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, text tools, and work logs in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Text Tools</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
     bind() {},
   },
@@ -1058,7 +1077,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-    const shortcuts = { "1": "notes", "2": "checklist", "3": "focus", "4": "shiplog", "5": "texttools", "6": "settings", "7": "about" };
+    const shortcuts = { "1": "notes", "2": "checklist", "3": "calculator", "4": "focus", "5": "shiplog", "6": "texttools", "7": "settings", "8": "about" };
     const appId = shortcuts[event.key];
     if (appId) {
       event.preventDefault();

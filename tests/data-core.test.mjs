@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
   assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
@@ -17,6 +17,12 @@ test("notes outline extracts Markdown headings with line and selection offsets",
 test("notes statistics count Unicode characters and human-readable words", () => {
   assert.deepEqual(noteStats("Hello  world\n🚀 launch"), { words: 4, characters: 21, lines: 2 });
   assert.deepEqual(noteStats(""), { words: 0, characters: 0, lines: 0 });
+});
+test("calculator evaluates constrained arithmetic", () => {
+  assert.deepEqual(calculateExpression("(12 + 3) * 2 / 5"), { ok: true, value: 6 });
+  assert.equal(calculateExpression("2 / 0").ok, false);
+  assert.equal(calculateExpression("alert(1)").ok, false);
+  assert.equal(calculateExpression("2 +").ok, false);
 });
 
 test("notes version history skips blanks and duplicates and keeps twenty snapshots", () => {

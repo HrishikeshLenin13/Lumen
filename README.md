@@ -6,6 +6,7 @@ Lumen is an installable offline workspace for notes, task tracking, focus sessio
 - Notes with automatic saving, Markdown outlines, statistics, and version history
 
 - Checklist with persistent completion state
+- Calculator for constrained arithmetic expressions
 - Text Tools with live counts, line trimming, and clipboard copying
 
 - Focus and break timers with notifications and session history
