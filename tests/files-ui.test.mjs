@@ -1,0 +1,26 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+test("selecting a folder preserves its row so a double-click can open it", () => {
+  const source = readFileSync(new URL("../js/main.js", import.meta.url), "utf8");
+  const nodes = new Map();
+  const node = (selector) => { if (!nodes.has(selector)) nodes.set(selector, { listeners: {}, value: "", textContent: "", addEventListener(type, handler) { this.listeners[type] = handler; }, querySelectorAll() { return []; } }); return nodes.get(selector); };
+  const list = node("[data-files-list]");
+  let writes = 0;
+  Object.defineProperty(list, "innerHTML", { set(value) { writes += 1; this.markup = value; } });
+  const root = { querySelector: node, querySelectorAll: () => [] };
+  const data = { files: [{ id: "folder", kind: "folder", name: "Documents", parent: null, content: "" }, { id: "text", kind: "text", name: "inside.txt", parent: "folder", content: "hello" }] };
+  const context = vm.createContext({ data, escapeHtml: (value) => String(value) });
+  vm.runInContext(source.slice(source.indexOf("function bindFiles(root)"), source.indexOf("async function clearAllData")), context);
+  context.bindFiles(root);
+  const button = { dataset: { fileId: "folder" } };
+  const event = { target: { closest: () => button } };
+  list.listeners.click(event);
+  list.listeners.click(event);
+  assert.equal(writes, 1);
+  list.listeners.dblclick(event);
+  assert.equal(writes, 2);
+  assert.equal(node("[data-files-path]").textContent, "C:\\Documents");
+  assert.match(list.markup, /inside\.txt/);
+});

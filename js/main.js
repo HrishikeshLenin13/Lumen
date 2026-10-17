@@ -421,10 +421,11 @@ function bindFiles(root) {
   let saveTimer = null;
   const selectedItem = () => data.files.find((item) => item.id === selected);
   const folderPath = () => { const names = []; const visited = new Set(); let id = current; while (id && !visited.has(id)) { visited.add(id); const folder = data.files.find((item) => item.id === id && item.kind === "folder"); if (!folder) break; names.unshift(folder.name); id = folder.parent; } return "C:\\" + names.join("\\"); };
-  const render = () => {
-    const items = data.files.filter((item) => item.parent === current).sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1));
-    list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><span class="files__glyph">' + (item.kind === "folder" ? "DIR" : "TXT") + '</span><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
+  const render = (refreshList = true) => {
+    const items = refreshList ? data.files.filter((item) => item.parent === current).sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1)) : [];
+    if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><span class="files__glyph">' + (item.kind === "folder" ? "DIR" : "TXT") + '</span><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
     root.querySelector("[data-files-path]").textContent = folderPath();
+    if (!refreshList) list.querySelectorAll("[data-file-id]").forEach((button) => button.classList.toggle("selected", button.dataset.fileId === selected));
     root.querySelector("[data-files-up]").disabled = current === null;
     root.querySelectorAll("[data-files-rename],[data-files-move],[data-files-delete]").forEach((button) => button.disabled = !selectedItem());
     const item = selectedItem();
@@ -436,7 +437,7 @@ function bindFiles(root) {
   const createItem = async (kind) => { const proposed = await showWindowDialog({ title: kind === "folder" ? "New folder" : "New text file", message: "Enter a name.", value: kind === "folder" ? "New Folder" : "New Text File.txt", confirmLabel: "Create" }); const name = proposed?.trim().replace(/[\\/]/g, "-").slice(0, 80); if (!name) return; const item = { id: makeId(), kind, name, parent: current, content: "" }; data.files.push(item); selected = item.id; persistData(); render(); if (kind === "text") content.focus(); };
   root.querySelector("[data-files-new-folder]").addEventListener("click", () => createItem("folder"));
   root.querySelector("[data-files-new-text]").addEventListener("click", () => createItem("text"));
-  list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button) return; selected = button.dataset.fileId; render(); });
+  list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button || selected === button.dataset.fileId) return; selected = button.dataset.fileId; render(false); });
   list.addEventListener("dblclick", (event) => { const item = data.files.find((candidate) => candidate.id === event.target.closest("[data-file-id]")?.dataset.fileId); if (!item) return; if (item.kind === "folder") { current = item.id; selected = null; render(); } else content.focus(); });
   list.addEventListener("dragover", (event) => { if (event.dataTransfer.types.includes("Files")) event.preventDefault(); });
   list.addEventListener("drop", async (event) => { const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("text/") || /\.txt$/i.test(file.name)); if (!files.length) return; event.preventDefault(); const destination = current; try { const imported = await Promise.all(files.slice(0, Math.min(20, Math.max(0, 500 - data.files.length))).map(async (file) => ({ id: makeId(), kind: "text", name: file.name.replace(/[\\/]/g, "-").slice(0, 80), parent: destination, content: (await file.slice(0, 800000).text()).slice(0, 200000) }))); data.files.push(...imported.slice(0, Math.max(0, 500 - data.files.length))); const saved = persistData(); render(); root.querySelector("[data-files-status]").textContent = saved ? "Imported " + imported.length + (imported.length === 1 ? " text file." : " text files.") : "Import could not be saved. Export your files to keep them."; } catch { showToast("These text files could not be imported."); } });
