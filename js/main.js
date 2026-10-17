@@ -728,17 +728,71 @@ const apps = [
     id: "calculator",
     name: "Calculator",
     icon: "icons/calculator.png?v=528346ef06",
+    size: [284, 356],
     html() {
-      return '<form class="calculator" data-calculator><label class="form-label">Expression<input class="field calculator-input" type="text" inputmode="decimal" maxlength="120" placeholder="(12 + 3) * 2" data-calculator-input required></label><button type="submit" class="btn primary">Calculate</button><output class="calculator-result" data-calculator-result aria-live="polite">0</output></form>';
+      const keys = [["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
+      return '<div class="calc" data-calc data-autofocus tabindex="0" aria-label="Calculator. Type numbers and operators or use the keypad."><div class="calc__screen"><span class="calc__expr" data-calc-expr></span><output class="calc__value" data-calc-value aria-live="polite">0</output></div><div class="calc__keys">' + keys.map(([label, key, kind]) => '<button type="button" class="btn calc__' + kind + '" data-calc-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(key === "back" ? "Backspace" : key === "clear" ? "Clear" : key === "equals" ? "Equals" : label) + '">' + label + '</button>').join("") + '</div><ol class="calc__tape" data-calc-tape aria-label="Recent results"></ol></div>';
     },
     bind(root) {
-      const form = root.querySelector("[data-calculator]");
-      const input = root.querySelector("[data-calculator-input]");
-      const result = root.querySelector("[data-calculator-result]");
-      form.addEventListener("submit", (event) => {
+      const calc = root.querySelector("[data-calc]");
+      const exprView = root.querySelector("[data-calc-expr]");
+      const valueView = root.querySelector("[data-calc-value]");
+      const tape = root.querySelector("[data-calc-tape]");
+      const pretty = (value) => value.replace(/\*/g, "×").replace(/\//g, "÷").replace(/-/g, "−");
+      let expression = "";
+      let evaluated = false;
+      const results = [];
+      const render = (value, preview) => {
+        writeText(exprView, pretty(expression));
+        writeText(valueView, value);
+        valueView.classList.toggle("preview", preview);
+      };
+      const press = (key) => {
+        if (key === "clear") {
+          expression = "";
+          evaluated = false;
+          return render("0", false);
+        }
+        if (key === "back") {
+          expression = evaluated ? "" : expression.slice(0, -1);
+          evaluated = false;
+        } else if (key === "equals") {
+          const calculated = calculateExpression(expression);
+          if (!calculated.ok) return render(expression ? calculated.error : "0", false);
+          results.unshift([pretty(expression), String(calculated.value)]);
+          results.length = Math.min(results.length, 5);
+          tape.innerHTML = results.map(([sum, answer]) => '<li><button type="button" data-calc-recall="' + escapeHtml(answer) + '">' + escapeHtml(sum) + " = <strong>" + escapeHtml(answer) + "</strong></button></li>").join("");
+          expression = String(calculated.value);
+          evaluated = true;
+          return render(expression, false);
+        } else {
+          if (evaluated && /[\d.(]/.test(key)) expression = "";
+          evaluated = false;
+          expression = (expression + key).slice(0, 120);
+        }
+        const preview = calculateExpression(expression);
+        render(preview.ok ? String(preview.value) : expression ? pretty(expression) : "0", preview.ok && /[^\d.]/.test(expression));
+      };
+      root.querySelector(".calc__keys").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-calc-key]");
+        if (button) press(button.dataset.calcKey);
+      });
+      tape.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-calc-recall]");
+        if (!button) return;
+        expression = button.dataset.calcRecall;
+        evaluated = true;
+        render(expression, false);
+      });
+      calc.addEventListener("keydown", (event) => {
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        const key = { Enter: "equals", "=": "equals", Backspace: "back", Escape: "clear", Delete: "clear", x: "*", X: "*" }[event.key] || (/^[\d.+\-*/%()]$/.test(event.key) ? event.key : null);
+        if (!key) return;
         event.preventDefault();
-        const calculated = calculateExpression(input.value);
-        result.textContent = calculated.ok ? String(calculated.value) : calculated.error;
+        event.stopPropagation();
+        press(key);
+        root.querySelector('[data-calc-key="' + CSS.escape(key) + '"]')?.classList.add("active");
+        window.setTimeout(() => root.querySelector(".calc__keys .active")?.classList.remove("active"), 90);
       });
     },
   },
@@ -961,6 +1015,7 @@ function zoomRects(from, to, done) {
 }
 function paintWindow(element, phase) {
   if (!element.classList.replace(phase, "painting")) return;
+  element.querySelector("[data-autofocus]")?.focus({ preventScroll: true });
   onOwnAnimationEnd(element, () => element.classList.remove("painting"));
 }
 function launcherRect(id) {
@@ -1045,6 +1100,7 @@ function openApp(id) {
   element.style.left = 120 + offset + "px";
   element.style.top = 40 + offset + "px";
   element.style.zIndex = String(++z);
+  if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div>';
   wins.append(element);
   systemSound(740);
