@@ -1348,11 +1348,10 @@ async function boot() {
   }
   post.remove();
   document.querySelector("[data-boot-brand]").classList.remove("hidden");
+  document.getElementById("desk").classList.remove("hidden");
   await wait(700);
   document.getElementById("boot").classList.add("fade");
-  document.getElementById("desk").classList.replace("hidden", "power-on");
-  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll("#bootSplitRed, #bootSplitBlue").forEach((split) => split.beginElement?.());
-  await wait(120);
+  await wait(420);
   document.getElementById("boot").remove();
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
   openApp(apps.some((app) => app.id === requestedApp) ? requestedApp : "about");
