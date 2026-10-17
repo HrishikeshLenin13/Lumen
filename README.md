@@ -36,4 +36,5 @@ Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are h
 - `js/main.js` contains the desktop, window manager, and app bindings.
 - `js/data-core.mjs` contains normalized storage and reusable data operations.
 - `sw.js` manages the versioned offline app shell.
+- Run `node scripts/stamp-cache.mjs` after changing cached files to refresh content-hash cache stamps.
 - Run tests with `node --test tests/*.test.mjs`.

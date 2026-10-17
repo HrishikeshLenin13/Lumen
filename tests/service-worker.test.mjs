@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 
 async function offline(url, mode) {
@@ -31,10 +32,11 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   const source = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
-  assert.match(source, /\.\/icons\/checklist\.png\?v=1/);
-  assert.match(source, /\.\/icons\/calculator\.png\?v=1/);
-  assert.match(source, /\.\/icons\/text-tools\.png\?v=1/);
-  assert.match(source, /lumen-app-v35/);
-  assert.match(html, /<script type="module" src="js\/main\.js\?v=31"><\/script>/);
-  assert.match(source, /lumen-vintage\.css\?v=31/);
+  assert.match(source, /\.\/icons\/checklist\.png\?v=\w+/);
+  assert.match(source, /\.\/icons\/calculator\.png\?v=\w+/);
+  assert.match(source, /\.\/icons\/text-tools\.png\?v=\w+/);
+  assert.match(source, /lumen-app-\w{10}/);
+  assert.match(html, /<script type="module" src="js\/main\.js\?v=\w+"><\/script>/);
+  assert.match(source, /lumen-vintage\.css\?v=\w+/);
 });
+test('cache stamps match the current file contents', () => assert.equal(spawnSync(process.execPath, ['scripts/stamp-cache.mjs', '--check'], { cwd: new URL('..', import.meta.url) }).status, 0));

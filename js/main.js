@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression } from "./data-core.mjs?v=7cd4b29ecd";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -169,7 +169,7 @@ function finishTimer() {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? "Time for a break." : "Ready for another focus session?",
-      icon: "icons/l.png?v=12",
+      icon: "icons/l.png?v=33d4468d61",
     });
   }
 }
@@ -363,7 +363,7 @@ const apps = [
     id: "notes",
     name: "Notes",
     glyph: "N",
-    icon: "icons/notes.png?v=12",
+    icon: "icons/notes.png?v=8c65e95fff",
     html() {
       return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes.</p><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button></span></div>';
     },
@@ -475,7 +475,7 @@ const apps = [
     id: "focus",
     name: "Focus",
     glyph: "F",
-    icon: "icons/timer.png?v=12",
+    icon: "icons/timer.png?v=13bd7c6582",
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer" aria-live="polite"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
     },
@@ -494,7 +494,7 @@ const apps = [
     id: "shiplog",
     name: "Ship Log",
     glyph: "H",
-    icon: "icons/logs.png?v=12",
+    icon: "icons/logs.png?v=7ce34f25cf",
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" max="24" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" maxlength="240" placeholder="What did you ship?" id="logText" aria-label="Ship description"><input class="field" type="text" maxlength="48" placeholder="Project (optional)" id="logProject" aria-label="Project"><input class="field" type="text" placeholder="Tags, comma separated" id="logTags" aria-label="Tags"><button type="button" class="btn primary" data-add-log>Add entry</button></div><div class="log-tools"><label class="form-label log-filter">Search entries<input class="field" type="search" placeholder="Description, project, tag, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><label class="form-label">Date range<select class="field" data-log-range><option value="all"' + (shipDateRange === "all" ? " selected" : "") + '>All time</option><option value="7"' + (shipDateRange === "7" ? " selected" : "") + '>Last 7 days</option><option value="30"' + (shipDateRange === "30" ? " selected" : "") + '>Last 30 days</option></select></label><button type="button" class="btn" data-export-log>Export filtered CSV</button></div><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
@@ -642,7 +642,7 @@ const apps = [
     id: "checklist",
     name: "Checklist",
     glyph: "C",
-    icon: "icons/checklist.png?v=1",
+    icon: "icons/checklist.png?v=0e27a20bbd",
     html() {
       return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
     },
@@ -692,7 +692,7 @@ const apps = [
     id: "calculator",
     name: "Calculator",
     glyph: "=",
-    icon: "icons/calculator.png?v=1",
+    icon: "icons/calculator.png?v=528346ef06",
     html() {
       return '<form class="calculator" data-calculator><label class="form-label">Expression<input class="field calculator-input" type="text" inputmode="decimal" maxlength="120" placeholder="(12 + 3) * 2" data-calculator-input required></label><button type="submit" class="btn primary">Calculate</button><output class="calculator-result" data-calculator-result aria-live="polite">0</output></form>';
     },
@@ -711,7 +711,7 @@ const apps = [
     id: "texttools",
     name: "Text Tools",
     glyph: "T",
-    icon: "icons/text-tools.png?v=1",
+    icon: "icons/text-tools.png?v=e557672a22",
     html() {
       return '<textarea class="text-tools-area" data-text-tools aria-label="Text to inspect" placeholder="Paste or type text"></textarea><div class="row text-tools-bar"><span class="hint hint--flush" data-text-stats>0 words · 0 characters · 0 lines</span><button type="button" class="btn" data-text-trim>Trim lines</button><button type="button" class="btn primary" data-text-copy>Copy</button></div>';
     },
@@ -742,7 +742,7 @@ const apps = [
     id: "settings",
     name: "Settings",
     glyph: "S",
-    icon: "icons/help.png?v=12",
+    icon: "icons/help.png?v=aa753d325e",
     html() {
       const darkSelected = data.theme === "dark" ? " selected" : "";
       const lightSelected = data.theme === "light" ? " selected" : "";
@@ -789,7 +789,7 @@ const apps = [
     id: "about",
     name: "About",
     glyph: "i",
-    icon: "icons/info.png?v=12",
+    icon: "icons/info.png?v=b8b38795ff",
     html() {
       return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, text tools, and work logs in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Text Tools</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
@@ -1063,7 +1063,7 @@ apps.forEach((app) => {
   icons.append(button);
 });
 
-startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=12" alt=""><span data-install-label>Install LUMEN...</span></button>';
+startMenu.innerHTML = '<div class="start-menu__banner"><strong>LUMEN</strong><span>Builder Desk</span></div><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__title">Programs</div>' + apps.map((app) => '<button type="button" role="menuitem" data-open-app="' + escapeHtml(app.id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</button>').join("") + '<div class="menu-separator" role="separator"></div><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
@@ -1189,7 +1189,7 @@ window.addEventListener("hashchange", () => {
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=20", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
+    navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then((registration) => registration.update()).catch((error) => console.warn("Service worker registration failed:", error));
   });
 }
 
@@ -1197,7 +1197,7 @@ const smoothCursor = document.getElementById("smoothCursor");
 if (smoothCursor && window.matchMedia("(pointer: fine)").matches) {
   const cursorImage = new Image();
   cursorImage.addEventListener("load", () => document.documentElement.classList.add("custom-cursor"), { once: true });
-  cursorImage.src = "icons/cursor.png?v=12";
+  cursorImage.src = "icons/cursor.png?v=af1b0be3b4";
   let cursorFrame = 0;
   document.addEventListener("pointermove", (event) => {
     const x = event.clientX;
