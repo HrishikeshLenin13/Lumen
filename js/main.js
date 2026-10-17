@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=f928736ba2";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=dec95c21bb";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -942,18 +942,28 @@ const apps = [
     icon: "icons/minesweeper.png?v=65c80a1be7",
     size: [236, 334],
     html() {
-      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
+      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><select class="field mines__level" data-mine-level aria-label="Difficulty"><option value="beginner">Beginner, 9 by 9</option><option value="intermediate">Intermediate, 16 by 16</option><option value="expert">Expert, 30 by 16</option></select><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
     },
     bind(root) {
-      const width = 9;
-      const height = 9;
-      const mines = 10;
+      const levels = { beginner: [9, 9, 10], intermediate: [16, 16, 40], expert: [30, 16, 99] };
+      let [width, height, mines] = levels[data.mineLevel];
+      const levelPicker = root.querySelector("[data-mine-level]");
+      levelPicker.value = data.mineLevel;
+      const best = () => data.mineLevel === "beginner" ? data.mineBest : data.mineBests[data.mineLevel];
       const board = root.querySelector("[data-mine-board]");
       const counter = root.querySelector("[data-mine-count]");
       const clock = root.querySelector("[data-mine-time]");
       const status = root.querySelector("[data-mine-status]");
-      board.innerHTML = Array.from({ length: width * height }, (_, index) => '<button type="button" class="mine-cell" data-mine-cell="' + index + '" aria-label="Hidden square"></button>').join("");
-      const cells = Array.from(board.children);
+      let cells = [];
+      const build = () => {
+        [width, height, mines] = levels[data.mineLevel];
+        board.style.gridTemplateColumns = "repeat(" + width + ", 20px)";
+        board.innerHTML = Array.from({ length: width * height }, (_, index) => '<button type="button" class="mine-cell" data-mine-cell="' + index + '" aria-label="Hidden square"></button>').join("");
+        cells = Array.from(board.children);
+        const win = root.closest(".win");
+        if (win && !win.classList.contains("max")) win.style.cssText += "width:" + Math.max(236, width * 20 + 52) + "px;height:" + (height * 20 + 210) + "px";
+      };
+      build();
       let field = null;
       let revealed = new Set();
       let flags = new Set();
@@ -972,7 +982,8 @@ const apps = [
           cell.classList.toggle("open", open);
           cell.classList.toggle("boom", open && Boolean(info?.mine));
           writeAttribute(cell, "data-count", open && info && !info.mine && info.count ? String(info.count) : "");
-          writeText(cell, open ? (info.mine ? "" : info.count ? String(info.count) : "") : flags.has(index) ? "⚑" : "");
+          writeText(cell, open && !info.mine && info.count ? String(info.count) : "");
+          cell.classList.toggle("flagged", !open && flags.has(index));
           writeAttribute(cell, "aria-label", open ? (info.mine ? "Mine" : info.count ? info.count + " nearby mines" : "Empty") : flags.has(index) ? "Flagged square" : "Hidden square");
         });
         writeText(counter, led(mines - flags.size));
@@ -984,7 +995,7 @@ const apps = [
         over = false;
         stopClock();
         writeText(clock, "000");
-        writeText(status, data.mineBest ? "Best time " + data.mineBest + "s. Right click or press F to flag." : "Click a square to start. Right click or press F to flag.");
+        writeText(status, best() ? "Best time " + best() + "s. Right click or press F to flag." : "Click a square to start. Right click or press F to flag.");
         paint();
       };
       const finish = (won) => {
@@ -992,10 +1003,11 @@ const apps = [
         stopClock();
         if (won) {
           const seconds = Math.max(1, Math.round((Date.now() - started) / 1000));
-          const best = !data.mineBest || seconds < data.mineBest;
-          if (best) data.mineBest = seconds;
+          const record = !best() || seconds < best();
+          if (record && data.mineLevel === "beginner") data.mineBest = seconds;
+          else if (record) data.mineBests[data.mineLevel] = seconds;
           persistData();
-          writeText(status, "Cleared in " + seconds + "s." + (best ? " New best time." : " Best is " + data.mineBest + "s."));
+          writeText(status, "Cleared in " + seconds + "s." + (record ? " New best time." : " Best is " + best() + "s."));
           playSound("win");
         } else {
           field.forEach((info, index) => {
@@ -1043,6 +1055,7 @@ const apps = [
         toggleFlag(Number(cell.dataset.mineCell));
       });
       root.querySelector("[data-mine-reset]").addEventListener("click", reset);
+      levelPicker.addEventListener("change", () => { data.mineLevel = levelPicker.value; persistData(); build(); reset(); });
       reset();
       return stopClock;
     },

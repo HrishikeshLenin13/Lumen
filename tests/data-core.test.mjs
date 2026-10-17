@@ -183,6 +183,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.deepEqual(normalizeData({ windows: [{ id: "notes", left: -5, width: 50, minimized: 1 }, { nope: 1 }] }).windows, [{ id: "notes", left: 0, top: 0, width: 120, height: 320, minimized: true, maximized: false }]);
   assert.deepEqual(normalizeData({ iconPositions: { notes: { x: -4, y: 30 }, bad: null }, iconGrid: false }).iconPositions, { notes: { x: 0, y: 30 } });
   assert.equal(normalizeData({}).iconGrid, true);
+  assert.deepEqual([normalizeData({ mineLevel: "expert", mineBests: { expert: 2000, intermediate: 55 } })].map((d) => [d.mineLevel, d.mineBests])[0], ["expert", { intermediate: 55, expert: 999 }]);
   assert.deepEqual([normalizeData({ saverStyle: "starfield", saverWait: "10", wallpaperFit: "tile", deskColor: "#ABCDEF", fontSize: "large", iconSize: "large", showClock: false, showQuickLaunch: false })].map((d) => [d.saverStyle, d.saverWait, d.wallpaperFit, d.deskColor, d.fontSize, d.iconSize, d.showClock, d.showQuickLaunch])[0], ["starfield", 10, "tile", "#abcdef", "large", "large", false, false]);
   assert.deepEqual([normalizeData({ saverStyle: "x", saverWait: 7, deskColor: "red" })].map((d) => [d.saverStyle, d.saverWait, d.deskColor])[0], ["logo", 3, "#3a6ea5"]);
   assert.deepEqual(makeDefaultData().files, []);

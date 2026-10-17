@@ -1605,3 +1605,5 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .field--color { height: 23px; padding: 1px 2px; }
 .win.pinned { z-index: 1000000 !important; }
 .window-dialog__content > span { white-space: pre-line; }
+.mines__level { margin: 0; }
+.mine-cell.flagged { background-image: url("../icons/mine-flag.png?v=6163da60ab"); background-position: center; background-repeat: no-repeat; image-rendering: pixelated; }
