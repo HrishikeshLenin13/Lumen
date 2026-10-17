@@ -1284,7 +1284,7 @@ const apps = [
       };
       const findApp = (name) => apps.find((app) => app.id === name.toLowerCase() || app.name.toLowerCase() === name.toLowerCase());
       const commands = {
-        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\ndate            show the date and time\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nexit            close this window",
+        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
         apps: () => apps.map((app) => app.id.padEnd(14) + app.name).join("\n"),
         open: (args) => {
           const app = findApp(args);
@@ -1310,7 +1310,16 @@ const apps = [
           persistData();
           return "Appended to Notes.";
         },
-        date: () => new Date().toString(),
+        start: (args) => commands.open(args),
+        dir: () => { const top = data.files.filter((item) => !item.parent); return top.length ? " Directory of C:\\\n\n" + top.map((item) => (item.kind === "folder" ? "<DIR>     " : String(item.content.length).padStart(9) + " ") + item.name).join("\n") + "\n\n" + top.length + " item(s)" : " Directory of C:\\\n\nFile Not Found"; },
+        tree: () => { const lines = []; const walk = (parent, depth) => data.files.filter((item) => item.parent === parent).forEach((item) => { lines.push("    ".repeat(depth) + (item.kind === "folder" ? "+-- " : "|   ") + item.name); if (item.kind === "folder") walk(item.id, depth + 1); }); walk(null, 0); return "C:\\\n" + (lines.join("\n") || "No subfolders exist"); },
+        type: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? file.content || "(empty)" : "The system cannot find the file specified."; },
+        time: () => new Date().toLocaleTimeString(),
+        whoami: () => "lumen\\builder",
+        mem: () => { let used = 0; try { used = Object.keys(localStorage).reduce((sum, key) => sum + key.length + (localStorage.getItem(key) || "").length, 0); } catch {} return Math.round(used / 1024) + "K of browser storage in use\n" + data.files.length + " files, " + data.tasks.length + " tasks, " + data.logs.length + " log entries"; },
+        color: (args) => { const palette = ["#000", "#000080", "#008000", "#008080", "#800000", "#800080", "#808000", "#c0c0c0", "#808080", "#0000ff", "#00ff00", "#00ffff", "#ff0000", "#ff00ff", "#ffff00", "#fff"]; const code = (args || "07").toLowerCase(); if (!/^[0-9a-f]{2}$/.test(code) || code[0] === code[1]) return "Usage: color <background><text>, for example color 07 or color 1f"; const shell = root.querySelector(".cmd"); shell.style.background = palette[parseInt(code[0], 16)]; shell.style.color = palette[parseInt(code[1], 16)]; return null; },
+        shutdown: () => { turnOffDialog(); return null; },
+        date: () => new Date().toLocaleDateString(undefined, { dateStyle: "full" }),
         echo: (args) => args,
         ver: () => "LUMEN [Version 1.04]",
         cls: () => {
