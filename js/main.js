@@ -257,13 +257,17 @@ function formatLogDate(value) {
 function formatHours(value) {
   return Number(value).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
+const renderedMarkup = new WeakMap();
 function renderNoteOutline(nav, notes) {
   if (!nav) return;
   const headings = extractNoteHeadings(notes);
   const visibleHeadings = headings.slice(0, 200);
-  nav.innerHTML = visibleHeadings.length
+  const markup = visibleHeadings.length
     ? '<h3 class="notes-outline__title">In this note</h3><ol>' + visibleHeadings.map((heading, index) => '<li><button type="button" class="btn notes-outline__item" data-note-heading="' + index + '" style="--heading-indent:' + ((heading.level - 1) * 8) + 'px" aria-label="Go to ' + escapeHtml(heading.title) + ', line ' + heading.line + '"><span>' + escapeHtml(heading.title) + '</span><small>' + heading.line + '</small></button></li>').join("") + '</ol>' + (headings.length > visibleHeadings.length ? '<p class="hint notes-outline__limit">Showing the first 200 of ' + headings.length + ' headings.</p>' : '')
     : '<p class="hint">Add Markdown headings like <code># Today</code> to build an outline.</p>';
+  if (renderedMarkup.get(nav) === markup) return;
+  renderedMarkup.set(nav, markup);
+  nav.innerHTML = markup;
 }
 function noteRevisionLabel(revision) {
   const firstLine = revision.text.split("\n").find((line) => line.trim())?.trim() || "Untitled note";
@@ -279,7 +283,7 @@ function renderNoteHistory(container) {
 function renderNoteStats(element, notes) {
   if (!element) return;
   const stats = noteStats(notes);
-  element.textContent = stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines";
+  writeText(element, stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines");
 }
 function filteredLogs() {
   const days = shipDateRange === "7" || shipDateRange === "30" ? Number(shipDateRange) : 0;
