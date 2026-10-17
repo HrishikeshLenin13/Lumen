@@ -181,11 +181,6 @@ function playSound(name) {
     source.start();
   });
 }
-function requestNotificationPermission() {
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission().catch(() => {});
-  }
-}
 function stopTimerInterval() {
   clearInterval(timer.intervalId);
   timer.intervalId = null;
@@ -234,7 +229,7 @@ function finishTimer() {
   renderSessionHistory();
   playSound("timer");
   showToast(message);
-  if ("Notification" in window && Notification.permission === "granted") {
+  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? "Time for a break." : "Ready for another focus session?",
       icon: "icons/l.png?v=33d4468d61",
@@ -258,7 +253,6 @@ function startTimer() {
   timer.endAt = Date.now() + timer.secondsLeft * 1000;
   document.title = APP_TITLE;
   primeAudio();
-  requestNotificationPermission();
   stopTimerInterval();
   timer.intervalId = setInterval(updateTimer, TIMER_TICK_MS);
   saveTimerState();
@@ -1004,6 +998,7 @@ const apps = [
       });
       root.querySelector("[data-mine-reset]").addEventListener("click", reset);
       reset();
+      return stopClock;
     },
   },
   {
@@ -1430,6 +1425,7 @@ const apps = [
         paint();
       });
       stop.addEventListener("click", halt);
+      return () => clearInterval(busy);
     },
   },
   {
@@ -2358,13 +2354,14 @@ const saver = document.createElement("div");
 saver.className = "saver hidden";
 saver.setAttribute("aria-hidden", "true");
 saver.innerHTML = '<span class="saver__logo">LUMEN</span>';
-document.body.append(saver);
+desk.append(saver);
 let lastActive = performance.now();
 let saverFrame = 0;
 function startSaver() {
-  if (!data.screensaver || reducedMotion.matches || document.getElementById("boot")) return;
+  if (!data.screensaver || reducedMotion.matches || document.hidden || document.getElementById("boot")) return;
   const logo = saver.firstElementChild;
   saver.classList.remove("hidden");
+  screenCursor.classList.add("hidden");
   const maximumX = Math.max(0, window.innerWidth - logo.offsetWidth);
   const maximumY = Math.max(0, window.innerHeight - logo.offsetHeight);
   let x = Math.round(maximumX / 3);
