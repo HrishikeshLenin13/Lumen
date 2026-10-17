@@ -1594,8 +1594,10 @@ function flingWindow(node, velocityX, velocityY) {
   let vy = Math.max(-6, Math.min(6, velocityY));
   let last = performance.now();
   node.dataset.flinging = token;
+  desk.classList.add("moving");
   const step = (now) => {
-    if (!node.isConnected || node.classList.contains("max") || node.dataset.flinging !== token) return;
+    if (node.dataset.flinging !== token) return;
+    if (!node.isConnected || node.classList.contains("max")) return desk.classList.remove("moving");
     const elapsed = Math.min(32, now - last);
     last = now;
     x += vx * elapsed;
@@ -1616,7 +1618,10 @@ function flingWindow(node, velocityX, velocityY) {
     node.style.left = Math.round(x) + "px";
     node.style.top = Math.round(y) + "px";
     if (Math.hypot(vx, vy) > 0.025) requestAnimationFrame(step);
-    else delete node.dataset.flinging;
+    else {
+      delete node.dataset.flinging;
+      desk.classList.remove("moving");
+    }
   };
   requestAnimationFrame(step);
 }
@@ -1644,6 +1649,7 @@ function drag(node) {
       node.style.top = pendingTop + "px";
     };
     try { bar.setPointerCapture(pointerId); } catch { return; }
+    desk.classList.add("moving");
     document.body.classList.add("dragging");
     const move = (moveEvent) => {
       if (moveEvent.pointerId !== pointerId) return;
@@ -1668,6 +1674,7 @@ function drag(node) {
       const velocityY = span ? (recent[recent.length - 1][1] - recent[0][1]) / span : 0;
       if (Math.hypot(velocityX, velocityY) > 0.7 && !reducedMotion.matches) flingWindow(node, velocityX, velocityY);
       else constrainWindow(node);
+      if (!node.dataset.flinging) desk.classList.remove("moving");
     };
     bar.addEventListener("pointermove", move);
     bar.addEventListener("pointerup", stop);
@@ -1741,11 +1748,13 @@ desk.addEventListener("pointerdown", (event) => {
     cancelAnimationFrame(frame);
     marquee.classList.add("hidden");
     if (desk.hasPointerCapture(pointerId)) desk.releasePointerCapture(pointerId);
+    desk.classList.remove("moving");
     desk.removeEventListener("pointermove", move);
     desk.removeEventListener("pointerup", stop);
     desk.removeEventListener("pointercancel", stop);
   };
   try { desk.setPointerCapture(pointerId); } catch { return; }
+  desk.classList.add("moving");
   desk.addEventListener("pointermove", move);
   desk.addEventListener("pointerup", stop);
   desk.addEventListener("pointercancel", stop);
@@ -1971,9 +1980,9 @@ document.addEventListener("pointerdown", primeAudio);
 document.addEventListener("pointerdown", () => Object.keys(sounds).forEach(loadSound), { once: true });
 
 function bendScreen() {
-  const lens = document.querySelector("[data-crt-lens]");
-  const bend = document.querySelector("[data-crt-bend]");
-  if (!lens || !bend) return;
+  const lenses = document.querySelectorAll("[data-crt-lens]");
+  const bends = document.querySelectorAll("[data-crt-bend]");
+  if (!lenses.length) return;
   if (document.documentElement.dataset.effects !== "full") return;
   const strength = 0.028;
   const width = 160;
@@ -1997,8 +2006,9 @@ function bendScreen() {
     }
   }
   context.putImageData(image, 0, 0);
-  lens.setAttribute("href", canvas.toDataURL());
-  bend.setAttribute("scale", String(scale));
+  const map = canvas.toDataURL();
+  lenses.forEach((lens) => lens.setAttribute("href", map));
+  bends.forEach((bend) => bend.setAttribute("scale", String(scale)));
 }
 let bendTimer = 0;
 window.addEventListener("resize", () => {

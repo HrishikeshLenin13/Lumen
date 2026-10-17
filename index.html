@@ -15,7 +15,7 @@
     <link rel="icon" href="icons/favicon.png?v=86272e4942" type="image/png">
     <title>LUMEN - builder desk</title>
 
-    <link rel="stylesheet" href="css/lumen-vintage.css?v=4bc5c3a99d" />
+    <link rel="stylesheet" href="css/lumen-vintage.css?v=5524e21c9a" />
   </head>
   <body>
     <div id="boot" class="boot" role="status" aria-live="polite"><pre class="boot-post" data-boot-post></pre><div class="boot-brand hidden" data-boot-brand><img class="boot-mark" src="icons/l.png?v=33d4468d61" alt=""><span class="boot-logo">LUMEN</span><span class="boot-copy">Starting up...</span><span class="boot-track"><span></span></span></div></div>
@@ -27,6 +27,13 @@
       <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/><feBlend in="redGreen" in2="blueShift" mode="screen" result="split"/>
       <feGaussianBlur in="split" stdDeviation="2" result="bloom"/><feComponentTransfer in="bloom" result="softBloom"><feFuncA type="linear" slope="0.22"/></feComponentTransfer><feBlend in="split" in2="softBloom" mode="screen" result="glow"/>
       <feImage preserveAspectRatio="none" result="lens" data-crt-lens/><feDisplacementMap in="glow" in2="lens" scale="0" xChannelSelector="R" yChannelSelector="G" data-crt-bend/>
+    </filter>
+    <filter id="crt-fast" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feOffset in="red" dx="-1" result="redShift"/>
+      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>
+      <feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/><feOffset in="blue" dx="1" result="blueShift"/>
+      <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/><feBlend in="redGreen" in2="blueShift" mode="screen" result="split"/>
+      <feImage preserveAspectRatio="none" result="lens" data-crt-lens/><feDisplacementMap in="split" in2="lens" scale="0" xChannelSelector="R" yChannelSelector="G" data-crt-bend/>
     </filter></svg>
 
     <main id="desk" class="desktop hidden">
@@ -57,6 +64,6 @@
     <div class="crt-mask" aria-hidden="true"></div>
     <div class="crt-roll" aria-hidden="true"></div>
 
-    <script type="module" src="js/main.js?v=3f9990f45d"></script>
+    <script type="module" src="js/main.js?v=1ca8c2f691"></script>
   </body>
 </html>
