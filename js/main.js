@@ -423,9 +423,6 @@ const apps = [
       const history = root.querySelector("[data-note-history]");
       const stats = root.querySelector("[data-note-stats]");
       let saveTimer = null;
-      const undo = [];
-      const undoButton = root.querySelector("[data-paint-undo]");
-      const snapshot = () => { undo.push(context.getImageData(0, 0, canvas.width, canvas.height)); if (undo.length > 20) undo.shift(); undoButton.disabled = false; };
       let metadataFrame = null;
       let savedNotes = data.notes;
       const renderEditorMetadata = () => {
@@ -955,6 +952,9 @@ const apps = [
       let color = "#000000";
       let last = null;
       let saveTimer = null;
+      const undo = [];
+      const undoButton = root.querySelector("[data-paint-undo]");
+      const snapshot = () => { undo.push(context.getImageData(0, 0, canvas.width, canvas.height)); if (undo.length > 20) undo.shift(); undoButton.disabled = false; };
       const store = () => {
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
