@@ -19,6 +19,9 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 - Character Map for copying arrows, box drawing, currency, accents, and math symbols
 - A Recycle Bin that keeps deleted files and folders until you restore or empty them
+- A Run dialog that understands classic names like notepad, calc, mspaint, cmd, and winmine
+- Minesweeper difficulty levels, find and replace in Notes, Paint can open pictures, and calculator square root, percent, sign, and reciprocal keys
+- Command Prompt commands for dir, tree, type, time, whoami, mem, color, start, and shutdown
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch

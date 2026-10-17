@@ -1584,7 +1584,7 @@ const apps = [
     id: "settings",
     name: "Settings",
     icon: "icons/help.png?v=aa753d325e",
-    size: [452, 372],
+    size: [452, 476],
     html() {
       const fullEffectsSelected = data.effects === "full" ? " selected" : "";
       const subtleEffectsSelected = data.effects === "subtle" ? " selected" : "";
