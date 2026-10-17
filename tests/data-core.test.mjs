@@ -164,7 +164,8 @@ test("Ship Log search and date ranges compose before export", () => {
   assert.deepEqual(filterLogs(logs, { query: "Lumen", now }), [logs[0], logs[1]]);
 });
 
-test("fresh installs include both feature stores", () => {
+test("fresh installs start with clean workspace data", () => {
+  assert.equal(makeDefaultData().notes, "");
   assert.deepEqual(makeDefaultData().sessions, []);
   assert.equal(makeDefaultData().timerState, null);
   assert.deepEqual(makeDefaultData().noteHistory, []);

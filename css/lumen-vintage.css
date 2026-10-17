@@ -1251,6 +1251,8 @@ html[data-effects="off"] body::after {
   .settings-grid {
     grid-template-columns: 1fr;
   }
+  .calculator { grid-template-columns: 1fr; }
+  .checklist-toolbar { flex-wrap: wrap; }
 
   .log-entry-form {
     grid-template-columns: 1fr;

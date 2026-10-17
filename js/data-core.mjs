@@ -1,6 +1,6 @@
 export function makeDefaultData() {
   return {
-    notes: "Project notes...\nWhat are you building today?",
+    notes: "",
     noteHistory: [],
     logs: [],
     sessions: [],
