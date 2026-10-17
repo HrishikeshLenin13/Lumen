@@ -17,6 +17,7 @@ export function makeDefaultData() {
     paintImage: "",
     events: [],
     screensaver: true,
+    windows: [],
   };
 }
 
@@ -316,6 +317,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     paintImage: typeof source.paintImage === "string" && source.paintImage.startsWith("data:image/png;base64,") && source.paintImage.length < 300000 ? source.paintImage : defaults.paintImage,
     events: Array.isArray(source.events) ? source.events.filter((event) => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date) && typeof event.text === "string" && event.text.trim()).map((event) => ({ id: typeof event.id === "string" && event.id ? event.id : makeId(), date: event.date, text: event.text.trim().slice(0, 160) })).slice(0, 500) : [],
     screensaver: source.screensaver !== false,
+    windows: Array.isArray(source.windows) ? source.windows.filter((item) => item && typeof item.id === "string" && item.id).slice(0, 20).map((item) => ({ id: item.id.slice(0, 40), left: clampNumber(item.left, 0, 10000, 0), top: clampNumber(item.top, 0, 10000, 0), width: clampNumber(item.width, 120, 10000, 420), height: clampNumber(item.height, 100, 10000, 320), minimized: Boolean(item.minimized), maximized: Boolean(item.maximized) })) : [],
     logs,
     sessions,
     tasks,

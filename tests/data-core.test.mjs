@@ -172,6 +172,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(normalizeData({ rockPets: -4 }).rockPets, 0);
   assert.equal(normalizeData({ sounds: false }).sounds, false);
   assert.equal(normalizeData({ screensaver: false }).screensaver, false);
+  assert.deepEqual(normalizeData({ windows: [{ id: "notes", left: -5, width: 50, minimized: 1 }, { nope: 1 }] }).windows, [{ id: "notes", left: 0, top: 0, width: 120, height: 320, minimized: true, maximized: false }]);
 });
 test("minefields keep the first click and its neighbors safe and count nearby mines", () => {
   const field = createMinefield(9, 9, 10, 40, () => 0.5);

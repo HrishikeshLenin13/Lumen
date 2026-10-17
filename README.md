@@ -10,7 +10,7 @@ Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 - Calculator with a real keypad, keyboard input, live preview, and a result tape
 - Calendar with local events, opened from the taskbar clock
 - Command Prompt that opens apps, does math, and adds tasks and notes
-- Paint with pencil, eraser, fill, a VGA palette, and PNG export
+- Paint with pencil, eraser, fill, airbrush, smudge, undo, a VGA palette, and PNG export
 - Minesweeper with a safe first click, flags, and a saved best time
 - Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
 

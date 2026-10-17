@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=7f97dd6eb3";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=2ac9a8036c";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -423,6 +423,9 @@ const apps = [
       const history = root.querySelector("[data-note-history]");
       const stats = root.querySelector("[data-note-stats]");
       let saveTimer = null;
+      const undo = [];
+      const undoButton = root.querySelector("[data-paint-undo]");
+      const snapshot = () => { undo.push(context.getImageData(0, 0, canvas.width, canvas.height)); if (undo.length > 20) undo.shift(); undoButton.disabled = false; };
       let metadataFrame = null;
       let savedNotes = data.notes;
       const renderEditorMetadata = () => {
@@ -941,7 +944,7 @@ const apps = [
     size: [372, 404],
     html() {
       const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
-      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Your drawing is kept on this device.</span></div></div>';
+      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
     },
     bind(root) {
       const canvas = root.querySelector("[data-paint-canvas]");
@@ -980,10 +983,13 @@ const apps = [
         context.fillRect(x - Math.floor(size / 2), y - Math.floor(size / 2), size, size);
       };
       const rgba = (value) => [1, 3, 5].map((offset) => parseInt(value.slice(offset, offset + 2), 16)).concat(255);
+      const airbrush = ([x, y]) => { const radius = Number(sizeInput.value) * 2; context.fillStyle = color; for (let dot = 0; dot < radius * 2; dot += 1) { const angle = Math.random() * Math.PI * 2; const distance = Math.sqrt(Math.random()) * radius; context.fillRect(Math.round(x + Math.cos(angle) * distance), Math.round(y + Math.sin(angle) * distance), 1, 1); } };
+      const smudge = ([x, y]) => { const size = Math.max(2, Number(sizeInput.value) * 2); const left = Math.max(0, x - Math.floor(size / 2)); const top = Math.max(0, y - Math.floor(size / 2)); const width = Math.min(size, canvas.width - left); const height = Math.min(size, canvas.height - top); const pixels = context.getImageData(left, top, width, height); const totals = [0, 0, 0, 0]; for (let offset = 0; offset < pixels.data.length; offset += 4) totals.forEach((_, channel) => totals[channel] += pixels.data[offset + channel]); for (let offset = 0; offset < pixels.data.length; offset += 4) totals.forEach((total, channel) => pixels.data[offset + channel] = Math.round((pixels.data[offset + channel] * 2 + total / (pixels.data.length / 4)) / 3)); context.putImageData(pixels, left, top); };
       canvas.addEventListener("pointerdown", (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
         const at = point(event);
+        snapshot();
         if (tool === "fill") {
           const image = context.getImageData(0, 0, canvas.width, canvas.height);
           if (floodFill(image.data, canvas.width, canvas.height, at[0], at[1], rgba(color))) context.putImageData(image, 0, 0);
@@ -995,12 +1001,12 @@ const apps = [
           return;
         }
         last = at;
-        stamp(at);
+        (tool === "airbrush" ? airbrush : tool === "smudge" ? smudge : stamp)(at);
       });
       canvas.addEventListener("pointermove", (event) => {
         if (!last) return;
         const at = point(event);
-        linePoints(last[0], last[1], at[0], at[1]).forEach(stamp);
+        linePoints(last[0], last[1], at[0], at[1]).forEach(tool === "airbrush" ? airbrush : tool === "smudge" ? smudge : stamp);
         last = at;
       });
       const end = () => {
@@ -1026,8 +1032,10 @@ const apps = [
         root.querySelectorAll("[data-paint-color]").forEach((item) => item.setAttribute("aria-checked", String(item === swatch)));
         if (tool === "eraser") root.querySelector('[data-paint-tool="pencil"]').click();
       });
+      undoButton.addEventListener("click", () => { const image = undo.pop(); if (!image) return; context.putImageData(image, 0, 0); undoButton.disabled = undo.length === 0; store(); });
       root.querySelector("[data-paint-clear]").addEventListener("click", () => {
         if (!window.confirm("Clear the whole drawing?")) return;
+        snapshot();
         blank();
         store();
       });
@@ -1514,7 +1522,7 @@ function restoreApp(id) {
   if (id === "focus") paintTimer(entry.el.querySelector(".body"));
   return true;
 }
-function openApp(id) {
+function openApp(id, geometry) {
   const app = apps.find((candidate) => candidate.id === id);
   if (!app) return;
   setStartMenu(false);
@@ -1537,6 +1545,7 @@ function openApp(id) {
   element.style.top = (window.innerWidth <= 640 ? icons.offsetTop + icons.offsetHeight + 8 : 40) + offset + "px";
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
+  if (geometry) element.style.cssText += "left:" + geometry.left + "px;top:" + geometry.top + "px;width:" + geometry.width + "px;height:" + geometry.height + "px";
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false"></button><button type="button" class="x" data-close aria-label="close window"></button></div></header><div class="body">' + app.html() + '</div><span class="win-grip" data-grip aria-hidden="true"></span>';
   wins.append(element);
   playSound("open");
@@ -2165,6 +2174,49 @@ window.addEventListener("resize", () => {
   clearTimeout(bendTimer);
   bendTimer = window.setTimeout(bendScreen, 160);
 });
+function rememberWindows() {
+  data.windows = Array.from(open.entries()).sort((a, b) => Number(a[1].el.style.zIndex) - Number(b[1].el.style.zIndex)).map(([id, entry]) => {
+    const maximized = entry.el.classList.contains("max");
+    return {
+      id,
+      left: parseInt(entry.el.style.left, 10) || 0,
+      top: parseInt(entry.el.style.top, 10) || 0,
+      width: maximized ? parseInt(entry.el.style.width, 10) || 420 : entry.el.offsetWidth,
+      height: maximized ? parseInt(entry.el.style.height, 10) || 320 : entry.el.offsetHeight,
+      minimized: entry.el.classList.contains("min") || entry.el.classList.contains("minimizing"),
+      maximized,
+    };
+  });
+  persistData();
+}
+function restoreWindows() {
+  const saved = data.windows.filter((item) => apps.some((app) => app.id === item.id));
+  saved.forEach((item) => {
+    openApp(item.id, item);
+    const entry = open.get(item.id);
+    if (!entry) return;
+    if (item.maximized) {
+      entry.el.classList.add("max");
+      entry.el.querySelector("[data-max]")?.setAttribute("aria-pressed", "true");
+      entry.el.querySelector("[data-max]")?.setAttribute("aria-label", "restore window");
+    }
+    if (item.minimized) {
+      entry.el.classList.add("min");
+      entry.el.classList.remove("focus");
+      entry.tab.classList.remove("on");
+      entry.tab.setAttribute("aria-selected", "false");
+    }
+  });
+  if (activeId && open.get(activeId)?.el.classList.contains("min")) {
+    activeId = null;
+    activateTopWindow();
+  }
+  return saved.length > 0;
+}
+window.addEventListener("pagehide", rememberWindows);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") rememberWindows();
+});
 async function boot() {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const post = document.querySelector("[data-boot-post]");
@@ -2190,11 +2242,14 @@ async function boot() {
   await wait(420);
   document.getElementById("boot").remove();
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
-  openApp(apps.some((app) => app.id === requestedApp) ? requestedApp : "about");
+  const restored = restoreWindows();
+  if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
+  else if (!restored) openApp("about");
   refreshInstallControls();
 }
 window.addEventListener("hashchange", () => {
   const requestedApp = location.hash.slice(1) === "texttools" ? "notes" : location.hash.slice(1);
+  const restored = restoreWindows();
   if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
 });
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
