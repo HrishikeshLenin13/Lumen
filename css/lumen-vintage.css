@@ -918,7 +918,11 @@ select.field:focus {
 .toy__art { width: 96px; height: 96px; image-rendering: pixelated; }
 .toy__line { min-height: 18px; margin: 0; }
 .toy__slip { max-width: 300px; min-height: 52px; margin: 0; padding: 14px 16px; color: #111; background: #fffef5; border: 1px solid #000; box-shadow: 2px 2px 0 #000; font-family: var(--mono); }
-.toy__coin { display: grid; place-items: center; width: 96px; height: 96px; color: #111; background: #fff; border: 1px solid #000; border-radius: 50%; box-shadow: 2px 2px 0 #000; font-family: var(--mono); font-weight: 700; }
+.coin-stage { position: relative; display: grid; justify-items: center; align-items: end; width: 128px; height: 168px; perspective: 420px; }
+.coin { position: relative; z-index: 1; width: 64px; height: 64px; margin-bottom: 16px; transform-style: preserve-3d; }
+.coin__face { position: absolute; inset: 0; image-rendering: pixelated; backface-visibility: hidden; }
+.coin__face--tails { transform: rotateX(180deg); }
+.coin-shadow { position: absolute; bottom: 8px; width: 56px; height: 8px; opacity: 0.35; background: #000; border-radius: 50%; }
 .busy-bar { height: 22px; padding: 2px; background: #fff; border: 1px solid #000; box-shadow: inset 1px 1px #808080; }
 .busy-bar span { display: block; width: 0; height: 100%; background: repeating-linear-gradient(90deg, #2fae3c 0 8px, transparent 8px 10px); }
 

@@ -135,7 +135,7 @@ function primeAudio() {
     audioContext = null;
   }
 }
-const sounds = { open: "sounds/open.mp3", close: "sounds/close.mp3", minimize: "sounds/minimize.mp3", restore: "sounds/restore.mp3", thud: "sounds/thud.mp3", win: "sounds/win.mp3", boom: "sounds/boom.mp3", degauss: "sounds/degauss.mp3", timer: "sounds/timer.mp3" };
+const sounds = { open: "sounds/open.mp3", close: "sounds/close.mp3", minimize: "sounds/minimize.mp3", restore: "sounds/restore.mp3", thud: "sounds/thud.mp3", win: "sounds/win.mp3", boom: "sounds/boom.mp3", degauss: "sounds/degauss.mp3", timer: "sounds/timer.mp3", flip: "sounds/flip.mp3" };
 const soundBuffers = new Map();
 function loadSound(name) {
   if (!audioContext || !sounds[name]) return Promise.resolve(null);
@@ -1251,27 +1251,52 @@ const apps = [
     name: "Coin Flip",
     icon: "icons/coin.png?v=65c80a1be7",
     html() {
-      return '<div class="toy"><output class="toy__coin" data-coin aria-live="polite">?</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
+      return '<div class="toy"><div class="coin-stage"><div class="coin" data-coin><img class="coin__face" src="icons/coin-heads.png?v=634e3d3375" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="icons/coin-tails.png?v=634e3d3375" alt="" width="64" height="64"></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
     },
     bind(root) {
-      const face = root.querySelector("[data-coin]");
+      const coin = root.querySelector("[data-coin]");
+      const shadow = root.querySelector("[data-coin-shadow]");
+      const result = root.querySelector("[data-coin-result]");
       const tally = root.querySelector("[data-coin-tally]");
       const button = root.querySelector("[data-coin-flip]");
       const counts = { Heads: 0, Tails: 0 };
+      let angle = 0;
       button.addEventListener("click", () => {
         button.disabled = true;
-        let spins = 0;
-        const spin = setInterval(() => {
-          spins += 1;
-          face.textContent = spins % 2 ? "Tails" : "Heads";
-          if (spins < 7) return;
-          clearInterval(spin);
-          const result = Math.random() < 0.5 ? "Heads" : "Tails";
-          counts[result] += 1;
-          face.textContent = result;
-          tally.textContent = counts.Heads + " heads · " + counts.Tails + " tails";
+        const side = Math.random() < 0.5 ? "Heads" : "Tails";
+        const start = angle;
+        angle = (Math.floor(start / 360) + 5 + Math.floor(Math.random() * 3)) * 360 + (side === "Tails" ? 180 : 0);
+        const middle = start + (angle - start) / 2;
+        const land = () => {
+          coin.style.transform = "rotateX(" + angle + "deg)";
+          counts[side] += 1;
+          writeText(result, side + "!");
+          writeText(tally, counts.Heads + " heads · " + counts.Tails + " tails");
           button.disabled = false;
-        }, 70);
+          playSound("thud");
+        };
+        writeText(result, "Flipping...");
+        playSound("flip");
+        if (reducedMotion.matches) return land();
+        const timing = { duration: 1150, fill: "forwards" };
+        const toss = coin.animate([
+          { transform: "translateY(0) rotateX(" + start + "deg)", easing: "cubic-bezier(0.2, 0.6, 0.4, 1)" },
+          { transform: "translateY(-104px) rotateX(" + middle + "deg)", offset: 0.45, easing: "cubic-bezier(0.6, 0, 0.8, 0.4)" },
+          { transform: "translateY(0) rotateX(" + angle + "deg)", offset: 0.84, easing: "ease-out" },
+          { transform: "translateY(-10px) rotateX(" + angle + "deg)", offset: 0.92, easing: "ease-in" },
+          { transform: "translateY(0) rotateX(" + angle + "deg)" },
+        ], timing);
+        shadow.animate([
+          { transform: "scaleX(1)", opacity: 0.35 },
+          { transform: "scaleX(0.45)", opacity: 0.12, offset: 0.45 },
+          { transform: "scaleX(1)", opacity: 0.35, offset: 0.84 },
+          { transform: "scaleX(0.85)", opacity: 0.3, offset: 0.92 },
+          { transform: "scaleX(1)", opacity: 0.35 },
+        ], timing).finished.then((animation) => animation.cancel(), () => {});
+        toss.finished.then(() => {
+          land();
+          toss.cancel();
+        }, land);
       });
     },
   },

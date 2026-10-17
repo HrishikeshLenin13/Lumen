@@ -33,7 +33,7 @@ Open LUMEN in a supported browser, choose LUMEN on the taskbar, then select **In
 Notes, tasks, settings, timer state, and work logs stay in browser storage. Settings can export or restore a JSON backup.
 
 ## Sounds
-System sounds live in `sounds/` as MP3 files: open, close, minimize, restore, thud, win, boom, degauss, and timer. Replace any file with your own MP3 of the same name and reload. Sounds always load fresh when online and stay cached for offline use.
+System sounds live in `sounds/` as MP3 files: open, close, minimize, restore, thud, win, boom, degauss, timer, and flip. Replace any file with your own MP3 of the same name and reload. Sounds always load fresh when online and stay cached for offline use.
 
 ## Credits
 Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are human-made.
