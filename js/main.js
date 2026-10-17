@@ -1473,13 +1473,13 @@ function openApp(id) {
     return;
   }
   const element = document.createElement("section");
-  const offset = open.size * 24;
+  const offset = (open.size % 8) * 24;
   element.className = "win focus opening";
   element.dataset.appId = id;
   element.setAttribute("role", "dialog");
   element.setAttribute("aria-modal", "false");
   element.setAttribute("aria-label", app.name);
-  element.style.left = 120 + offset + "px";
+  element.style.left = (window.innerWidth <= 640 ? 8 : icons.offsetLeft + icons.offsetWidth + 12) + offset + "px";
   element.style.top = 40 + offset + "px";
   element.style.zIndex = String(++z);
   if (app.size) element.style.cssText += "width:" + app.size[0] + "px;height:" + app.size[1] + "px";
