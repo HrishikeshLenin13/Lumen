@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=e7bf76c439";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=f928736ba2";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -116,6 +116,15 @@ function persistData() {
     return false;
   }
 }
+function readDisplayChoices(root) {
+  data.fontSize = root.querySelector("#fontChoice").value;
+  data.iconSize = root.querySelector("#iconChoice").value;
+  data.wallpaperFit = root.querySelector("#fitChoice").value;
+  data.deskColor = /^#[0-9a-f]{6}$/i.test(root.querySelector("#deskColor").value) ? root.querySelector("#deskColor").value : data.deskColor;
+  data.showClock = root.querySelector("#clockShown").value === "on";
+  data.showQuickLaunch = root.querySelector("#quickShown").value === "on";
+  requestAnimationFrame(layoutIcons);
+}
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
   document.documentElement.dataset.effects = data.effects;
@@ -124,6 +133,8 @@ function applyTheme() {
   document.documentElement.style.setProperty("--tone", tone === "brightness(1) contrast(1)" ? "none" : tone);
   bendScreen();
   document.documentElement.dataset.wallpaper = data.wallpaper;
+  Object.assign(document.documentElement.dataset, { fit: data.wallpaperFit, fontSize: data.fontSize, iconSize: data.iconSize, clock: data.showClock ? "on" : "off", quickLaunch: data.showQuickLaunch ? "on" : "off" });
+  document.documentElement.style.setProperty("--desk-color", data.deskColor);
   clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: data.clock24 ? "h23" : "h12" });
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = "#1d1d20";
@@ -1504,7 +1515,7 @@ const apps = [
       const midnightWallpaperSelected = data.wallpaper === "midnight" ? " selected" : "";
       const auroraWallpaperSelected = data.wallpaper === "aurora" ? " selected" : "";
       const graphiteWallpaperSelected = data.wallpaper === "graphite" ? " selected" : "";
-      return '<div class="tabs" role="tablist"><button type="button" role="tab" class="tabs__tab" data-tab="display" aria-selected="true">Display</button><button type="button" role="tab" class="tabs__tab" data-tab="saver" aria-selected="false">Screen Saver</button><button type="button" role="tab" class="tabs__tab" data-tab="time" aria-selected="false">Date and Time</button><button type="button" role="tab" class="tabs__tab" data-tab="backup" aria-selected="false">Backup</button></div><form data-settings-form><div class="tab-panel" data-panel="display" role="tabpanel"><fieldset class="group"><legend>Appearance</legend><div class="settings-grid"><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark">Luna Blue</option><option value="olive">Olive Green</option><option value="light">Silver</option><option value="royale">Royale</option><option value="classic">Windows Classic</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option></select></label></div></fieldset><fieldset class="group"><legend>Monitor</legend><div class="settings-grid"><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">Brightness<input class="knob" id="brightnessKnob" type="range" min="70" max="130" step="5" value="' + data.brightness + '"></label><label class="form-label">Contrast<input class="knob" id="contrastKnob" type="range" min="70" max="140" step="5" value="' + data.contrast + '"></label></div></fieldset></div><div class="tab-panel" data-panel="saver" role="tabpanel" hidden><fieldset class="group"><legend>Screen saver</legend><div class="settings-grid"><label class="form-label">Screensaver<select class="field" id="saverChoice"><option value="on"' + (data.screensaver ? " selected" : "") + '>After 3 minutes</option><option value="off"' + (data.screensaver ? "" : " selected") + '>Off</option></select></label></div></fieldset><fieldset class="group"><legend>Sounds</legend><div class="settings-grid"><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label></div></fieldset></div><div class="tab-panel" data-panel="time" role="tabpanel" hidden><fieldset class="group"><legend>Clock</legend><div class="settings-grid"><label class="form-label">Taskbar clock<select class="field" id="clockChoice"><option value="12">12-hour</option><option value="24">24-hour</option></select></label></div></fieldset><fieldset class="group"><legend>Focus timer</legend><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label></div></fieldset></div><div class="row row--actions" data-settings-actions><span class="hint hint--flush" data-settings-status aria-live="polite"></span><button type="submit" class="btn primary">Apply</button></div></form><div class="tab-panel" data-panel="backup" role="tabpanel" hidden><fieldset class="group"><legend>Backup and Restore</legend><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div></fieldset><fieldset class="group"><legend>Install LUMEN</legend><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button></fieldset><fieldset class="group"><legend>Reset</legend><button type="button" class="btn danger" data-clear-data>Clear all data...</button></fieldset></div>';
+      return '<div class="tabs" role="tablist"><button type="button" role="tab" class="tabs__tab" data-tab="display" aria-selected="true">Display</button><button type="button" role="tab" class="tabs__tab" data-tab="saver" aria-selected="false">Screen Saver</button><button type="button" role="tab" class="tabs__tab" data-tab="time" aria-selected="false">Date and Time</button><button type="button" role="tab" class="tabs__tab" data-tab="backup" aria-selected="false">Backup</button></div><form data-settings-form><div class="tab-panel" data-panel="display" role="tabpanel"><fieldset class="group"><legend>Appearance</legend><div class="settings-grid"><label class="form-label">Color scheme<select class="field" id="themeChoice"><option value="dark">Luna Blue</option><option value="olive">Olive Green</option><option value="light">Silver</option><option value="royale">Royale</option><option value="classic">Windows Classic</option></select></label><label class="form-label">Desk background<select class="field" id="wallpaperChoice"><option value="classic"' + classicWallpaperSelected + '>Classic LUMEN</option><option value="midnight"' + midnightWallpaperSelected + '>Midnight Grid</option><option value="aurora"' + auroraWallpaperSelected + '>Aurora Dust</option><option value="graphite"' + graphiteWallpaperSelected + '>Graphite Desk</option><option value="none">None</option></select></label><label class="form-label">Font size<select class="field" id="fontChoice"><option value="normal">Normal</option><option value="large">Large</option></select></label><label class="form-label">Icon size<select class="field" id="iconChoice"><option value="normal">Normal</option><option value="large">Large</option></select></label></div></fieldset><fieldset class="group"><legend>Desktop</legend><div class="settings-grid"><label class="form-label">Wallpaper position<select class="field" id="fitChoice"><option value="stretch">Stretch</option><option value="center">Center</option><option value="tile">Tile</option></select></label><label class="form-label">Background color<input class="field field--color" id="deskColor" type="color" value="' + data.deskColor + '"></label></div></fieldset><fieldset class="group"><legend>Monitor</legend><div class="settings-grid"><label class="form-label">Screen effects<select class="field" id="effectsChoice"><option value="full"' + fullEffectsSelected + '>Realistic CRT</option><option value="subtle"' + subtleEffectsSelected + '>Subtle scanlines</option><option value="grid"' + gridEffectsSelected + '>Gridlines</option><option value="off"' + offEffectsSelected + '>Off</option></select></label><label class="form-label">Brightness<input class="knob" id="brightnessKnob" type="range" min="70" max="130" step="5" value="' + data.brightness + '"></label><label class="form-label">Contrast<input class="knob" id="contrastKnob" type="range" min="70" max="140" step="5" value="' + data.contrast + '"></label></div></fieldset></div><div class="tab-panel" data-panel="saver" role="tabpanel" hidden><fieldset class="group"><legend>Screen saver</legend><div class="settings-grid"><label class="form-label">Screensaver<select class="field" id="saverChoice"><option value="on"' + (data.screensaver ? " selected" : "") + '>On</option><option value="off"' + (data.screensaver ? "" : " selected") + '>Off</option></select></label><label class="form-label">Screen saver<select class="field" id="saverStyle"><option value="logo">LUMEN logo</option><option value="starfield">Starfield</option><option value="blank">Blank</option></select></label><label class="form-label">Wait<select class="field" id="saverWait"><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option></select></label></div><div class="row"><button type="button" class="btn" data-saver-preview>Preview</button></div></fieldset><fieldset class="group"><legend>Sounds</legend><div class="settings-grid"><label class="form-label">System sounds<select class="field" id="soundsChoice"><option value="on"' + (data.sounds ? " selected" : "") + '>On</option><option value="off"' + (data.sounds ? "" : " selected") + '>Off</option></select></label></div></fieldset></div><div class="tab-panel" data-panel="time" role="tabpanel" hidden><fieldset class="group"><legend>Clock</legend><div class="settings-grid"><label class="form-label">Taskbar clock<select class="field" id="clockChoice"><option value="12">12-hour</option><option value="24">24-hour</option></select></label><label class="form-label">Show the clock<select class="field" id="clockShown"><option value="on">Yes</option><option value="off">No</option></select></label><label class="form-label">Show Quick Launch<select class="field" id="quickShown"><option value="on">Yes</option><option value="off">No</option></select></label></div></fieldset><fieldset class="group"><legend>Focus timer</legend><div class="settings-grid"><label class="form-label">Focus length<input class="field" id="focusMinutes" type="number" min="1" max="180" step="1" value="' + data.focusMin + '" required></label><label class="form-label">Break length<input class="field" id="breakMinutes" type="number" min="1" max="60" step="1" value="' + data.breakMin + '" required></label></div></fieldset></div><div class="row row--actions" data-settings-actions><span class="hint hint--flush" data-settings-status aria-live="polite"></span><button type="submit" class="btn primary">Apply</button></div></form><div class="tab-panel" data-panel="backup" role="tabpanel" hidden><fieldset class="group"><legend>Backup and Restore</legend><p class="hint">Export your desk to a JSON file or restore a previous export.</p><div class="row"><button type="button" class="btn" data-export-backup>Export backup...</button><button type="button" class="btn" data-import-backup>Import backup...</button><input class="sr-only" type="file" accept="application/json,.json" data-import-file></div></fieldset><fieldset class="group"><legend>Install LUMEN</legend><button type="button" class="btn" data-install-app><span data-install-label>Install...</span></button></fieldset><fieldset class="group"><legend>Reset</legend><button type="button" class="btn danger" data-clear-data>Clear all data...</button></fieldset></div>';
     },
     bind(root) {
       const form = root.querySelector("[data-settings-form]");
@@ -1513,7 +1524,9 @@ const apps = [
       const fileInput = root.querySelector("[data-import-file]");
       root.querySelector("#clockChoice").value = data.clock24 ? "24" : "12";
       root.querySelector("#themeChoice").value = data.theme;
-      form.addEventListener("input", (event) => { if (!event.target.matches(".knob, #themeChoice, #wallpaperChoice, #effectsChoice")) return; data.theme = root.querySelector("#themeChoice").value; data.wallpaper = root.querySelector("#wallpaperChoice").value; data.effects = root.querySelector("#effectsChoice").value; data.brightness = clampNumber(root.querySelector("#brightnessKnob").value, 70, 130, 100); data.contrast = clampNumber(root.querySelector("#contrastKnob").value, 70, 140, 100); applyTheme(); persistData(); });
+      [["#fontChoice", data.fontSize], ["#iconChoice", data.iconSize], ["#fitChoice", data.wallpaperFit], ["#saverStyle", data.saverStyle], ["#saverWait", String(data.saverWait)], ["#clockShown", data.showClock ? "on" : "off"], ["#quickShown", data.showQuickLaunch ? "on" : "off"]].forEach(([selector, value]) => { root.querySelector(selector).value = value; });
+      root.querySelector("[data-saver-preview]").addEventListener("click", () => { const style = data.saverStyle; data.saverStyle = root.querySelector("#saverStyle").value; startSaver(true); data.saverStyle = style; });
+      form.addEventListener("input", (event) => { if (!event.target.matches(".knob, #themeChoice, #wallpaperChoice, #effectsChoice, #fontChoice, #iconChoice, #fitChoice, #deskColor, #clockShown, #quickShown")) return; readDisplayChoices(root); data.theme = root.querySelector("#themeChoice").value; data.wallpaper = root.querySelector("#wallpaperChoice").value; data.effects = root.querySelector("#effectsChoice").value; data.brightness = clampNumber(root.querySelector("#brightnessKnob").value, 70, 130, 100); data.contrast = clampNumber(root.querySelector("#contrastKnob").value, 70, 140, 100); applyTheme(); persistData(); });
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         if (!form.reportValidity()) return;
@@ -1526,6 +1539,9 @@ const apps = [
         paintVolume();
         data.screensaver = root.querySelector("#saverChoice").value === "on";
         data.clock24 = root.querySelector("#clockChoice").value === "24";
+        readDisplayChoices(root);
+        data.saverStyle = root.querySelector("#saverStyle").value;
+        data.saverWait = Number(root.querySelector("#saverWait").value);
         persistData();
         applyTheme();
         resetTimer(timer.mode);
@@ -2053,12 +2069,14 @@ orderedApps.forEach((app) => {
   iconButtons.set(app.id, button);
   icons.append(button);
 });
-const ICON_STEP_X = 92;
-const ICON_STEP_Y = 76;
+let ICON_STEP_X = 92;
+let ICON_STEP_Y = 76;
 let iconDragged = false;
 const freeIcons = window.matchMedia("(min-width: 641px)");
 function layoutIcons() {
   icons.classList.toggle("free", freeIcons.matches);
+  ICON_STEP_X = data.iconSize === "large" ? 100 : 92;
+  ICON_STEP_Y = data.iconSize === "large" ? 92 : 76;
   if (!freeIcons.matches) return iconButtons.forEach((button) => { button.style.left = ""; button.style.top = ""; });
   const width = icons.clientWidth;
   const height = icons.clientHeight;
@@ -2423,7 +2441,7 @@ function turnOffDialog() {
     const choice = event.target.closest("[data-power]")?.dataset.power;
     if (!choice) return;
     close();
-    if (choice === "standby") startSaver();
+    if (choice === "standby") startSaver(true);
     if (choice === "off") powerOff();
     if (choice === "restart") { rememberWindows(); location.reload(); }
   });
@@ -2686,15 +2704,44 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 const saver = document.createElement("div");
 saver.className = "saver hidden";
 saver.setAttribute("aria-hidden", "true");
-saver.innerHTML = '<span class="saver__logo">LUMEN</span>';
+saver.innerHTML = '<span class="saver__logo">LUMEN</span><canvas class="saver__stars"></canvas>';
 desk.append(saver);
 let lastActive = performance.now();
 let saverFrame = 0;
-function startSaver() {
-  if (!data.screensaver || reducedMotion.matches || document.hidden || document.getElementById("boot")) return;
+function startSaver(force = false) {
+  if ((!data.screensaver && !force) || document.hidden || document.getElementById("boot")) return;
   const logo = saver.firstElementChild;
+  const stars = saver.querySelector("canvas");
   saver.classList.remove("hidden");
   screenCursor.classList.add("hidden");
+  logo.hidden = data.saverStyle !== "logo";
+  stars.hidden = data.saverStyle !== "starfield";
+  if (data.saverStyle === "blank" || reducedMotion.matches) return;
+  if (data.saverStyle === "starfield") {
+    const context = stars.getContext("2d");
+    stars.width = Math.ceil(window.innerWidth / 2);
+    stars.height = Math.ceil(window.innerHeight / 2);
+    const field = Array.from({ length: 160 }, () => [Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random()]);
+    let previous = performance.now();
+    const fly = (now) => {
+      const elapsed = Math.min(50, now - previous);
+      previous = now;
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, stars.width, stars.height);
+      field.forEach((star) => {
+        star[2] -= elapsed * 0.00025;
+        if (star[2] <= 0.02) { star[0] = Math.random() * 2 - 1; star[1] = Math.random() * 2 - 1; star[2] = 1; }
+        const x = Math.round(stars.width / 2 + star[0] / star[2] * stars.width / 2);
+        const y = Math.round(stars.height / 2 + star[1] / star[2] * stars.height / 2);
+        const shade = Math.round(110 + 145 * (1 - star[2]));
+        context.fillStyle = "rgb(" + shade + "," + shade + "," + shade + ")";
+        context.fillRect(x, y, star[2] < 0.3 ? 2 : 1, star[2] < 0.3 ? 2 : 1);
+      });
+      saverFrame = requestAnimationFrame(fly);
+    };
+    saverFrame = requestAnimationFrame(fly);
+    return;
+  }
   const maximumX = Math.max(0, window.innerWidth - logo.offsetWidth);
   const maximumY = Math.max(0, window.innerHeight - logo.offsetHeight);
   let x = Math.round(maximumX / 3);
@@ -2734,6 +2781,6 @@ function wake(event) {
 }
 ["pointermove", "pointerdown", "keydown", "wheel"].forEach((type) => document.addEventListener(type, wake, { capture: true }));
 window.setInterval(() => {
-  if (saver.classList.contains("hidden") && performance.now() - lastActive > 180000) startSaver();
+  if (saver.classList.contains("hidden") && performance.now() - lastActive > data.saverWait * 60000) startSaver();
 }, 5000);
 boot();

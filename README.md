@@ -21,6 +21,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - A Recycle Bin that keeps deleted files and folders until you restore or empty them
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
+- Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
 - Monitor brightness and contrast knobs and a 12 or 24-hour clock
 - An XP-style two-column Start menu with Log Off and Turn Off Computer, which fades the desk to gray before the tube collapses
 
