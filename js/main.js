@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints } from "./data-core.mjs?v=24e2d1701d";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid } from "./data-core.mjs?v=2a818cc041";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1024,6 +1024,160 @@ const apps = [
     },
   },
   {
+    id: "calendar",
+    name: "Calendar",
+    icon: "icons/calendar.png?v=65c80a1be7",
+    size: [300, 380],
+    html() {
+      return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><button type="submit" class="btn">Add</button></form></div>';
+    },
+    bind(root) {
+      const localDate = (date) => date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+      const today = localDate(new Date());
+      let year = new Date().getFullYear();
+      let month = new Date().getMonth();
+      let selected = today;
+      const grid = root.querySelector("[data-cal-grid]");
+      const list = root.querySelector("[data-cal-events]");
+      const input = root.querySelector("[data-cal-input]");
+      const render = () => {
+        const busy = new Set(data.events.map((event) => event.date));
+        writeText(root.querySelector("[data-cal-title]"), new Date(year, month, 1).toLocaleString(undefined, { month: "long", year: "numeric" }));
+        grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(new Date(cell.date + "T12:00").toLocaleDateString(undefined, { dateStyle: "full" })) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
+        writeText(root.querySelector("[data-cal-selected]"), new Date(selected + "T12:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }));
+        const events = data.events.filter((event) => event.date === selected);
+        list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
+      };
+      root.querySelectorAll("[data-cal-step]").forEach((button) => button.addEventListener("click", () => {
+        month += Number(button.dataset.calStep);
+        year += Math.floor(month / 12);
+        month = (month + 12) % 12;
+        render();
+      }));
+      root.querySelector("[data-cal-today]").addEventListener("click", () => {
+        year = new Date().getFullYear();
+        month = new Date().getMonth();
+        selected = today;
+        render();
+      });
+      grid.addEventListener("click", (event) => {
+        const day = event.target.closest("[data-cal-date]");
+        if (!day) return;
+        selected = day.dataset.calDate;
+        const picked = new Date(selected + "T12:00");
+        year = picked.getFullYear();
+        month = picked.getMonth();
+        render();
+        input.focus();
+      });
+      root.querySelector("[data-cal-form]").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        data.events.push({ id: makeId(), date: selected, text: text.slice(0, 160) });
+        data.events.sort((a, b) => a.date.localeCompare(b.date));
+        input.value = "";
+        persistData();
+        render();
+      });
+      list.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-cal-delete]");
+        if (!button) return;
+        data.events = data.events.filter((item) => item.id !== button.dataset.calDelete);
+        persistData();
+        render();
+      });
+      render();
+    },
+  },
+  {
+    id: "terminal",
+    name: "Command Prompt",
+    icon: "icons/terminal.png?v=65c80a1be7",
+    size: [500, 300],
+    html() {
+      return '<div class="cmd" data-cmd><pre class="cmd__log" data-cmd-log aria-live="polite"></pre><form class="cmd__line" data-cmd-form><label class="cmd__prompt" for="cmdInput">C:\\LUMEN&gt;</label><input id="cmdInput" class="cmd__input" type="text" autocomplete="off" spellcheck="false" data-cmd-input data-autofocus></form></div>';
+    },
+    bind(root) {
+      const log = root.querySelector("[data-cmd-log]");
+      const input = root.querySelector("[data-cmd-input]");
+      const history = [];
+      let cursor = 0;
+      const print = (text) => {
+        log.textContent += text + "\n";
+        log.scrollTop = log.scrollHeight;
+      };
+      const findApp = (name) => apps.find((app) => app.id === name.toLowerCase() || app.name.toLowerCase() === name.toLowerCase());
+      const commands = {
+        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\ndate            show the date and time\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nexit            close this window",
+        apps: () => apps.map((app) => app.id.padEnd(14) + app.name).join("\n"),
+        open: (args) => {
+          const app = findApp(args);
+          if (!app) return "No program named " + args + ". Type apps to list them.";
+          openApp(app.id);
+          return "Starting " + app.name + "...";
+        },
+        calc: (args) => {
+          const result = calculateExpression(args);
+          return result.ok ? String(result.value) : result.error;
+        },
+        task: (args) => {
+          if (!args) return "Usage: task <text>";
+          data.tasks.unshift({ id: makeId(), text: args.slice(0, 160), done: false, createdAt: new Date().toISOString() });
+          persistData();
+          return "Added to Checklist.";
+        },
+        tasks: () => data.tasks.length ? data.tasks.map((task) => (task.done ? "[x] " : "[ ] ") + task.text).join("\n") : "No tasks.",
+        note: (args) => {
+          if (!args) return "Usage: note <text>";
+          if (open.has("notes")) return "Close Notes first so its open edits are not overwritten.";
+          data.notes = (data.notes ? data.notes.replace(/\n*$/, "\n") : "") + args;
+          persistData();
+          return "Appended to Notes.";
+        },
+        date: () => new Date().toString(),
+        echo: (args) => args,
+        ver: () => "LUMEN [Version 1.04]",
+        cls: () => {
+          log.textContent = "";
+          return null;
+        },
+        exit: () => {
+          closeApp("terminal");
+          return null;
+        },
+      };
+      root.querySelector("[data-cmd-form]").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const line = input.value.trim();
+        input.value = "";
+        print("C:\\LUMEN>" + line);
+        if (!line) return;
+        history.push(line);
+        cursor = history.length;
+        const [name, ...rest] = line.split(/\s+/);
+        const command = Object.hasOwn(commands, name.toLowerCase()) ? commands[name.toLowerCase()] : null;
+        const output = command ? command(rest.join(" ")) : "'" + name + "' is not recognized as a command. Type help.";
+        if (output !== null) print(output);
+      });
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowUp" && cursor > 0) {
+          event.preventDefault();
+          cursor -= 1;
+          input.value = history[cursor];
+        } else if (event.key === "ArrowDown" && history.length) {
+          event.preventDefault();
+          cursor = Math.min(history.length, cursor + 1);
+          input.value = history[cursor] || "";
+        }
+      });
+      root.querySelector("[data-cmd]").addEventListener("click", () => {
+        if (!window.getSelection()?.toString()) input.focus();
+      });
+      print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands.\n");
+    },
+  },
+  {
     id: "petrock",
     name: "Pet Rock",
     icon: "icons/pet-rock.png?v=65c80a1be7",
@@ -1700,13 +1854,14 @@ window.addEventListener("appinstalled", () => {
 
 function tickClock() {
   const now = new Date();
-  const clock = document.getElementById("clock");
+  const clock = document.querySelector("[data-clock-time]");
   const label = now.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
   writeText(clock, label);
   clock.dateTime = now.toISOString().slice(0, 16);
   window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
 }
 tickClock();
+document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
 window.addEventListener("beforeunload", persistData);
 document.addEventListener("pointerdown", primeAudio);
 

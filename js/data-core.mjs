@@ -15,6 +15,7 @@ export function makeDefaultData() {
     sounds: true,
     mineBest: 0,
     paintImage: "",
+    events: [],
   };
 }
 
@@ -247,6 +248,14 @@ export function linePoints(x0, y0, x1, y1) {
     }
   }
 }
+export function monthGrid(year, month) {
+  const anchor = new Date(Date.UTC(year, month, 1));
+  const start = Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1 - anchor.getUTCDay());
+  return Array.from({ length: 42 }, (_, index) => {
+    const day = new Date(start + index * 86400000);
+    return { date: day.toISOString().slice(0, 10), day: day.getUTCDate(), inMonth: day.getUTCMonth() === anchor.getUTCMonth() };
+  });
+}
 export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`) {
   const defaults = makeDefaultData();
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -304,6 +313,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     sounds: source.sounds !== false,
     mineBest: clampNumber(source.mineBest, 0, 999, defaults.mineBest),
     paintImage: typeof source.paintImage === "string" && source.paintImage.startsWith("data:image/png;base64,") && source.paintImage.length < 300000 ? source.paintImage : defaults.paintImage,
+    events: Array.isArray(source.events) ? source.events.filter((event) => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date) && typeof event.text === "string" && event.text.trim()).map((event) => ({ id: typeof event.id === "string" && event.id ? event.id : makeId(), date: event.date, text: event.text.trim().slice(0, 160) })).slice(0, 500) : [],
     logs,
     sessions,
     tasks,

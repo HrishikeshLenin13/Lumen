@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, monthGrid } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
   assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
@@ -199,4 +199,15 @@ test("flood fill paints only the connected region of the clicked color", () => {
 test("line points connect fast strokes without gaps", () => {
   assert.deepEqual(linePoints(0, 0, 3, 1), [[0, 0], [1, 0], [2, 1], [3, 1]]);
   assert.deepEqual(linePoints(2, 2, 2, 2), [[2, 2]]);
+});
+test("month grids start on Sunday and mark days outside the month", () => {
+  const grid = monthGrid(2026, 9);
+  assert.equal(grid.length, 42);
+  assert.deepEqual(grid[0], { date: "2026-09-27", day: 27, inMonth: false });
+  assert.deepEqual(grid[4], { date: "2026-10-01", day: 1, inMonth: true });
+  assert.equal(monthGrid(2026, 12)[5].date, "2027-01-01");
+});
+test("calendar events keep only dated text entries", () => {
+  const events = normalizeData({ events: [{ date: "2026-10-17", text: "  Ship  " }, { date: "soon", text: "x" }, { date: "2026-10-18", text: " " }] }, () => "id").events;
+  assert.deepEqual(events, [{ id: "id", date: "2026-10-17", text: "Ship" }]);
 });
