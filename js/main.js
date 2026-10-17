@@ -5,8 +5,11 @@ const APP_TITLE = "LUMEN - Builder Desk";
 const TIMER_TICK_MS = 1000;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const screenCursor = document.querySelector("[data-screen-cursor]");
+let cursorFrame = 0;
+let cursorX = -40;
+let cursorY = -40;
 function angleCursor(x, y) { const nx = x / innerWidth * 2 - 1; const ny = y / innerHeight * 2 - 1; screenCursor.style.setProperty("--cursor-x", Math.round(x) + "px"); screenCursor.style.setProperty("--cursor-y", Math.round(y) + "px"); screenCursor.style.setProperty("--cursor-rx", Math.round(-ny * 12) + "deg"); screenCursor.style.setProperty("--cursor-ry", Math.round(nx * 12) + "deg"); screenCursor.style.setProperty("--cursor-rz", Math.round(nx * 5) + "deg"); }
-document.addEventListener("pointermove", (event) => { angleCursor(event.clientX, event.clientY); screenCursor.classList.remove("hidden"); }, { passive: true });
+document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; screenCursor.classList.remove("hidden"); if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, width: 1, height: 1 };
 document.documentElement.dataset.curvedCursor = "on";
@@ -78,12 +81,13 @@ function showToast(message) {
 function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false } = {}) {
   return new Promise((resolve) => {
     const host = activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
+    const previousFocus = document.activeElement;
     const overlay = document.createElement("div");
     overlay.className = "window-dialog";
     overlay.setAttribute("role", "presentation");
     const control = Array.isArray(options) ? '<select class="field" data-dialog-value>' + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join("") + "</select>" : value !== undefined ? '<input class="field" data-dialog-value value="' + escapeHtml(value) + '">' : "";
     overlay.innerHTML = '<form class="window-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="windowDialogTitle"><strong class="window-dialog__title" id="windowDialogTitle">' + escapeHtml(title) + '</strong><div class="window-dialog__content"><span>' + escapeHtml(message) + '</span>' + control + '<div class="window-dialog__actions"><button type="button" class="btn" data-dialog-cancel>Cancel</button><button type="submit" class="btn' + (danger ? " danger" : " primary") + '">' + escapeHtml(confirmLabel) + "</button></div></div></form>";
-    const settle = (result) => { overlay.remove(); resolve(result); };
+    const settle = (result) => { overlay.remove(); previousFocus?.focus({ preventScroll: true }); resolve(result); };
     host.append(overlay);
     overlay.querySelector("form").addEventListener("submit", (event) => { event.preventDefault(); settle(overlay.querySelector("[data-dialog-value]")?.value ?? true); });
     overlay.querySelector("[data-dialog-cancel]").addEventListener("click", () => settle(null));
