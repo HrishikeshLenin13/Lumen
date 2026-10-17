@@ -24,6 +24,7 @@ const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" })
 const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
 const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
 const logDateFormat = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" });
 let clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
 function escapeHtml(value) {
@@ -2376,6 +2377,7 @@ function tickClock() {
   const label = clockFormat.format(now);
   writeText(clock, label);
   clock.dateTime = now.toISOString().slice(0, 16);
+  clock.parentElement.title = fullDateFormat.format(now);
   window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
 }
 tickClock();
