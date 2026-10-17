@@ -977,7 +977,7 @@ const apps = [
     size: [372, 404],
     html() {
       const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
-      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
+      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><button type="button" class="btn" data-paint-tool="picker" aria-pressed="false">Picker</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" tabindex="0" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
     },
     bind(root) {
       const canvas = root.querySelector("[data-paint-canvas]");
@@ -1011,7 +1011,7 @@ const apps = [
       const point = (event) => {
         const box = canvas.getBoundingClientRect();
         const [x, y] = toScene(event.clientX, event.clientY);
-        return [Math.floor((x - box.left) / box.width * canvas.width), Math.floor((y - box.top) / box.height * canvas.height)];
+        return [Math.max(0, Math.min(canvas.width - 1, Math.floor((x - box.left) / box.width * canvas.width))), Math.max(0, Math.min(canvas.height - 1, Math.floor((y - box.top) / box.height * canvas.height)))];
       };
       const stamp = ([x, y]) => {
         const size = Number(sizeInput.value);
@@ -1025,6 +1025,7 @@ const apps = [
         if (event.button !== 0) return;
         event.preventDefault();
         const at = point(event);
+        if (tool === "picker") { const pixel = context.getImageData(at[0], at[1], 1, 1).data; color = "#" + [pixel[0], pixel[1], pixel[2]].map((value) => value.toString(16).padStart(2, "0")).join(""); root.querySelectorAll("[data-paint-color]").forEach((item) => item.setAttribute("aria-checked", String(item.dataset.paintColor === color))); writeText(status, "Picked " + color.toUpperCase() + "."); return; }
         snapshot();
         if (tool === "fill") {
           const image = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -1069,6 +1070,7 @@ const apps = [
         if (tool === "eraser") root.querySelector('[data-paint-tool="pencil"]').click();
       });
       undoButton.addEventListener("click", () => { const image = undo.pop(); if (!image) return; context.putImageData(image, 0, 0); undoButton.disabled = undo.length === 0; store(); });
+      canvas.addEventListener("keydown", (event) => { if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z" || undoButton.disabled) return; event.preventDefault(); undoButton.click(); });
       root.querySelector("[data-paint-clear]").addEventListener("click", () => {
         if (!window.confirm("Clear the whole drawing?")) return;
         snapshot();
