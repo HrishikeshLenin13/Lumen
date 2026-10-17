@@ -644,16 +644,25 @@ const apps = [
     glyph: "C",
     icon: "icons/checklist.png?v=1",
     html() {
-      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist" data-task-list></div>';
+      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
     },
     bind(root) {
       const form = root.querySelector("[data-task-form]");
       const input = root.querySelector("[data-task-input]");
       const list = root.querySelector("[data-task-list]");
+      const summary = root.querySelector("[data-task-summary]");
+      const clearCompleted = root.querySelector("[data-clear-completed]");
       const render = () => {
         list.innerHTML = data.tasks.length ? data.tasks.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span>' + escapeHtml(task.text) + '</span></label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">No tasks yet.</p>';
+        summary.textContent = data.tasks.filter((task) => !task.done).length + " remaining · " + data.tasks.length + " total";
+        clearCompleted.disabled = !data.tasks.some((task) => task.done);
       };
       render();
+      clearCompleted.addEventListener("click", () => {
+        data.tasks = data.tasks.filter((task) => !task.done);
+        persistData();
+        render();
+      });
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         const text = input.value.trim();
@@ -762,7 +771,7 @@ const apps = [
     glyph: "i",
     icon: "icons/info.png?v=12",
     html() {
-      return '<h2 class="about-title">LUMEN</h2><p>Offline builder desk for notes, focus sessions, breaks, and shipped work.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
+      return '<h2 class="about-title">LUMEN</h2><p>Notes, tasks, focus sessions, text tools, and work logs in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Text Tools</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li></ul>';
     },
     bind() {},
   },
@@ -785,12 +794,19 @@ function visibleWindowsByZ() {
 }
 
 function onOwnAnimationEnd(element, callback) {
-  const handleAnimationEnd = (event) => {
-    if (event.target !== element) return;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
     element.removeEventListener("animationend", handleAnimationEnd);
     callback();
   };
+  const handleAnimationEnd = (event) => {
+    if (event.target !== element) return;
+    finish();
+  };
   element.addEventListener("animationend", handleAnimationEnd);
+  window.setTimeout(finish, 500);
 }
 
 function activateTopWindow() {
@@ -1042,7 +1058,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-    const shortcuts = { "1": "notes", "2": "focus", "3": "shiplog", "4": "settings", "5": "about" };
+    const shortcuts = { "1": "notes", "2": "checklist", "3": "focus", "4": "shiplog", "5": "texttools", "6": "settings", "7": "about" };
     const appId = shortcuts[event.key];
     if (appId) {
       event.preventDefault();
