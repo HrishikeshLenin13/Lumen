@@ -1566,6 +1566,13 @@ function closeAllWindows() {
   activeId = null;
 }
 
+function impact(node, speed, origin, horizontal) {
+  if (speed < 0.15) return;
+  const squash = Math.min(0.08, speed * 0.025);
+  const scale = horizontal ? "scale(" + (1 - squash) + ", " + (1 + squash / 2) + ")" : "scale(" + (1 + squash / 2) + ", " + (1 - squash) + ")";
+  node.animate([{ transformOrigin: origin, transform: scale }, { transformOrigin: origin, transform: "none" }], { duration: 170, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" });
+  systemSound(horizontal ? 180 : 150, 0.035);
+}
 let flingCount = 0;
 function flingWindow(node, velocityX, velocityY) {
   const token = String(++flingCount);
@@ -1573,8 +1580,8 @@ function flingWindow(node, velocityX, velocityY) {
   const maximumTop = Math.max(0, wins.clientHeight - node.offsetHeight);
   let x = node.offsetLeft;
   let y = node.offsetTop;
-  let vx = Math.max(-4, Math.min(4, velocityX));
-  let vy = Math.max(-4, Math.min(4, velocityY));
+  let vx = Math.max(-6, Math.min(6, velocityX));
+  let vy = Math.max(-6, Math.min(6, velocityY));
   let last = performance.now();
   node.dataset.flinging = token;
   const step = (now) => {
@@ -1585,20 +1592,20 @@ function flingWindow(node, velocityX, velocityY) {
     y += vy * elapsed;
     if (x < 0 || x > maximumLeft) {
       x = Math.max(0, Math.min(maximumLeft, x));
-      vx = -vx * 0.55;
-      systemSound(180, 0.035);
+      impact(node, Math.abs(vx), x === 0 ? "left center" : "right center", true);
+      vx = -vx * 0.78;
     }
     if (y < 0 || y > maximumTop) {
       y = Math.max(0, Math.min(maximumTop, y));
-      vy = -vy * 0.55;
-      systemSound(150, 0.035);
+      impact(node, Math.abs(vy), y === 0 ? "center top" : "center bottom", false);
+      vy = -vy * 0.78;
     }
-    const friction = Math.pow(0.9945, elapsed);
+    const friction = Math.pow(0.9982, elapsed);
     vx *= friction;
     vy *= friction;
     node.style.left = Math.round(x) + "px";
     node.style.top = Math.round(y) + "px";
-    if (Math.hypot(vx, vy) > 0.04) requestAnimationFrame(step);
+    if (Math.hypot(vx, vy) > 0.025) requestAnimationFrame(step);
     else delete node.dataset.flinging;
   };
   requestAnimationFrame(step);
@@ -1645,11 +1652,11 @@ function drag(node) {
       bar.removeEventListener("pointermove", move);
       bar.removeEventListener("pointerup", stop);
       bar.removeEventListener("pointercancel", stop);
-      const recent = samples.filter((sample) => stopEvent.timeStamp - sample[2] < 90);
+      const recent = samples.filter((sample) => stopEvent.timeStamp - sample[2] < 120);
       const span = recent.length > 1 ? recent[recent.length - 1][2] - recent[0][2] : 0;
       const velocityX = span ? (recent[recent.length - 1][0] - recent[0][0]) / span : 0;
       const velocityY = span ? (recent[recent.length - 1][1] - recent[0][1]) / span : 0;
-      if (Math.hypot(velocityX, velocityY) > 1.2 && !reducedMotion.matches) flingWindow(node, velocityX, velocityY);
+      if (Math.hypot(velocityX, velocityY) > 0.7 && !reducedMotion.matches) flingWindow(node, velocityX, velocityY);
       else constrainWindow(node);
     };
     bar.addEventListener("pointermove", move);
