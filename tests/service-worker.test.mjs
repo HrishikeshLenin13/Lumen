@@ -54,3 +54,4 @@ test('content-hashed assets are served from cache without the network', async ()
   assert.equal(await (await promise).text(), 'cached');
   assert.equal(fetched, 0);
 });
+test('the main script parses as a module', () => assert.equal(spawnSync(process.execPath, ['--input-type=module', '--check'], { input: readFileSync(new URL('../js/main.js', import.meta.url)) }).status, 0));

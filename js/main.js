@@ -24,7 +24,6 @@ const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" })
 const monthTitleFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
 const dayHeadingFormat = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" });
 const logDateFormat = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
-const fullDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "full" });
 let clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
 function escapeHtml(value) {
@@ -2031,7 +2030,7 @@ desk.addEventListener("pointerdown", (event) => {
     const top = Math.min(originY, pointerY);
     const right = Math.max(originX, pointerX);
     const bottom = Math.max(originY, pointerY);
-    marquee.style.cssText = "left:" + left + "px;top:" + top + "px;width:" + (right - left) + "px;height:" + (bottom - top) + "px";
+    marquee.style.cssText = "left:" + left + "px;top:" + (top - desk.offsetTop) + "px;width:" + (right - left) + "px;height:" + (bottom - top) + "px";
     marquee.classList.remove("hidden");
     selectIcons(new Set(boxes.filter(([, box]) => box.right > left && box.left < right && box.bottom > top && box.top < bottom).map(([id]) => id)));
   };
@@ -2316,7 +2315,7 @@ document.addEventListener("keydown", (event) => {
     if (!startMenu.classList.contains("hidden")) {
       setStartMenu(false);
       startBtn.focus();
-    } else if (activeId) {
+    } else if (activeId && !event.target.closest("input, textarea, select, [contenteditable]")) {
       closeApp(activeId);
     }
     return;
