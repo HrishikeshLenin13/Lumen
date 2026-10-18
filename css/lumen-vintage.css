@@ -1743,3 +1743,6 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .win .body button, .win .body label, .win .body .tabs, .win .body .desk-folder { -webkit-user-select: none; user-select: none; }
 .win .body, .icon span, .start-menu span, .toast, .window-dialog__content span, .context-menu button { overflow-wrap: anywhere; }
 @media (max-width: 640px) { .boot-post { right: 32px; font-size: 11px; line-height: 16px; white-space: pre-wrap; } }
+.boot::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at center, #fff 0, #dff4ff 35%, rgba(170, 220, 255, 0.4) 60%, transparent 75%); opacity: 0; animation: crt-on 950ms ease-out; }
+@keyframes crt-on { 0% { opacity: 1; transform: scale(0.012, 0.004); } 28% { opacity: 1; transform: scale(1, 0.004); } 58% { opacity: 0.6; transform: scale(1, 1); } 100% { opacity: 0; transform: scale(1, 1); } }
+@media (prefers-reduced-motion: reduce) { .boot::before { animation: none; } }
