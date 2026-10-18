@@ -461,7 +461,6 @@ async function importTextFiles(list, parent = null) {
   if (readable.length) { persistData(); document.dispatchEvent(new Event("lumen-files-changed")); }
   return readable.length;
 }
-let fileClipboard = null;
 function bindFiles(root) {
   const list = root.querySelector("[data-files-list]");
   const content = root.querySelector("[data-files-content]");
@@ -527,6 +526,7 @@ function bindFiles(root) {
   render();
   return (flush = true) => { clearTimeout(saveTimer); if (flush) persistData(); };
 }
+let fileClipboard = null;
 async function clearAllData() {
   const confirmed = await showWindowDialog({ title: "Clear all data", message: "Clear all LUMEN notes, files, settings, and ship log entries?", confirmLabel: "Clear", danger: true });
   if (!confirmed) return;
