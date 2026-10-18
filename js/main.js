@@ -12,7 +12,7 @@ const screenCursor = document.querySelector("[data-screen-cursor]");
 let cursorFrame = 0;
 let cursorX = -40;
 let cursorY = -40;
-function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < lens.top || surfaceX >= innerWidth || surfaceY >= lens.top + lens.height); const matrix = cursorSurfaceMatrix(x, y - lens.top, lens.width, lens.height, document.documentElement.dataset.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
+function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < lens.top || surfaceX >= innerWidth || surfaceY >= lens.top + lens.height); const matrix = cursorSurfaceMatrix(x, y - lens.top, lens.width, lens.height, data.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
 document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, top: 0, width: 1, height: 1 };
@@ -2372,9 +2372,7 @@ function drag(node) {
   });
 }
 
-window.addEventListener("resize", () => {
-  open.forEach((entry) => constrainWindow(entry.el));
-});
+let resizeFrame = 0; window.addEventListener("resize", () => { if (!resizeFrame) resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; open.forEach((entry) => constrainWindow(entry.el)); layoutIcons(); }); });
 
 const icons = document.getElementById("icons");
 const startBtn = document.getElementById("startBtn");
@@ -2564,7 +2562,6 @@ icons.addEventListener("pointerdown", (event) => {
   window.addEventListener("pointercancel", stop);
 });
 freeIcons.addEventListener("change", layoutIcons);
-window.addEventListener("resize", () => requestAnimationFrame(layoutIcons));
 layoutIcons();
 
 const desk = document.getElementById("desk");
