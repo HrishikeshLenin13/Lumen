@@ -1865,7 +1865,7 @@ const apps = [
     icon: "icons/recycle-bin.png?v=65c80a1be7",
     size: [430, 320],
     html() {
-      return '<div class="bin"><div class="files__toolbar"><button type="button" class="btn" data-bin-restore disabled>Restore</button><button type="button" class="btn" data-bin-delete disabled>Delete</button><button type="button" class="btn" data-bin-empty>Empty Recycle Bin</button></div><div class="bin__list" data-bin-list role="listbox" tabindex="0" aria-label="Deleted items"></div><p class="hint hint--flush" data-bin-status aria-live="polite"></p></div>';
+      return '<div class="bin"><div class="files__toolbar"><button type="button" class="btn" data-bin-restore disabled>Restore</button><button type="button" class="btn" data-bin-restore-all>Restore all</button><button type="button" class="btn" data-bin-delete disabled>Delete</button><button type="button" class="btn" data-bin-empty>Empty Recycle Bin</button></div><div class="bin__list" data-bin-list role="listbox" tabindex="0" aria-label="Deleted items"></div><p class="hint hint--flush" data-bin-status aria-live="polite"></p></div>';
     },
     bind(root) {
       const list = root.querySelector("[data-bin-list]");
@@ -1878,10 +1878,10 @@ const apps = [
         writeText(status, data.recycle.length === 1 ? "1 deleted item" : data.recycle.length + " deleted items");
         root.querySelector("[data-bin-restore]").disabled = !selected;
         root.querySelector("[data-bin-delete]").disabled = !selected;
-        root.querySelector("[data-bin-empty]").disabled = !data.recycle.length;
+        root.querySelector("[data-bin-empty]").disabled = !data.recycle.length; root.querySelector("[data-bin-restore-all]").disabled = !data.recycle.length;
       };
-      const restore = () => {
-        const entry = data.recycle.find((item) => item.id === selected);
+      const restore = (picked, quiet = false) => {
+        const entry = picked?.items ? picked : data.recycle.find((item) => item.id === selected);
         if (!entry) return;
         const taken = new Set(data.files.map((item) => item.id));
         const items = entry.items.filter((item) => !taken.has(item.id));
@@ -1890,6 +1890,7 @@ const apps = [
         data.files.push(...items);
         data.recycle = data.recycle.filter((item) => item !== entry);
         persistData();
+        if (quiet) return;
         showToast(entry.items[0].name + " was restored to Files.");
         document.dispatchEvent(new Event("lumen-files-changed"));
       };
@@ -1898,7 +1899,8 @@ const apps = [
       list.addEventListener("click", (event) => { const item = event.target.closest("[data-bin-id]"); if (!item) return; selected = item.dataset.binId; render(); list.querySelector('[data-bin-id="' + CSS.escape(selected) + '"]')?.focus(); });
       list.addEventListener("dblclick", (event) => { if (event.target.closest("[data-bin-id]")) restore(); });
       list.addEventListener("keydown", (event) => { if (event.key === "Delete" && selected) root.querySelector("[data-bin-delete]").click(); if (event.key === "Enter" && selected) restore(); });
-      root.querySelector("[data-bin-restore]").addEventListener("click", restore);
+      root.querySelector("[data-bin-restore]").addEventListener("click", () => restore());
+      root.querySelector("[data-bin-restore-all]").addEventListener("click", () => { const count = data.recycle.length; if (!count) return; [...data.recycle].reverse().forEach((entry) => restore(entry, true)); showToast(count === 1 ? "Restored 1 item to Files." : "Restored " + count + " items to Files."); document.dispatchEvent(new Event("lumen-files-changed")); });
       root.querySelector("[data-bin-delete]").addEventListener("click", async () => { const entry = data.recycle.find((item) => item.id === selected); if (!entry || !await showWindowDialog({ title: "Delete " + entry.items[0].name, message: "Permanently delete this item? This cannot be undone.", confirmLabel: "Delete", danger: true })) return; data.recycle = data.recycle.filter((item) => item !== entry); persistData(); render(); });
       root.querySelector("[data-bin-empty]").addEventListener("click", async () => { if (!data.recycle.length || !await showWindowDialog({ title: "Empty Recycle Bin", message: "Permanently delete all " + data.recycle.length + " items in the Recycle Bin?", confirmLabel: "Empty", danger: true })) return; data.recycle = []; persistData(); playSound("close"); render(); });
       render();
