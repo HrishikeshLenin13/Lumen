@@ -1,5 +1,10 @@
 import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=49fd07edf5";
 import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
+import { atlasMap } from "./atlas-map.mjs?v=fe06793173";
+const sprites = await loadSprites();
+function sprite(name) { return sprites[name] || ""; }
+async function loadSprites() { const urls = {}; try { const sheet = new Image(); await new Promise((resolve, reject) => { sheet.onload = resolve; sheet.onerror = reject; sheet.src = "icons/atlas.png?v=772387d617"; }); const canvas = document.createElement("canvas"); const context = canvas.getContext("2d"); for (const [name, [x, y, width, height]] of Object.entries(atlasMap)) { canvas.width = width; canvas.height = height; context.drawImage(sheet, x, y, width, height, 0, 0, width, height); urls[name] = canvas.toDataURL(); document.documentElement.style.setProperty("--icon-" + name, 'url("' + urls[name] + '")'); } } catch {} return urls; }
+document.querySelectorAll("img[data-icon]").forEach((image) => { image.src = sprite(image.dataset.icon); });
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -87,7 +92,7 @@ function showToast(message, undo) {
   title.textContent = "LUMEN";
   const icon = document.createElement("img");
   icon.className = "toast__icon";
-  icon.src = "icons/info.png?v=b8b38795ff";
+  icon.src = sprite("info");
   icon.alt = "";
   toast.replaceChildren(icon, title, message);
   if (undo) { const button = document.createElement("button"); button.type = "button"; button.className = "btn toast__undo"; button.textContent = "Undo"; button.addEventListener("click", (event) => { event.stopPropagation(); toast.classList.add("hidden"); undo(); }); toast.append(button); }
@@ -125,7 +130,7 @@ function persistData() {
     return false;
   }
 }
-function paintBin() { const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); const src = data.recycle.length ? "icons/recycle-bin-full.png?v=65c80a1be7" : "icons/recycle-bin.png?v=65c80a1be7"; if (image && image.getAttribute("src") !== src) image.src = src; }
+function paintBin() { const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); const src = data.recycle.length ? sprite("recycle-bin-full") : sprite("recycle-bin"); if (image && image.getAttribute("src") !== src) image.src = src; }
 function readDisplayChoices(root) {
   data.fontSize = root.querySelector("#fontChoice").value;
   data.iconSize = root.querySelector("#iconChoice").value;
@@ -283,7 +288,7 @@ function finishTimer() {
   if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
       body: timer.mode === "focus" ? (longBreakDue() ? "Four sessions done. Take a long break." : "Time for a break.") : "Ready for another focus session?",
-      icon: "icons/l.png?v=33d4468d61",
+      icon: sprite("l"),
     });
   }
 }
@@ -476,7 +481,7 @@ function bindFiles(root) {
     const order = root.querySelector("[data-files-sort]").value;
     const extension = (name) => (name.match(/\.([^.]+)$/)?.[1] || "").toLowerCase();
     const items = refreshList ? data.files.filter((item) => item.parent === current).sort((a, b) => a.kind !== b.kind ? (a.kind === "folder" ? -1 : 1) : order === "size" ? b.content.length - a.content.length || a.name.localeCompare(b.name) : order === "date" ? (b.modifiedAt || "").localeCompare(a.modifiedAt || "") || a.name.localeCompare(b.name) : order === "type" ? extension(a.name).localeCompare(extension(b.name)) || a.name.localeCompare(b.name) : a.name.localeCompare(b.name)) : [];
-    if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><img class="files__glyph" src="' + (item.kind === "folder" ? "icons/folder.png?v=466fc6b9b5" : "icons/text-file.png?v=466fc6b9b5") + '" alt="" width="16" height="16"><span>' + escapeHtml(item.name) + '</span>' + (item.modifiedAt ? '<small class="files__date">' + escapeHtml(shortDateFormat.format(new Date(item.modifiedAt))) + '</small>' : "") + '</button></li>').join("") : '<li class="hint">This folder is empty.</li>';
+    if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><img class="files__glyph" src="' + (item.kind === "folder" ? sprite("folder") : sprite("text-file")) + '" alt="" width="16" height="16"><span>' + escapeHtml(item.name) + '</span>' + (item.modifiedAt ? '<small class="files__date">' + escapeHtml(shortDateFormat.format(new Date(item.modifiedAt))) + '</small>' : "") + '</button></li>').join("") : '<li class="hint">This folder is empty.</li>';
     root.querySelector("[data-files-path]").textContent = folderPath();
     const folderName = current ? data.files.find((file) => file.id === current)?.name || "Files" : "Files";
     const win = root.closest?.(".win");
@@ -558,7 +563,7 @@ const apps = [
     id: "notes",
     name: "Notes",
     size: [580, 440],
-    icon: "icons/notes.png?v=8c65e95fff",
+    icon: sprite("notes"),
     html() {
       return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes. Press Ctrl+F to find and F5 to stamp the time and date.</p><div class="notes-format"><label class="notes-format__wrap"><input type="checkbox" data-notes-wrap> Word wrap</label><label>Font <select class="field" data-notes-font><option value="sans">Tahoma</option><option value="mono">Lucida Console</option><option value="serif">Times New Roman</option></select></label><label>Size <select class="field" data-notes-size><option value="11">11</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="20">20</option></select></label></div><div class="notes-find" data-note-find hidden><input class="field" data-note-find-input aria-label="Find" placeholder="Find"><input class="field" data-note-replace-input aria-label="Replace with" placeholder="Replace with"><button type="button" class="btn" data-note-find-next>Find Next</button><button type="button" class="btn" data-note-replace-all>Replace All</button><span class="hint hint--flush" data-note-find-count aria-live="polite"></span><button type="button" class="btn" data-note-find-close>Close</button></div><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush notes-caret" data-note-caret>Ln 1, Col 1</span><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-note-to-file>Save as file...</button><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
     },
@@ -722,7 +727,7 @@ const apps = [
   {
     id: "focus",
     name: "Focus",
-    icon: "icons/timer.png?v=13bd7c6582",
+    icon: sprite("timer"),
     size: [380, 344],
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><input class="field focus-label" type="text" maxlength="80" placeholder="What are you working on?" title="Finished focus sessions are added to Ship Log under this name" aria-label="What are you working on? Finished sessions go to Ship Log." data-focus-label><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
@@ -742,7 +747,7 @@ const apps = [
   {
     id: "shiplog",
     name: "Ship Log",
-    icon: "icons/logs.png?v=7ce34f25cf",
+    icon: sprite("logs"),
     size: [540, 460],
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong> · This week: <strong class="stat-strong" data-log-week-total></strong></p><div class="week" data-log-week aria-label="Hours logged in the last seven days"></div><div class="log-entry-form"><input class="field" type="number" min="0.25" max="24" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" maxlength="240" placeholder="What did you ship?" id="logText" aria-label="Ship description"><input class="field" type="text" maxlength="48" placeholder="Project (optional)" id="logProject" aria-label="Project"><input class="field" type="text" placeholder="Tags, comma separated" id="logTags" aria-label="Tags"><button type="button" class="btn primary" data-add-log>Add entry</button></div><div class="log-tools"><label class="form-label log-filter">Search entries<input class="field" type="search" placeholder="Description, project, tag, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><label class="form-label">Date range<select class="field" data-log-range><option value="all"' + (shipDateRange === "all" ? " selected" : "") + '>All time</option><option value="7"' + (shipDateRange === "7" ? " selected" : "") + '>Last 7 days</option><option value="30"' + (shipDateRange === "30" ? " selected" : "") + '>Last 30 days</option></select></label><button type="button" class="btn" data-export-log>Export filtered CSV</button></div><div class="log-list" data-log-list>' + logListHtml() + '</div>';
@@ -912,7 +917,7 @@ const apps = [
   {
     id: "checklist",
     name: "Checklist",
-    icon: "icons/checklist.png?v=0e27a20bbd",
+    icon: sprite("checklist"),
     size: [500, 420],
     html() {
       return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><input class="field checklist-due" type="date" aria-label="Due date, optional" title="Optional due date" data-task-due><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><select class="field checklist-view" data-task-show aria-label="Show"><option value="all">All</option><option value="open">To do</option><option value="done">Done</option></select><select class="field checklist-view" data-task-sort aria-label="Sort"><option value="newest">My order</option><option value="name">A to Z</option><option value="open">Unfinished first</option><option value="due">Due date</option><option value="important">Important first</option></select><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
@@ -990,7 +995,7 @@ const apps = [
   {
     id: "calculator",
     name: "Calculator",
-    icon: "icons/calculator.png?v=528346ef06",
+    icon: sprite("calculator"),
     size: [284, 436],
     html() {
       const keys = [["MC", "mc", "mem"], ["MR", "mr", "mem"], ["M+", "m+", "mem"], ["M−", "m-", "mem"], ["√", "sqrt", "fn"], ["%", "percent", "fn"], ["±", "negate", "fn"], ["1/x", "inverse", "fn"], ["C", "clear", "op"], ["(", "(", "op"], [")", ")", "op"], ["÷", "/", "op"], ["7", "7", "digit"], ["8", "8", "digit"], ["9", "9", "digit"], ["×", "*", "op"], ["4", "4", "digit"], ["5", "5", "digit"], ["6", "6", "digit"], ["−", "-", "op"], ["1", "1", "digit"], ["2", "2", "digit"], ["3", "3", "digit"], ["+", "+", "op"], ["⌫", "back", "op"], ["0", "0", "digit"], [".", ".", "digit"], ["=", "equals", "op"]];
@@ -1103,10 +1108,10 @@ const apps = [
   {
     id: "minesweeper",
     name: "Minesweeper",
-    icon: "icons/minesweeper.png?v=65c80a1be7",
+    icon: sprite("minesweeper"),
     size: [236, 334],
     html() {
-      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><select class="field mines__level" data-mine-level aria-label="Difficulty"><option value="beginner">Beginner, 9 by 9</option><option value="intermediate">Intermediate, 16 by 16</option><option value="expert">Expert, 30 by 16</option><option value="custom" data-mine-custom-label>Custom</option><option value="custom-edit">Custom...</option></select><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
+      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="' + sprite("mine-face") + '" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><select class="field mines__level" data-mine-level aria-label="Difficulty"><option value="beginner">Beginner, 9 by 9</option><option value="intermediate">Intermediate, 16 by 16</option><option value="expert">Expert, 30 by 16</option><option value="custom" data-mine-custom-label>Custom</option><option value="custom-edit">Custom...</option></select><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
     },
     bind(root) {
       const levels = { beginner: [9, 9, 10], intermediate: [16, 16, 40], expert: [30, 16, 99] };
@@ -1240,7 +1245,7 @@ const apps = [
   {
     id: "paint",
     name: "Paint",
-    icon: "icons/paint.png?v=65c80a1be7",
+    icon: sprite("paint"),
     size: [372, 444],
     html() {
       const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
@@ -1406,7 +1411,7 @@ const apps = [
   {
     id: "calendar",
     name: "Calendar",
-    icon: "icons/calendar.png?v=65c80a1be7",
+    icon: sprite("calendar"),
     size: [400, 560],
     html() {
       return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><input class="field cal__time" type="time" aria-label="Reminder time, optional" title="Optional reminder time" data-cal-time><select class="field cal__repeat-pick" aria-label="Repeat" title="Repeat" data-cal-repeat><option value="">Once</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select><button type="submit" class="btn">Add</button></form><h3 class="cal__upcoming-title">Upcoming</h3><ul class="cal__upcoming" data-cal-upcoming></ul></div>';
@@ -1481,7 +1486,7 @@ const apps = [
   {
     id: "terminal",
     name: "Command Prompt",
-    icon: "icons/terminal.png?v=65c80a1be7",
+    icon: sprite("terminal"),
     size: [500, 300],
     html() {
       return '<div class="cmd" data-cmd><pre class="cmd__log" data-cmd-log aria-live="polite"></pre><form class="cmd__line" data-cmd-form><label class="cmd__prompt" for="cmdInput">C:\\LUMEN&gt;</label><input id="cmdInput" class="cmd__input" type="text" autocomplete="off" spellcheck="false" data-cmd-input data-autofocus></form></div>';
@@ -1587,10 +1592,10 @@ const apps = [
   {
     id: "petrock",
     name: "Pet Rock",
-    icon: "icons/pet-rock.png?v=65c80a1be7",
+    icon: sprite("pet-rock"),
     size: [320, 300],
     html() {
-      return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite"></p><div class="row row--center"><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><button type="button" class="btn" data-rock-name>Name...</button></div><p class="hint hint--flush" data-rock-count></p></div>';
+      return '<div class="toy"><img class="toy__art" src="' + sprite("pet-rock-art") + '" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite"></p><div class="row row--center"><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><button type="button" class="btn" data-rock-name>Name...</button></div><p class="hint hint--flush" data-rock-count></p></div>';
     },
     bind(root) {
       const mood = root.querySelector("[data-rock-mood]");
@@ -1614,7 +1619,7 @@ const apps = [
   {
     id: "fortune",
     name: "Fortune",
-    icon: "icons/fortune.png?v=65c80a1be7",
+    icon: sprite("fortune"),
     size: [380, 200],
     html() {
       return '<div class="toy"><p class="toy__slip" data-fortune aria-live="polite"></p><button type="button" class="btn primary" data-fortune-next>Crack another cookie</button></div>';
@@ -1632,10 +1637,10 @@ const apps = [
   {
     id: "coinflip",
     name: "Coin Flip",
-    icon: "icons/coin.png?v=65c80a1be7",
+    icon: sprite("coin"),
     size: [420, 332],
     html() {
-      return '<div class="toy"><div class="coin-stage"><div class="coin" data-coin><img class="coin__face" src="icons/coin-heads.png?v=634e3d3375" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="icons/coin-tails.png?v=634e3d3375" alt="" width="64" height="64"></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
+      return '<div class="toy"><div class="coin-stage"><div class="coin" data-coin><img class="coin__face" src="' + sprite("coin-heads") + '" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="' + sprite("coin-tails") + '" alt="" width="64" height="64"></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
     },
     bind(root) {
       const coin = root.querySelector("[data-coin]");
@@ -1687,7 +1692,7 @@ const apps = [
   {
     id: "busywork",
     name: "Busy Work",
-    icon: "icons/busy.png?v=65c80a1be7",
+    icon: sprite("busy"),
     size: [380, 210],
     html() {
       return '<p class="hint" data-busy-task aria-live="polite">Ready to look busy.</p><div class="busy-bar" role="progressbar" aria-label="Busy work progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-busy-bar><span></span></div><div class="row row--actions"><button type="button" class="btn primary" data-busy-start>Look busy</button><button type="button" class="btn" data-busy-stop disabled>Stop</button></div>';
@@ -1731,7 +1736,7 @@ const apps = [
   {
     id: "charmap",
     name: "Character Map",
-    icon: "icons/charmap.png?v=65c80a1be7",
+    icon: sprite("charmap"),
     size: [430, 312],
     html() {
       return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set><option value="symbols">Symbols</option><option value="arrows">Arrows</option><option value="math">Math</option><option value="currency">Currency</option><option value="box">Box drawing</option><option value="accents">Accents</option><option value="greek">Greek</option></select></label><div class="charmap__recent" data-charmap-recent></div><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
@@ -1761,7 +1766,7 @@ const apps = [
   {
     id: "settings",
     name: "Settings",
-    icon: "icons/help.png?v=aa753d325e",
+    icon: sprite("help"),
     size: [452, 476],
     html() {
       const fullEffectsSelected = data.effects === "full" ? " selected" : "";
@@ -1846,15 +1851,15 @@ const apps = [
     },
   },
   {
-    id: "files", name: "Files", icon: "icons/files.png", size: [660, 420], html: filesHtml, bind: bindFiles,
+    id: "files", name: "Files", icon: sprite("files"), size: [660, 420], html: filesHtml, bind: bindFiles,
   },
   {
     id: "about",
     name: "About",
-    icon: "icons/info.png?v=b8b38795ff",
+    icon: sprite("info"),
     size: [460, 460],
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p class="hint hint--flush">Version 1.05</p><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>S</kbd> - save a Notes version or the Paint picture</li><li><kbd>Ctrl</kbd> + <kbd>Z</kbd> and <kbd>Ctrl</kbd> + <kbd>O</kbd> - undo and open in Paint</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Alt</kbd> + <kbd>Up</kbd> or <kbd>Down</kbd> - move a checklist task</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li><kbd>F1</kbd> - this window</li><li><kbd>F2</kbd> - rename the selected desktop icon</li><li><kbd>Ctrl</kbd> + <kbd>A</kbd> - select every desktop icon</li><li>Tap the Windows or Command key to open the Start menu, add D to show the desktop, or E to open Files</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul><h3 class="section-title">System</h3><dl class="about-stats" data-about-stats></dl>';
+      return '<img class="about-art" src="' + sprite("about-art") + '" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p class="hint hint--flush">Version 1.05</p><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>S</kbd> - save a Notes version or the Paint picture</li><li><kbd>Ctrl</kbd> + <kbd>Z</kbd> and <kbd>Ctrl</kbd> + <kbd>O</kbd> - undo and open in Paint</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Alt</kbd> + <kbd>Up</kbd> or <kbd>Down</kbd> - move a checklist task</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li><kbd>F1</kbd> - this window</li><li><kbd>F2</kbd> - rename the selected desktop icon</li><li><kbd>Ctrl</kbd> + <kbd>A</kbd> - select every desktop icon</li><li>Tap the Windows or Command key to open the Start menu, add D to show the desktop, or E to open Files</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul><h3 class="section-title">System</h3><dl class="about-stats" data-about-stats></dl>';
     },
     bind(root) {
       let used = 0;
@@ -1866,7 +1871,7 @@ const apps = [
   {
     id: "recycle",
     name: "Recycle Bin",
-    icon: "icons/recycle-bin.png?v=65c80a1be7",
+    icon: sprite("recycle-bin"),
     size: [430, 320],
     html() {
       return '<div class="bin"><div class="files__toolbar"><button type="button" class="btn" data-bin-restore disabled>Restore</button><button type="button" class="btn" data-bin-restore-all>Restore all</button><button type="button" class="btn" data-bin-delete disabled>Delete</button><button type="button" class="btn" data-bin-empty>Empty Recycle Bin</button></div><div class="bin__list" data-bin-list role="listbox" tabindex="0" aria-label="Deleted items"></div><p class="hint hint--flush" data-bin-status aria-live="polite"></p></div>';
@@ -1874,7 +1879,7 @@ const apps = [
     bind(root) {
       const list = root.querySelector("[data-bin-list]");
       const status = root.querySelector("[data-bin-status]");
-      const icons = { folder: "icons/folder.png?v=466fc6b9b5", text: "icons/text-file.png?v=466fc6b9b5" };
+      const icons = { folder: sprite("folder"), text: sprite("text-file") };
       let selected = null;
       const render = () => {
         if (!data.recycle.some((entry) => entry.id === selected)) selected = null;
@@ -2713,14 +2718,14 @@ desk.addEventListener("drop", async (event) => { if (!event.dataTransfer?.files.
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), [...arrangeMenu(), null, { label: (data.autoHideTaskbar ? "✓ " : "") + "Auto-hide the taskbar", run: () => { data.autoHideTaskbar = !data.autoHideTaskbar; persistData(); applyTheme(); } }, { label: "Properties", run: () => openApp("settings") }]); });
 document.addEventListener("pointermove", (event) => { if (!data.autoHideTaskbar) return; const bar = document.querySelector(".taskbar"); const [, y] = toScene(event.clientX, event.clientY); const bottom = desk.getBoundingClientRect().bottom; bar.classList.toggle("peek", y >= bottom - (bar.classList.contains("peek") ? bar.offsetHeight : 4) || !contextMenu.classList.contains("hidden")); }, { passive: true });
 const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="start-menu__found" data-start-found></div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="start-menu__recent" data-start-recent></div><div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="' + sprite("user-placeholder") + '" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="start-menu__found" data-start-found></div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="start-menu__recent" data-start-recent></div><div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="' + sprite("run") + '" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="' + sprite("info") + '" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="' + sprite("logoff") + '" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="' + sprite("power") + '" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
   startMenu.classList.toggle("searching", Boolean(needle));
   startMenu.querySelectorAll(".start-menu__all [data-open-app]").forEach((button) => button.classList.toggle("hidden", !button.textContent.toLocaleLowerCase().includes(needle)));
   const found = needle ? data.files.filter((item) => item.kind === "text" && (item.name.toLocaleLowerCase().includes(needle) || item.content.toLocaleLowerCase().includes(needle))).slice(0, 5) : [];
-  startMenu.querySelector("[data-start-found]").innerHTML = found.length ? '<div class="start-menu__heading">Files</div>' + found.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="icons/text-file.png?v=466fc6b9b5" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
+  startMenu.querySelector("[data-start-found]").innerHTML = found.length ? '<div class="start-menu__heading">Files</div>' + found.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="' + sprite("text-file") + '" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
 }
 startSearch.addEventListener("input", () => filterStartMenu(startSearch.value));
 startSearch.addEventListener("keydown", (event) => {
@@ -2736,7 +2741,7 @@ function renderPinned() {
   const frequent = Object.entries(data.launches).filter(([id]) => !pinned.includes(id) && apps.some((app) => app.id === id)).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   ["calculator", "paint", "focus", "shiplog", "minesweeper", "files"].forEach((id) => { if (!frequent.includes(id) && !pinned.includes(id)) frequent.push(id); });
   const recent = data.recentFiles.map((id) => data.files.find((item) => item.id === id && item.kind === "text")).filter(Boolean).slice(0, 3);
-  startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="icons/text-file.png?v=466fc6b9b5" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
+  startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="' + sprite("text-file") + '" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
   startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + (pinned.length ? '<div class="menu-separator" role="separator"></div>' : "") + frequent.slice(0, Math.max(2, 7 - pinned.length)).map((id) => startItem(id)).join("");
 }
 function setStartMenu(show) {
@@ -2810,7 +2815,7 @@ function turnOffDialog() {
   dialog.className = "shutdown";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-label", "Turn off LUMEN");
-  dialog.innerHTML = '<div class="shutdown__box"><div class="shutdown__head"><span>Turn off LUMEN</span><img src="icons/l.png?v=33d4468d61" alt="" width="14" height="16"></div><div class="shutdown__choices"><button type="button" data-power="standby"><img class="shutdown__icon" src="icons/stand-by.png?v=65c80a1be7" alt="" width="32" height="32">Stand By</button><button type="button" data-power="off"><img class="shutdown__icon" src="icons/turn-off.png?v=65c80a1be7" alt="" width="32" height="32">Turn Off</button><button type="button" data-power="restart"><img class="shutdown__icon" src="icons/restart.png?v=65c80a1be7" alt="" width="32" height="32">Restart</button></div><div class="shutdown__foot"><button type="button" class="btn" data-power="cancel">Cancel</button></div></div>';
+  dialog.innerHTML = '<div class="shutdown__box"><div class="shutdown__head"><span>Turn off LUMEN</span><img src="' + sprite("l") + '" alt="" width="14" height="16"></div><div class="shutdown__choices"><button type="button" data-power="standby"><img class="shutdown__icon" src="' + sprite("stand-by") + '" alt="" width="32" height="32">Stand By</button><button type="button" data-power="off"><img class="shutdown__icon" src="' + sprite("turn-off") + '" alt="" width="32" height="32">Turn Off</button><button type="button" data-power="restart"><img class="shutdown__icon" src="' + sprite("restart") + '" alt="" width="32" height="32">Restart</button></div><div class="shutdown__foot"><button type="button" class="btn" data-power="cancel">Cancel</button></div></div>';
   desk.append(dialog);
   const close = () => { dialog.remove(); desk.classList.remove("shutting"); };
   dialog.addEventListener("keydown", (event) => { if (event.key === "Escape") { event.stopPropagation(); close(); } });

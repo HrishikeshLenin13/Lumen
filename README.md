@@ -3,7 +3,7 @@ Lumen is an installable offline workspace for notes, task tracking, focus sessio
 Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
 Drag desktop icons to keep your preferred app order.
 The pixel cursor tilts with the curved CRT surface, and confirmations stay inside LUMEN windows.
-Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dragging.png` with your own 16×16 PNGs. Cursor hotspots use the top-left pixel, matching `cursor-2x.png`.
+Draw your art in `art/`, one PNG per icon at its current size, then run `node scripts/build-atlas.mjs`. It packs every icon into `icons/atlas.png`, so the page loads one image instead of dozens, and builds the favicon and both app icons from `art/lumen-logo.png`. Cursor hotspots use the top-left pixel.
 
 ## Features
 
@@ -74,5 +74,6 @@ Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are h
 - `js/main.js` contains the desktop, window manager, and app bindings.
 - `js/data-core.mjs` contains normalized storage and reusable data operations.
 - `sw.js` manages the versioned offline app shell.
+- Run `node scripts/build-atlas.mjs` after changing anything in `art/`. It also refreshes the cache stamps.
 - Run `node scripts/stamp-cache.mjs` after changing cached files to refresh content-hash cache stamps.
 - Run tests with `node --test tests/*.test.mjs`.

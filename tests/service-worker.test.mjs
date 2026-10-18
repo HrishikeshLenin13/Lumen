@@ -32,11 +32,8 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   const source = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
-  assert.match(source, /\.\/icons\/checklist\.png\?v=\w+/);
-  assert.match(source, /\.\/icons\/calculator\.png\?v=\w+/);
-  assert.match(source, /\.\/icons\/files\.png\?v=\w+/);
-  for (const name of ["mine-bomb", "cursor-pointing", "cursor-dragging"]) assert.ok(source.includes("./icons/" + name + ".png?v="));
-  assert.match(source, /\.\/icons\/pet-rock\.png\?v=\w+/);
+  for (const file of ["icons/atlas.png", "js/atlas-map.mjs", "icons/favicon.png", "icons/app-icon.png", "icons/app-icon-512.png"]) assert.ok(source.includes("./" + file + "?v="), file);
+  assert.doesNotMatch(source, /\.\/icons\/(?!atlas|favicon|app-icon|wallpaper)[a-z-]+\.png/);
   assert.match(source, /lumen-app-\w{10}/);
   assert.match(html, /<script type="module" src="js\/main\.js\?v=\w+"><\/script>/);
   assert.match(source, /lumen-vintage\.css\?v=\w+/);
@@ -55,3 +52,5 @@ test('content-hashed assets are served from cache without the network', async ()
   assert.equal(fetched, 0);
 });
 test('the main script parses as a module', () => assert.equal(spawnSync(process.execPath, ['--input-type=module', '--check'], { input: readFileSync(new URL('../js/main.js', import.meta.url)) }).status, 0));
+
+test('the icon atlas is built from art and holds every sprite the app uses', async () => { assert.equal(spawnSync(process.execPath, ['scripts/build-atlas.mjs', '--check'], { cwd: new URL('..', import.meta.url) }).status, 0); const { atlasMap } = await import('../js/atlas-map.mjs'); const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'); const css = readFileSync(new URL('../css/lumen-vintage.css', import.meta.url), 'utf8'); const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8'); const used = [...main.matchAll(/sprite\("([a-z0-9-]+)"\)/g), ...css.matchAll(/var\(--icon-([a-z0-9-]+)\)/g), ...html.matchAll(/data-icon="([a-z0-9-]+)"/g)].map((match) => match[1]); assert.ok(used.length > 30); for (const name of used) assert.ok(atlasMap[name], name); assert.doesNotMatch(main + css + html, /icons\/(?!atlas|favicon|app-icon|wallpaper)[a-z0-9-]+\.png/); });

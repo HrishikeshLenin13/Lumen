@@ -11,18 +11,20 @@
     <meta name="application-name" content="LUMEN">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="LUMEN">
-    <link rel="manifest" href="manifest.webmanifest?v=9240a55724">
-    <link rel="icon" href="icons/favicon.png?v=86272e4942" type="image/png">
+    <link rel="manifest" href="manifest.webmanifest?v=fad35e93d7">
+    <link rel="icon" href="icons/favicon.png?v=6da4b3c16f" type="image/png">
     <title>LUMEN - Builder Desk</title>
 
     <link rel="preload" href="icons/wallpaper.png?v=5e0b52de42" as="image" fetchpriority="high">
-    <link rel="stylesheet" href="css/lumen-vintage.css?v=3a2ffcc7a9" />
+    <link rel="stylesheet" href="css/lumen-vintage.css?v=fa2d684548" />
     <link rel="modulepreload" href="js/data-core.mjs?v=49fd07edf5">
     <link rel="modulepreload" href="js/rock-lines.mjs?v=b747b167bd">
+    <link rel="modulepreload" href="js/atlas-map.mjs?v=fe06793173">
+    <link rel="preload" href="icons/atlas.png?v=772387d617" as="image">
   </head>
   <body>
     <span class="screen-cursor" data-screen-cursor aria-hidden="true"></span>
-    <div id="boot" class="boot" role="status" aria-live="polite"><pre class="boot-post" data-boot-post></pre><div class="boot-brand hidden" data-boot-brand><img class="boot-mark" src="icons/l.png?v=33d4468d61" alt=""><span class="boot-logo">LUMEN</span><span class="boot-copy">Starting up...</span><span class="boot-track"><span></span></span></div></div>
+    <div id="boot" class="boot" role="status" aria-live="polite"><pre class="boot-post" data-boot-post></pre><div class="boot-brand hidden" data-boot-brand><img class="boot-mark" data-icon="l" alt=""><span class="boot-logo">LUMEN</span><span class="boot-copy">Starting up...</span><span class="boot-track"><span></span></span></div></div>
 
     <svg class="crt-defs" aria-hidden="true" focusable="false"><filter id="crt-split" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
       <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feOffset in="red" dx="-1" result="redShift"/>
@@ -40,7 +42,7 @@
       <feImage preserveAspectRatio="none" result="lens" data-crt-lens/><feComponentTransfer in="split" result="glow"><feFuncR type="table" tableValues="0 0.25 0.5225 0.867 1"/><feFuncG type="table" tableValues="0 0.25 0.5225 0.867 1"/><feFuncB type="table" tableValues="0 0.25 0.5225 0.867 1"/></feComponentTransfer><feDisplacementMap in="glow" in2="lens" scale="0" xChannelSelector="R" yChannelSelector="G" data-crt-bend/>
     </filter></svg>
 
-    <div class="bezel" aria-hidden="true"><img class="bezel__led" src="icons/power-led.png?v=55adc242c7" alt="" width="8" height="8"><span class="bezel__name">LUMEN</span></div>
+    <div class="bezel" aria-hidden="true"><img class="bezel__led" data-icon="power-led" alt="" width="8" height="8"><span class="bezel__name">LUMEN</span></div>
     <main id="desk" class="desktop hidden">
       <nav class="icons" id="icons" aria-label="Applications"></nav>
       <div class="windows" id="wins" aria-live="polite"></div>
@@ -61,7 +63,7 @@
         </div>
         <div class="quick-launch"><button type="button" class="quick-launch__desktop" data-show-desktop aria-label="Show desktop"></button></div>
         <div class="tasks" id="tasks" role="tablist" aria-label="Open windows"></div>
-        <div class="volume-pop hidden" id="volumePop" role="dialog" aria-label="Volume"><span class="volume-pop__title">Volume</span><input class="knob volume-pop__slider" type="range" min="0" max="100" step="5" aria-label="Volume" data-volume-slider><label class="volume-pop__mute"><input type="checkbox" data-volume-mute> Mute</label></div><div class="tray"><button type="button" class="tray__timer hidden" id="trayTimer" aria-label="Open Focus timer"><img src="icons/timer.png?v=13bd7c6582" alt="" width="16" height="16"></button><button type="button" class="tray__volume" id="volume" aria-label="Mute system sounds" aria-pressed="false"></button><button type="button" class="tray__clock" id="clock" aria-label="Open calendar"><time data-clock-time></time></button></div>
+        <div class="volume-pop hidden" id="volumePop" role="dialog" aria-label="Volume"><span class="volume-pop__title">Volume</span><input class="knob volume-pop__slider" type="range" min="0" max="100" step="5" aria-label="Volume" data-volume-slider><label class="volume-pop__mute"><input type="checkbox" data-volume-mute> Mute</label></div><div class="tray"><button type="button" class="tray__timer hidden" id="trayTimer" aria-label="Open Focus timer"><img data-icon="timer" alt="" width="16" height="16"></button><button type="button" class="tray__volume" id="volume" aria-label="Mute system sounds" aria-pressed="false"></button><button type="button" class="tray__clock" id="clock" aria-label="Open calendar"><time data-clock-time></time></button></div>
       </footer>
 
       <div class="toast hidden" id="toast" role="status" aria-live="assertive"></div>
@@ -71,6 +73,6 @@
     <div class="crt-roll" aria-hidden="true"></div>
     <div class="crt-flicker" aria-hidden="true"></div>
 
-    <script type="module" src="js/main.js?v=1c9c662bad"></script>
+    <script type="module" src="js/main.js?v=ce1d188d5c"></script>
   </body>
 </html>

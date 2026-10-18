@@ -11,11 +11,12 @@
   "theme_color": "#1d1d20",
   "icons": [
     {
-      "src": "icons/app-icon.png?v=12",
+      "src": "icons/app-icon.png?v=9e98d8ad02",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
-    }
+    },
+    { "src": "icons/app-icon-512.png?v=0b82f5e871", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
     { "name": "Notes", "url": "./#notes" },
