@@ -1639,3 +1639,4 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .week__day { display: grid; justify-items: center; align-content: end; gap: 2px; height: 100%; }
 .week__bar { display: block; width: 14px; min-height: 1px; background: #316ac5; box-shadow: inset -1px 0 #0a246a; }
 .week__label { color: var(--window-muted); font-size: 10px; line-height: 12px; }
+.log-entry-form #logProject { grid-column: 1 / 3; }
