@@ -1,5 +1,4 @@
 import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f913b5f3";
-import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -1599,7 +1598,7 @@ const apps = [
     bind(root) {
       const mood = root.querySelector("[data-rock-mood]");
       const count = root.querySelector("[data-rock-count]");
-      let lastLine = -1;
+      let lastLine = -1; const lines = import("./rock-lines.mjs?v=b747b167bd");
       const who = () => data.rockName || "The rock";
       const render = () => {
         count.textContent = data.rockPets === 1 ? "Petted once." : "Petted " + data.rockPets + " times.";
@@ -1609,7 +1608,7 @@ const apps = [
       root.querySelector("[data-rock-pet]").addEventListener("click", () => {
         data.rockPets += 1;
         persistData();
-        let pick = Math.floor(Math.random() * rockLines.length); if (pick === lastLine) pick = (pick + 1) % rockLines.length; lastLine = pick; mood.textContent = (Math.random() < 1 / 5000 ? rareRockLine : data.rockPets % 100 === 0 ? "The rock has chosen you." : rockLines[pick]).replace(/^The rock/, who());
+        lines.then(({ rockLines, rareRockLine }) => { let pick = Math.floor(Math.random() * rockLines.length); if (pick === lastLine) pick = (pick + 1) % rockLines.length; lastLine = pick; mood.textContent = (Math.random() < 1 / 5000 ? rareRockLine : data.rockPets % 100 === 0 ? "The rock has chosen you." : rockLines[pick]).replace(/^The rock/, who()); });
         render();
       });
       render();
