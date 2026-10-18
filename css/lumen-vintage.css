@@ -1629,3 +1629,5 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .notes-format select.field { height: 21px; }
 .checklist-view.field { width: auto; min-height: 23px; margin: 0; }
 .checklist-entry .btn { white-space: nowrap; }
+.cal__time.field { flex: 0 0 auto; width: 92px; }
+.cal__at { font-family: var(--mono); }

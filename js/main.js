@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=bcd4528595";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=afa313610d";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1283,7 +1283,7 @@ const apps = [
     icon: "icons/calendar.png?v=65c80a1be7",
     size: [300, 380],
     html() {
-      return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><button type="submit" class="btn">Add</button></form></div>';
+      return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><input class="field cal__time" type="time" aria-label="Reminder time, optional" title="Optional reminder time" data-cal-time><button type="submit" class="btn">Add</button></form></div>';
     },
     bind(root) {
       const localDate = (date) => date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
@@ -1301,7 +1301,7 @@ const apps = [
         grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(fullDateFormat.format(new Date(cell.date + "T12:00"))) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
         const focusDay = grid.querySelector('[data-cal-date="' + selected + '"]') || grid.querySelector(".cal__day:not(.out)"); grid.querySelectorAll("[data-cal-date]").forEach((day) => { day.tabIndex = day === focusDay ? 0 : -1; if (day.dataset.calDate === today) day.setAttribute("aria-current", "date"); }); writeText(root.querySelector("[data-cal-selected]"), dayHeadingFormat.format(new Date(selected + "T12:00")));
         const events = data.events.filter((event) => event.date === selected);
-        list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
+        list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + (event.time ? '<strong class="cal__at">' + escapeHtml(event.time) + "</strong> " : "") + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
       };
       root.querySelectorAll("[data-cal-step]").forEach((button) => button.addEventListener("click", () => {
         month += Number(button.dataset.calStep);
@@ -1330,9 +1330,11 @@ const apps = [
         event.preventDefault();
         const text = input.value.trim();
         if (!text) return;
-        data.events.push({ id: makeId(), date: selected, text: text.slice(0, 160) });
-        data.events.sort((a, b) => a.date.localeCompare(b.date));
+        const time = root.querySelector("[data-cal-time]").value;
+        data.events.push({ id: makeId(), date: selected, text: text.slice(0, 160), ...(time ? { time } : {}) });
+        data.events.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(b.time || ""));
         input.value = "";
+        root.querySelector("[data-cal-time]").value = "";
         persistData();
         render();
       });
@@ -2691,6 +2693,21 @@ window.addEventListener("appinstalled", () => {
   showToast("LUMEN was installed.");
 });
 
+function checkReminders() {
+  const now = new Date();
+  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const due = data.events.filter((event) => event.time && !event.reminded && event.date === today && (([hours, mins]) => minutes - (hours * 60 + mins))(event.time.split(":").map(Number)) >= 0);
+  if (!due.length) return;
+  due.forEach((event) => { event.reminded = true; });
+  const fresh = due.filter((event) => (([hours, mins]) => minutes - (hours * 60 + mins))(event.time.split(":").map(Number)) <= 30);
+  persistData();
+  if (!fresh.length) return;
+  playSound("timer");
+  showToast("Reminder, " + fresh[0].time + ": " + fresh[0].text + (fresh.length > 1 ? " and " + (fresh.length - 1) + " more" : ""));
+  if (activeId !== "calendar") open.get("calendar")?.tab.classList.add("flashing");
+}
+window.setInterval(checkReminders, 20000);
 function tickClock() {
   const now = new Date();
   const clock = document.querySelector("[data-clock-time]");
@@ -2846,6 +2863,7 @@ async function boot() {
   const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   const agenda = data.events.filter((event) => event.date === today);
   if (agenda.length) window.setTimeout(() => showToast(agenda.length === 1 ? "Today: " + agenda[0].text : "You have " + agenda.length + " events today, starting with " + agenda[0].text + "."), 900);
+  window.setTimeout(checkReminders, 4500);
   refreshInstallControls();
 }
 window.addEventListener("hashchange", () => {

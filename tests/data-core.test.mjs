@@ -231,6 +231,7 @@ test("month grids start on Sunday and mark days outside the month", () => {
 test("calendar events keep only dated text entries", () => {
   const events = normalizeData({ events: [{ date: "2026-10-17", text: "  Ship  " }, { date: "soon", text: "x" }, { date: "2026-10-18", text: " " }] }, () => "id").events;
   assert.deepEqual(events, [{ id: "id", date: "2026-10-17", text: "Ship" }]);
+  assert.deepEqual(normalizeData({ events: [{ id: "a", date: "2026-10-17", text: "Call", time: "09:30", reminded: true }, { id: "b", date: "2026-10-17", text: "Bad", time: "25:00" }] }).events, [{ id: "a", date: "2026-10-17", text: "Call", time: "09:30", reminded: true }, { id: "b", date: "2026-10-17", text: "Bad" }]);
 });
 test("virtual files keep safe folders and text documents", () => assert.deepEqual(normalizeData({ files: [{ id: "docs", kind: "folder", name: " Docs " }, { id: "note", kind: "text", name: "ideas/txt", parent: "docs", content: "hello" }, { id: "bad", kind: "image", name: "no" }] }).files, [{ id: "docs", kind: "folder", name: "Docs", parent: null, content: "" }, { id: "note", kind: "text", name: "ideas-txt", parent: "docs", content: "hello" }]));
 test("virtual folders repair cyclic parent relationships", () => assert.deepEqual(normalizeData({ files: [{ id: "a", kind: "folder", name: "A", parent: "b" }, { id: "b", kind: "folder", name: "B", parent: "a" }] }).files.map((item) => item.parent), [null, null]));
