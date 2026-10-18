@@ -29,13 +29,10 @@ const shortDateFormat = new Intl.DateTimeFormat(undefined, { month: "short", day
 const narrowDayFormat = new Intl.DateTimeFormat(undefined, { weekday: "narrow" });
 let clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
+const htmlEscapes = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
 function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  const text = String(value);
+  return /[&<>"']/.test(text) ? text.replace(/[&<>"']/g, (character) => htmlEscapes[character]) : text;
 }
 
 function makeId() {
