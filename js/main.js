@@ -839,12 +839,12 @@ const apps = [
         if (action === "delete-selected") {
           const count = selectedLogIds.size;
           if (!count || !await showWindowDialog({ title: "Delete ship log entries", message: "Delete " + count + " selected ship log " + (count === 1 ? "entry?" : "entries?"), confirmLabel: "Delete", danger: true })) return;
-          data.logs = data.logs.filter((item) => !selectedLogIds.has(item.id));
+          const before = data.logs.slice(); data.logs = data.logs.filter((item) => !selectedLogIds.has(item.id));
           if (editingLogId && selectedLogIds.has(editingLogId)) editingLogId = null;
           selectedLogIds.clear();
           persistData();
           render();
-          showToast(count + " ship log " + (count === 1 ? "entry deleted." : "entries deleted."));
+          showToast(count + " ship log " + (count === 1 ? "entry deleted." : "entries deleted."), () => { data.logs = before; persistData(); if (root.isConnected) render(); });
           return;
         }
         const entry = data.logs.find((item) => item.id === id);
@@ -1448,9 +1448,9 @@ const apps = [
       list.addEventListener("click", (event) => {
         const button = event.target.closest("[data-cal-delete]");
         if (!button) return;
-        data.events = data.events.filter((item) => item.id !== button.dataset.calDelete);
+        const before = data.events.slice(); data.events = data.events.filter((item) => item.id !== button.dataset.calDelete);
         persistData();
-        render();
+        render(); showToast("Event deleted.", () => { data.events = before; persistData(); if (root.isConnected) render(); });
       });
       render();
     },
