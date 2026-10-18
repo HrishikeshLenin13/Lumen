@@ -468,6 +468,9 @@ function bindFiles(root) {
     const items = refreshList ? data.files.filter((item) => item.parent === current).sort((a, b) => a.kind !== b.kind ? (a.kind === "folder" ? -1 : 1) : order === "size" ? b.content.length - a.content.length || a.name.localeCompare(b.name) : order === "type" ? extension(a.name).localeCompare(extension(b.name)) || a.name.localeCompare(b.name) : a.name.localeCompare(b.name)) : [];
     if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><img class="files__glyph" src="' + (item.kind === "folder" ? "icons/folder.png?v=466fc6b9b5" : "icons/text-file.png?v=466fc6b9b5") + '" alt="" width="16" height="16"><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
     root.querySelector("[data-files-path]").textContent = folderPath();
+    const folderName = current ? data.files.find((file) => file.id === current)?.name || "Files" : "Files";
+    const win = root.closest?.(".win");
+    if (win) { writeText(win.querySelector(".bar-title").lastChild, folderName); const label = open.get("files")?.tab.querySelector(".task__label"); if (label) writeText(label, folderName); }
     list.querySelectorAll("[data-file-id]").forEach((button) => { button.classList.toggle("selected", button.dataset.fileId === selected); button.setAttribute("aria-pressed", String(button.dataset.fileId === selected)); });
     root.querySelector("[data-files-up]").disabled = current === null;
     root.querySelectorAll("[data-files-rename],[data-files-move],[data-files-delete]").forEach((button) => button.disabled = !selectedItem());
