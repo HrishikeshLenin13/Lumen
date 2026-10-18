@@ -79,7 +79,7 @@ try {
   data.paintImage = "";
 }
 let toastTimer = null;
-function showToast(message) {
+function showToast(message, undo) {
   const toast = document.getElementById("toast");
   if (!toast) return;
   const title = document.createElement("strong");
@@ -90,9 +90,10 @@ function showToast(message) {
   icon.src = "icons/info.png?v=b8b38795ff";
   icon.alt = "";
   toast.replaceChildren(icon, title, message);
+  if (undo) { const button = document.createElement("button"); button.type = "button"; button.className = "btn toast__undo"; button.textContent = "Undo"; button.addEventListener("click", (event) => { event.stopPropagation(); toast.classList.add("hidden"); undo(); }); toast.append(button); }
   toast.classList.remove("hidden");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.add("hidden"), 3200);
+  toastTimer = setTimeout(() => toast.classList.add("hidden"), undo ? 6000 : 3200);
 }
 function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false } = {}) {
   return new Promise((resolve) => {
@@ -861,12 +862,13 @@ const apps = [
         }
         if (action === "delete") {
           if (!await showWindowDialog({ title: "Delete ship log entry", message: "Delete this ship log entry?", confirmLabel: "Delete", danger: true })) return;
+          const before = data.logs.slice();
           data.logs = data.logs.filter((item) => item.id !== id);
           selectedLogIds.delete(id);
           if (editingLogId === id) editingLogId = null;
           persistData();
           render();
-          showToast("Ship log entry deleted.");
+          showToast("Ship log entry deleted.", () => { data.logs = before; persistData(); if (root.isConnected) render(); });
           return;
         }
         if (action === "save") {
@@ -956,9 +958,11 @@ const apps = [
       list.addEventListener("click", (event) => {
         const button = event.target.closest("[data-task-delete]");
         if (!button) return;
+        const before = data.tasks.slice();
         data.tasks = data.tasks.filter((task) => task.id !== button.dataset.taskDelete);
         persistData();
         render();
+        showToast("Task deleted.", () => { data.tasks = before; persistData(); if (root.isConnected) render(); });
       });
     },
   },
