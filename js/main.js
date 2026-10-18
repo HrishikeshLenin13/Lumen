@@ -1,4 +1,5 @@
 import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=49fd07edf5";
+import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1594,7 +1595,7 @@ const apps = [
     bind(root) {
       const mood = root.querySelector("[data-rock-mood]");
       const count = root.querySelector("[data-rock-count]");
-      const moods = ["The rock remains a rock.", "The rock appreciates you, probably.", "The rock is unmoved.", "The rock has achieved inner peace.", "The rock did not notice.", "The rock is thinking about geology."];
+      let lastLine = -1;
       const who = () => data.rockName || "The rock";
       const render = () => {
         count.textContent = data.rockPets === 1 ? "Petted once." : "Petted " + data.rockPets + " times.";
@@ -1604,7 +1605,7 @@ const apps = [
       root.querySelector("[data-rock-pet]").addEventListener("click", () => {
         data.rockPets += 1;
         persistData();
-        mood.textContent = (data.rockPets % 100 === 0 ? "The rock has chosen you." : moods[data.rockPets % moods.length]).replace(/^The rock/, who());
+        let pick = Math.floor(Math.random() * rockLines.length); if (pick === lastLine) pick = (pick + 1) % rockLines.length; lastLine = pick; mood.textContent = (Math.random() < 1 / 5000 ? rareRockLine : data.rockPets % 100 === 0 ? "The rock has chosen you." : rockLines[pick]).replace(/^The rock/, who());
         render();
       });
       render();
