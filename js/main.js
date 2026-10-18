@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=fd6a49c2ff";
+import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=0de920ff78";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1002,7 +1002,7 @@ const apps = [
       const pretty = (value) => value.replace(/\*/g, "×").replace(/\//g, "÷").replace(/-/g, "−");
       let expression = "";
       let evaluated = false;
-      const results = [];
+      const results = data.calcTape; const paintTape = () => { tape.innerHTML = results.map(([sum, answer]) => '<li><button type="button" data-calc-recall="' + escapeHtml(answer) + '">' + escapeHtml(sum) + " = <strong>" + escapeHtml(answer) + "</strong></button></li>").join(""); }; paintTape();
       let memory = 0;
       const render = (value, preview) => {
         writeText(exprView, pretty(expression));
@@ -1018,7 +1018,7 @@ const apps = [
           const tidy = Number(value.toPrecision(12));
           results.unshift([{ sqrt: "√", percent: "%", negate: "±", inverse: "1/" }[key] + "(" + pretty(expression || "0") + ")", String(tidy)]);
           results.length = Math.min(results.length, 5);
-          tape.innerHTML = results.map(([sum, answer]) => '<li><button type="button" data-calc-recall="' + escapeHtml(answer) + '">' + escapeHtml(sum) + " = <strong>" + escapeHtml(answer) + "</strong></button></li>").join("");
+          paintTape(); persistData();
           expression = tidy < 0 ? "(0" + tidy + ")" : String(tidy);
           evaluated = true;
           return render(String(tidy), false);
@@ -1051,7 +1051,7 @@ const apps = [
           if (!calculated.ok) return render(expression ? calculated.error : "0", false);
           results.unshift([pretty(expression), String(calculated.value)]);
           results.length = Math.min(results.length, 5);
-          tape.innerHTML = results.map(([sum, answer]) => '<li><button type="button" data-calc-recall="' + escapeHtml(answer) + '">' + escapeHtml(sum) + " = <strong>" + escapeHtml(answer) + "</strong></button></li>").join("");
+          paintTape(); persistData();
           expression = String(calculated.value);
           evaluated = true;
           return render(expression, false);
