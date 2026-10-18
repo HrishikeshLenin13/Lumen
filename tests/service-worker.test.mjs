@@ -34,6 +34,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   assert.match(source, /\.\/js\/data-core\.mjs/);
   assert.match(source, /\.\/js\/lumen-script\.mjs/);
   assert.ok(source.includes("./icons/wallpaper-spectrum.jpg"), "spectrum background stays available offline");
+  assert.equal(readFileSync(new URL("../icons/wallpaper-spectrum.jpg", import.meta.url)).subarray(0, 2).toString("hex"), "ffd8", "spectrum background asset is a readable JPEG");
   for (const file of ["css/sprites.css", "icons/favicon.png", "icons/app-icon.png", "icons/app-icon-512.png"]) assert.ok(source.includes("./" + file + "?v="), file);
   assert.doesNotMatch(source, /\.\/icons\/(?!atlas|favicon|app-icon|wallpaper)[a-z-]+\.png/);
   assert.match(source, /lumen-app-\w{10}/);
