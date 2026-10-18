@@ -1012,7 +1012,7 @@ const apps = [
       });
       calc.addEventListener("keydown", (event) => {
         if (event.ctrlKey || event.metaKey || event.altKey) return;
-        const key = { Enter: "equals", "=": "equals", Backspace: "back", Escape: "clear", Delete: "clear", x: "*", X: "*" }[event.key] || (/^[\d.+\-*/%()]$/.test(event.key) ? event.key : null);
+        const key = { Enter: "equals", "=": "equals", Backspace: "back", Escape: "clear", Delete: "clear", x: "*", X: "*", "@": "sqrt", F9: "negate", r: "inverse", R: "inverse" }[event.key] || (/^[\d.+\-*/%()]$/.test(event.key) ? event.key : null);
         if (!key) return;
         event.preventDefault();
         event.stopPropagation();
