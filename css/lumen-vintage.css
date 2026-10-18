@@ -877,6 +877,9 @@ select.field { height: 23px; }
 .checklist-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .checklist { display: grid; gap: 6px; }
 .checklist-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border: 1px solid var(--card-border); background: var(--card-bg); }
+.checklist-item.dragging { opacity: 0.5; }
+.checklist-item.drop-before { box-shadow: inset 0 2px #316ac5; }
+.checklist-item.drop-after { box-shadow: inset 0 -2px #316ac5; }
 .checklist-item label { display: flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; }
 .checklist-item input:checked + span { color: var(--window-muted); text-decoration: line-through; }
 .calc { display: grid; gap: 8px; outline: none; }
