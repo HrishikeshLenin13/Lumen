@@ -153,8 +153,10 @@ function applyTheme() {
   document.documentElement.style.setProperty("--tone", tone === "brightness(1) contrast(1)" ? "none" : tone);
   bendScreen();
   document.documentElement.dataset.wallpaper = data.wallpaper;
+  const cursorChanged = document.documentElement.dataset.cursor !== data.cursorType;
   document.documentElement.dataset.cursor = data.cursorType;
   document.documentElement.dataset.curvedCursor = data.cursorType === "pixel" ? "on" : "off";
+  if (cursorChanged && data.cursorType === "pixel") angleCursor(cursorX, cursorY);
   Object.assign(document.documentElement.dataset, { fit: data.wallpaperFit, fontSize: data.fontSize, iconSize: data.iconSize, clock: data.showClock ? "on" : "off", transitions: data.transitions ? "on" : "off", quickLaunch: data.showQuickLaunch ? "on" : "off", icons: data.showIcons ? "on" : "off", autohide: data.autoHideTaskbar ? "on" : "off" });
   document.documentElement.style.setProperty("--desk-color", data.deskColor);
   clockFormat = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: data.clock24 ? "h23" : "h12" });
