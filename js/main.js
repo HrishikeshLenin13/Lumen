@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=bb52d4f984";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=ded67a1184";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1701,7 +1701,7 @@ const apps = [
     icon: "icons/charmap.png?v=65c80a1be7",
     size: [430, 312],
     html() {
-      return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set><option value="symbols">Symbols</option><option value="arrows">Arrows</option><option value="math">Math</option><option value="currency">Currency</option><option value="box">Box drawing</option><option value="accents">Accents</option><option value="greek">Greek</option></select></label><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
+      return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set><option value="symbols">Symbols</option><option value="arrows">Arrows</option><option value="math">Math</option><option value="currency">Currency</option><option value="box">Box drawing</option><option value="accents">Accents</option><option value="greek">Greek</option></select></label><div class="charmap__recent" data-charmap-recent></div><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
     },
     bind(root) {
       const sets = { symbols: "§¶†‡•…‰′″‹›«»©®™°±·¿¡♠♣♥♦♪♫☺☻☼★☆✓✗※", arrows: "←↑→↓↔↕↖↗↘↙⇐⇑⇒⇓⇔↩↪↺↻⇄⇅➔➜▲▼◀▶△▽◁▷", math: "±×÷√∛∞≈≠≡≤≥∑∏∫∂∆∇∈∉∩∪⊂⊃∧∨¬∀∃∅πµ½⅓¼¾²³", currency: "$¢£¤¥€₹₽₩₪₫₱₿ƒ₴₺", box: "─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬░▒▓█▄▀▌▐■□▪▫", accents: "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ", greek: "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω" };
@@ -1712,9 +1712,14 @@ const apps = [
       const text = root.querySelector("[data-charmap-text]");
       const show = (char) => { zoom.textContent = char; code.textContent = "U+" + char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"); };
       const render = () => { const chars = [...sets[pick.value]]; grid.innerHTML = chars.map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join(""); show(chars[0]); };
+      const recentRow = root.querySelector("[data-charmap-recent]");
+      const paintRecent = () => { recentRow.innerHTML = data.recentChars ? '<span class="hint hint--flush">Recent</span>' + [...data.recentChars].map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join("") : ""; };
+      const remember = (char) => { data.recentChars = [char, ...[...data.recentChars].filter((item) => item !== char)].slice(0, 16).join(""); persistData(); paintRecent(); };
+      recentRow.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); });
+      paintRecent();
       pick.addEventListener("change", render);
       grid.addEventListener("focusin", (event) => { if (event.target.dataset.char) show(event.target.dataset.char); });
-      grid.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); });
+      grid.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); remember(cell.dataset.char); });
       root.querySelector("[data-charmap-clear]").addEventListener("click", () => { text.value = ""; });
       root.querySelector("[data-charmap-copy]").addEventListener("click", async () => { if (!text.value) return showToast("Pick some characters first."); try { await navigator.clipboard.writeText(text.value); showToast("Copied " + text.value + " to the clipboard."); } catch { text.select(); showToast("Press Ctrl+C to copy the selection."); } });
       render();
@@ -3086,7 +3091,7 @@ async function boot() {
   const now = new Date();
   const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   const agenda = data.events.filter((event) => event.date === today);
-  const dueTasks = data.tasks.filter((task) => !task.done && task.due && task.due <= today);
+  const dueTasks = data.tasks.filter((task) => !task.done && task.due && task.due <= today).sort((a, b) => a.due.localeCompare(b.due));
   if (dueTasks.length) window.setTimeout(() => showToast(dueTasks.length === 1 ? "Task due: " + dueTasks[0].text : dueTasks.length + " tasks are due, starting with " + dueTasks[0].text + "."), agenda.length ? 4200 : 900);
   if (agenda.length) window.setTimeout(() => showToast(agenda.length === 1 ? "Today: " + agenda[0].text : "You have " + agenda.length + " events today, starting with " + agenda[0].text + "."), 900);
   window.setTimeout(checkReminders, 4500);

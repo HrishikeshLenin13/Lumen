@@ -1667,3 +1667,6 @@ html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--c
 .checklist-when { margin-left: 8px; padding: 0 4px; color: var(--window-muted); border: 1px solid #d0d0bf; border-radius: 2px; font-size: 10px; }
 .checklist-when.soon { color: #8a5a00; border-color: #e5a01a; }
 .checklist-when.late { color: #fff; background: #b42336; border-color: #b42336; }
+.charmap__recent { display: flex; flex-wrap: wrap; align-items: center; gap: 0; min-height: 0; }
+.charmap__recent .hint { margin-right: 6px; }
+.charmap__recent .charmap__cell { border: 1px solid #d4d0c8; margin-right: -1px; }
