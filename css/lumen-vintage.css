@@ -1300,6 +1300,7 @@ html[data-effects="full"] body::after { background: radial-gradient(ellipse 22% 
 html[data-effects="full"] .crt-roll { display: block; animation: crt-roll 9s linear infinite; }
 .crt-flicker { position: fixed; inset: var(--bezel) 0 0; z-index: 9996; display: none; pointer-events: none; background: #000; opacity: 0; will-change: opacity; }
 html[data-effects="full"] .crt-flicker { display: block; animation: crt-flutter 1.9s steps(1) infinite; }
+.desktop.moving ~ .crt-roll, .desktop.moving ~ .crt-flicker { animation-play-state: paused; }
 html[data-effects="full"] .desktop { filter: url("#crt-split") var(--tube, saturate(1.12) contrast(1.05)); }
 html[data-effects="full"] .desktop.moving { filter: url("#crt-fast") var(--tube, saturate(1.12) contrast(1.05)); }
 html:not([data-effects="full"]) .desktop { filter: var(--tone, none); }
