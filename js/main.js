@@ -469,6 +469,8 @@ function bindFiles(root) {
   };
   const refreshFromBin = () => { if (!root.isConnected) return document.removeEventListener("lumen-files-changed", refreshFromBin); render(); };
   document.addEventListener("lumen-files-changed", refreshFromBin);
+  const openFromSearch = (event) => { if (!root.isConnected) return document.removeEventListener("lumen-open-file", openFromSearch); const item = data.files.find((file) => file.id === event.detail); if (!item) return; current = item.parent; selected = item.id; render(); };
+  document.addEventListener("lumen-open-file", openFromSearch);
   const importInput = root.querySelector("[data-files-import-input]");
   root.querySelector("[data-files-import]").addEventListener("click", () => importInput.click());
   importInput.addEventListener("change", async () => { const count = await importTextFiles(importInput.files, current); importInput.value = ""; if (count) { render(); showToast(count === 1 ? "Imported 1 file." : "Imported " + count + " files."); } });
@@ -2580,17 +2582,19 @@ desk.addEventListener("dragover", (event) => { if (event.dataTransfer?.types.inc
 desk.addEventListener("drop", async (event) => { if (!event.dataTransfer?.files.length) return; event.preventDefault(); const count = await importTextFiles(event.dataTransfer.files, null); if (!count) return showToast("Only text files can be imported."); openApp("files"); showToast(count === 1 ? "Imported 1 file into C:\\." : "Imported " + count + " files into C:\\."); });
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), arrangeMenu()); });
 const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="start-menu__found" data-start-found></div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
   startMenu.classList.toggle("searching", Boolean(needle));
   startMenu.querySelectorAll(".start-menu__all [data-open-app]").forEach((button) => button.classList.toggle("hidden", !button.textContent.toLocaleLowerCase().includes(needle)));
+  const found = needle ? data.files.filter((item) => item.kind === "text" && (item.name.toLocaleLowerCase().includes(needle) || item.content.toLocaleLowerCase().includes(needle))).slice(0, 5) : [];
+  startMenu.querySelector("[data-start-found]").innerHTML = found.length ? '<div class="start-menu__heading">Files</div>' + found.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="icons/text-file.png?v=466fc6b9b5" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
 }
 startSearch.addEventListener("input", () => filterStartMenu(startSearch.value));
 startSearch.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
-  const firstMatch = startMenu.querySelector(".start-menu__all [data-open-app]:not(.hidden)");
+  const firstMatch = startMenu.querySelector(".start-menu__all [data-open-app]:not(.hidden), [data-open-file]");
   if (!firstMatch) return;
   firstMatch.click();
 });
@@ -2641,6 +2645,8 @@ startMenu.addEventListener("click", (event) => {
   if (event.target.closest("[data-all-programs]")) writeText(startMenu.querySelector("[data-all-programs] span"), startMenu.classList.toggle("show-all") ? "Back" : "All Programs");
   if (event.target.closest("[data-log-off]")) { setStartMenu(false); logOff(); }
   if (event.target.closest("[data-run]")) { setStartMenu(false); runDialog(); }
+  const fileButton = event.target.closest("[data-open-file]");
+  if (fileButton) { setStartMenu(false); openApp("files"); document.dispatchEvent(new CustomEvent("lumen-open-file", { detail: fileButton.dataset.openFile })); }
   if (event.target.closest("[data-power-off]")) { setStartMenu(false); turnOffDialog(); }
 });
 document.addEventListener("mousedown", (event) => {
