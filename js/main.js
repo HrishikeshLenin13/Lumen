@@ -795,7 +795,7 @@ const apps = [
           selectVisible.indeterminate = visibleSelected > 0 && visibleSelected < visibleIds.length;
         }
       };
-      const refreshLogs = () => { if (!root.isConnected) return document.removeEventListener("lumen-logs-changed", refreshLogs); render(); }; document.addEventListener("lumen-logs-changed", refreshLogs);
+      const refreshLogs = () => { if (!root.isConnected) return document.removeEventListener("lumen-logs-changed", refreshLogs); render(); }; document.addEventListener("lumen-logs-changed", refreshLogs); document.addEventListener("lumen-day-changed", refreshLogs);
       const addEntry = () => {
         const validated = validateLogEntry({ hours: hoursInput.value, description: textInput.value, project: projectInput.value, tags: tagsInput.value });
         if (!validated.ok) {
@@ -918,7 +918,7 @@ const apps = [
           showToast("Ship log entry updated.");
         }
       });
-      return () => document.removeEventListener("lumen-logs-changed", refreshLogs);
+      return () => { document.removeEventListener("lumen-logs-changed", refreshLogs); document.removeEventListener("lumen-day-changed", refreshLogs); };
     },
   },
   {
@@ -947,7 +947,7 @@ const apps = [
         summary.textContent = data.tasks.filter((task) => !task.done).length + " remaining · " + data.tasks.length + " total";
         clearCompleted.disabled = !data.tasks.some((task) => task.done);
       };
-      root.querySelector("[data-task-show]").value = data.views.taskShow; root.querySelector("[data-task-sort]").value = data.views.taskSort; render();
+      root.querySelector("[data-task-show]").value = data.views.taskShow; root.querySelector("[data-task-sort]").value = data.views.taskSort; render(); const dayRefresh = () => { if (!root.isConnected) return document.removeEventListener("lumen-day-changed", dayRefresh); render(); }; document.addEventListener("lumen-day-changed", dayRefresh);
       root.querySelectorAll(".checklist-view").forEach((picker) => picker.addEventListener("change", () => { data.views.taskShow = root.querySelector("[data-task-show]").value; data.views.taskSort = root.querySelector("[data-task-sort]").value; persistData(); render(); }));
       list.addEventListener("dblclick", async (event) => {
         const label = event.target.closest("[data-task-text]");
@@ -1487,7 +1487,7 @@ const apps = [
         persistData();
         render(); showToast("Event deleted.", () => { data.events = before; persistData(); if (root.isConnected) render(); });
       });
-      render();
+      render(); const dayRefresh = () => { if (!root.isConnected) return document.removeEventListener("lumen-day-changed", dayRefresh); render(); }; document.addEventListener("lumen-day-changed", dayRefresh);
     },
   },
   {
@@ -3062,6 +3062,7 @@ function checkReminders() { if (!data.events.some((event) => event.time)) return
 }
 window.setInterval(checkReminders, 20000);
 let clockTimeout = null;
+let clockDay = localDay();
 function tickClock() {
   window.clearTimeout(clockTimeout);
   const now = new Date();
@@ -3069,7 +3070,7 @@ function tickClock() {
   const label = clockFormat.format(now);
   writeText(clock, label);
   clock.dateTime = now.toISOString().slice(0, 16);
-  clock.parentElement.title = fullDateFormat.format(now);
+  clock.parentElement.title = fullDateFormat.format(now); if (localDay(now) !== clockDay) { clockDay = localDay(now); document.dispatchEvent(new Event("lumen-day-changed")); }
   clockTimeout = window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
 }
 tickClock();
