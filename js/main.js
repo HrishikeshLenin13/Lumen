@@ -2687,6 +2687,7 @@ contextMenu.addEventListener("click", (event) => {
   item?.run();
 });
 contextMenu.addEventListener("keydown", (event) => {
+  const items = Array.from(contextMenu.querySelectorAll("button:not(:disabled)")); if (event.key === "Home" || event.key === "End") { event.preventDefault(); items[event.key === "Home" ? 0 : items.length - 1]?.focus(); return; } if (event.key.length === 1 && /\S/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) { const start = items.indexOf(document.activeElement); const match = [...items.slice(start + 1), ...items.slice(0, start + 1)].find((button) => button.textContent.replace(/^✓ /, "").toLowerCase().startsWith(event.key.toLowerCase())); if (match) { event.preventDefault(); match.focus(); } return; }
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
   event.preventDefault();
   const buttons = Array.from(contextMenu.querySelectorAll("button:not(:disabled)"));
