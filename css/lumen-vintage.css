@@ -936,7 +936,9 @@ select.field { height: 23px; }
 .files__path { flex: 1; min-width: 0; padding: 3px 6px; overflow: hidden; color: #000; background: #fff; border: 2px solid; border-color: #808080 #fff #fff #808080; white-space: nowrap; text-overflow: ellipsis; }
 .files__main { display: grid; grid-template-columns: minmax(150px, 2fr) minmax(180px, 3fr); min-height: 0; border: 2px solid; border-color: #808080 #fff #fff #808080; }
 .files__list { margin: 0; padding: 2px; overflow: auto; background: #fff; list-style: none; }
-.files__item { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; width: 100%; min-height: 30px; padding: 2px 4px; color: #000; background: transparent; border: 0; text-align: left; }
+.files__item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; width: 100%; min-height: 30px; padding: 2px 4px; color: #000; background: transparent; border: 0; text-align: left; }
+.files__date { padding-left: 6px; color: var(--window-muted); font-size: 11px; }
+.files__item.selected .files__date, .files__item.scene-hover .files__date { color: #fff; }
 .files__item.selected, .files__item.scene-hover { color: #fff; background: #316ac5; }
 .files__item:focus-visible { outline: 1px dotted currentColor; outline-offset: -3px; }
 .files__glyph { flex: 0 0 auto; width: 16px; height: 16px; image-rendering: pixelated; }
