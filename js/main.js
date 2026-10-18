@@ -2814,6 +2814,10 @@ async function boot() {
   const restored = restoreWindows();
   if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
   else if (!restored) openApp("about");
+  const now = new Date();
+  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const agenda = data.events.filter((event) => event.date === today);
+  if (agenda.length) window.setTimeout(() => showToast(agenda.length === 1 ? "Today: " + agenda[0].text : "You have " + agenda.length + " events today, starting with " + agenda[0].text + "."), 900);
   refreshInstallControls();
 }
 window.addEventListener("hashchange", () => {
