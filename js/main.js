@@ -219,6 +219,8 @@ function paintTimer(root = open.get("focus")?.el.querySelector(".body")) {
   const active = timer.running || (!timer.finished && timer.secondsLeft < timerMinutes() * 60);
   tray.classList.toggle("hidden", !active);
   if (active) writeAttribute(tray, "title", timerLabel() + ": " + formatTime(timer.secondsLeft) + (timer.running ? " left" : " left, paused"));
+  const focusTab = open.get("focus")?.tab.lastChild;
+  if (focusTab) writeText(focusTab, active ? "Focus " + formatTime(timer.secondsLeft) : "Focus");
   if (!root) return;
   const readout = root.querySelector("#timer");
   const status = root.querySelector("[data-timer-status]");
