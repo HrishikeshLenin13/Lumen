@@ -27,7 +27,7 @@ Draw your art in `art/`, one PNG per icon at its current size, then run `node sc
 - Calendar reminders at a set time, a tray volume popup, Alt+Esc window switching, and a weekly hours chart in Ship Log
 - Import text files into Files with a button or by dropping them on the Files window or the desk
 - Paint line, rectangle, and ellipse tools, Minesweeper chording, Command Prompt tab completion, and Start menu search that finds files
-- Your own picture as the desk background, outline window dragging, an animations switch, upcoming events in Calendar, and a nameable pet rock
+- Your own picture or Spectrum Steps as the desk background, selectable pixel/system/crosshair/pointer/wait/text cursors, outline window dragging, an animations switch, upcoming events in Calendar, and a nameable pet rock
 - Recent files in the Start menu, a tray menu for the clock and sound, folder names in the Files title, file sorting, and system details in About
 - Save notes as files, due dates on tasks, calculator copy and paste, recent characters, a Mystify screen saver, and a long break after every fourth focus session
 - Undo after deleting tasks, ship log entries, and events, copy, paste, and duplicate in Files, a full Recycle Bin icon, Ctrl+A on the desk, F1 for help, and the Windows key for Start
