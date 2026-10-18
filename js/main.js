@@ -1920,6 +1920,17 @@ const apps = [
 
 const wins = document.getElementById("wins");
 const tasks = document.getElementById("tasks");
+function dragReorder(container, selector, onDrop) {
+  container.addEventListener("dragstart", (event) => event.preventDefault());
+  container.addEventListener("pointerdown", (event) => {
+    const item = event.target.closest(selector); if (!item || event.button !== 0) return;
+    const [startX] = toScene(event.clientX, event.clientY); let dragging = false;
+    const move = (next) => { const [x] = toScene(next.clientX, next.clientY); if (!dragging && Math.abs(x - startX) < 6) return; if (!dragging) { dragging = true; item.classList.add("reordering"); document.body.classList.add("dragging"); } const others = [...container.querySelectorAll(selector)].filter((other) => other !== item); const before = others.find((other) => { const box = other.getBoundingClientRect(); return x < box.left + box.width / 2; }); if (before && item.nextElementSibling !== before) container.insertBefore(item, before); else if (!before && others.length && others[others.length - 1].nextElementSibling !== item) others[others.length - 1].after(item); };
+    const stop = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", stop); window.removeEventListener("pointercancel", stop); if (!dragging) return; item.classList.remove("reordering"); document.body.classList.remove("dragging"); const block = (click) => { click.stopImmediatePropagation(); click.preventDefault(); }; item.addEventListener("click", block, true); window.setTimeout(() => item.removeEventListener("click", block, true), 0); onDrop?.(); };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", stop); window.addEventListener("pointercancel", stop);
+  });
+}
+dragReorder(tasks, ".task");
 const open = new Map();
 const iconButtons = new Map();
 if (timer.running) {
@@ -3059,7 +3070,7 @@ function renderQuickLaunch() { const bar = document.querySelector(".quick-launch
 function quickItem(id) { const added = data.quickLaunch.includes(id); return { label: added ? "Remove from Quick Launch" : "Add to Quick Launch", run: () => { data.quickLaunch = added ? data.quickLaunch.filter((item) => item !== id) : [...data.quickLaunch, id].slice(0, 8); persistData(); renderQuickLaunch(); } }; }
 document.querySelector(".quick-launch").addEventListener("click", (event) => { const button = event.target.closest("[data-quick-app]"); if (button) openApp(button.dataset.quickApp); });
 document.querySelector(".quick-launch").addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-quick-app]"); if (!button) return; event.preventDefault(); event.stopPropagation(); showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(button.dataset.quickApp) }, quickItem(button.dataset.quickApp)]); });
-renderQuickLaunch();
+renderQuickLaunch(); dragReorder(document.querySelector(".quick-launch"), "[data-quick-app]", () => { data.quickLaunch = [...document.querySelectorAll(".quick-launch [data-quick-app]")].map((button) => button.dataset.quickApp); persistData(); });
 function paintVolume() {
   const volume = document.getElementById("volume");
   volume.classList.toggle("muted", !data.sounds);
