@@ -71,6 +71,10 @@ html[data-wallpaper="graphite"] {
   --desktop-bg: #fff url("../icons/wallpaper-graphite.png?v=d5a967ff8e") center / 100% 100% no-repeat;
 }
 
+html[data-wallpaper="spectrum"] {
+  --desktop-bg: #fff url("../icons/wallpaper-spectrum.jpg") center / 100% 100% no-repeat;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -1252,6 +1256,12 @@ select,
 }
 .screen-cursor { display: none; }
 @media (pointer: fine) { html[data-curved-cursor="on"], html[data-curved-cursor="on"] * { cursor: none !important; } }
+html[data-cursor]:not([data-cursor="pixel"]) .screen-cursor { display: none; }
+html[data-cursor="system"], html[data-cursor="system"] * { cursor: auto !important; }
+html[data-cursor="crosshair"], html[data-cursor="crosshair"] * { cursor: crosshair !important; }
+html[data-cursor="pointer"], html[data-cursor="pointer"] * { cursor: pointer !important; }
+html[data-cursor="wait"], html[data-cursor="wait"] * { cursor: wait !important; }
+html[data-cursor="text"], html[data-cursor="text"] * { cursor: text !important; }
 @media (pointer: fine) { .screen-cursor { position: fixed; left: 0; top: 0; z-index: 9994; display: block; width: 16px; height: 16px; pointer-events: none; background: var(--icon-cursor-2x) 0 0 / 16px 16px no-repeat; image-rendering: pixelated; transform: translate3d(-40px, -40px, 0); transform-origin: 0 0; will-change: transform; } }
 .screen-cursor.hidden { display: none; }
 .screen-cursor { filter: var(--tone, none); }
