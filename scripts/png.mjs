@@ -20,11 +20,12 @@ export function decodePng(buffer) {
   return { width, height, pixels };
 }
 export function encodePng({ width, height, pixels }) {
-  const stride = width * 4; const raw = Buffer.alloc((stride + 1) * height);
-  for (let y = 0; y < height; y += 1) { raw[y * (stride + 1)] = 1; for (let x = 0; x < stride; x += 1) raw[y * (stride + 1) + 1 + x] = (pixels[y * stride + x] - (x >= 4 ? pixels[y * stride + x - 4] : 0)) & 255; }
+  const stride = width * 4; const filtered = (fixed) => { const raw = Buffer.alloc((stride + 1) * height);
+  for (let y = 0; y < height; y += 1) { let best = null; let bestScore = Infinity; for (const filter of fixed === null ? [0, 1, 2, 3, 4] : [fixed]) { const row = Buffer.alloc(stride); let score = 0; for (let x = 0; x < stride; x += 1) { const left = x >= 4 ? pixels[y * stride + x - 4] : 0; const up = y ? pixels[(y - 1) * stride + x] : 0; const corner = y && x >= 4 ? pixels[(y - 1) * stride + x - 4] : 0; const value = (pixels[y * stride + x] - [0, left, up, (left + up) >> 1, paeth(left, up, corner)][filter]) & 255; row[x] = value; score += value < 128 ? value : 256 - value; } if (score < bestScore) { bestScore = score; best = [filter, row]; } } raw[y * (stride + 1)] = best[0]; best[1].copy(raw, y * (stride + 1) + 1); } return deflateSync(raw, { level: 9 }); };
   const chunk = (kind, body) => { const head = Buffer.alloc(8); head.writeUInt32BE(body.length, 0); head.write(kind, 4, "ascii"); const tail = Buffer.alloc(4); tail.writeUInt32BE(crc(Buffer.concat([head.subarray(4), body])), 0); return Buffer.concat([head, body, tail]); };
   const header = Buffer.alloc(13); header.writeUInt32BE(width, 0); header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 6;
-  return Buffer.concat([signature, chunk("IHDR", header), chunk("IDAT", deflateSync(raw, { level: 9 })), chunk("IEND", Buffer.alloc(0))]);
+  const data = [null, 0, 1, 2, 4].map(filtered).reduce((smallest, next) => next.length < smallest.length ? next : smallest);
+  return Buffer.concat([signature, chunk("IHDR", header), chunk("IDAT", data), chunk("IEND", Buffer.alloc(0))]);
 }
 export function resizeImage(image, width, height) {
   const pixels = new Uint8Array(width * height * 4);
