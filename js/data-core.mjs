@@ -337,7 +337,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     if (!Number.isFinite(minutes) || minutes < 1 || !["focus", "break"].includes(session?.mode)) return null;
     return { mode: session.mode, minutes: Math.min(180, Math.round(minutes)), at: typeof session.at === "string" ? session.at : new Date().toISOString() };
   }).filter(Boolean).slice(0, 50) : [];
-  const tasks = Array.isArray(source.tasks) ? source.tasks.map((task) => ({ id: typeof task?.id === "string" && task.id ? task.id : makeId(), text: typeof task?.text === "string" ? task.text.trim().slice(0, 160) : "", done: Boolean(task?.done), createdAt: typeof task?.createdAt === "string" ? task.createdAt : new Date().toISOString(), ...(/^\d{4}-\d{2}-\d{2}$/.test(task?.due) ? { due: task.due } : {}) })).filter((task) => task.text).slice(0, 200) : [];
+  const tasks = Array.isArray(source.tasks) ? source.tasks.map((task) => ({ id: typeof task?.id === "string" && task.id ? task.id : makeId(), text: typeof task?.text === "string" ? task.text.trim().slice(0, 160) : "", done: Boolean(task?.done), createdAt: typeof task?.createdAt === "string" ? task.createdAt : new Date().toISOString(), ...(/^\d{4}-\d{2}-\d{2}$/.test(task?.due) ? { due: task.due } : {}), ...(task?.important === true ? { important: true } : {}) })).filter((task) => task.text).slice(0, 200) : [];
   const savedTimer = source.timerState && typeof source.timerState === "object" ? source.timerState : null;
   const noteHistory = Array.isArray(source.noteHistory) ? limitNoteHistory(source.noteHistory.map((revision) => {
     if (!revision || typeof revision.text !== "string" || !revision.text.trim()) return null;
