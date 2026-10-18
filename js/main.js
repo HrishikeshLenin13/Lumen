@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=dec95c21bb";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=54f1acfc30";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1826,6 +1826,7 @@ function openApp(id, geometry) {
     if (id === "focus") paintTimer(existing.el.querySelector(".body"));
     return;
   }
+  if (!geometry) data.launches[id] = (data.launches[id] || 0) + 1;
   const element = document.createElement("section");
   const offset = (open.size % 8) * 24;
   element.className = "win focus opening";
@@ -2474,7 +2475,7 @@ desk.addEventListener("contextmenu", (event) => {
 });
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), arrangeMenu()); });
 const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned">' + ["notes", "checklist", "calculator", "paint", "focus", "shiplog"].map((id) => startItem(id)).join("") + '</div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="icons/user-placeholder.png?v=3a2cefad8c" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="icons/run.png?v=6193f5371f" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="icons/info.png?v=b8b38795ff" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="icons/logoff.png?v=6193f5371f" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="icons/power.png?v=6193f5371f" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
@@ -2489,12 +2490,19 @@ startSearch.addEventListener("keydown", (event) => {
   firstMatch.click();
 });
 
+function renderPinned() {
+  const pinned = ["notes", "checklist"];
+  const frequent = Object.entries(data.launches).filter(([id]) => !pinned.includes(id) && apps.some((app) => app.id === id)).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  ["calculator", "paint", "focus", "shiplog", "minesweeper", "files"].forEach((id) => { if (!frequent.includes(id) && !pinned.includes(id)) frequent.push(id); });
+  startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + '<div class="menu-separator" role="separator"></div>' + frequent.slice(0, 5).map((id) => startItem(id)).join("");
+}
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
   startBtn.setAttribute("aria-expanded", String(show));
   if (show) {
     startSearch.value = "";
     startMenu.classList.remove("show-all");
+    renderPinned();
     filterStartMenu("");
     startSearch.focus();
   }

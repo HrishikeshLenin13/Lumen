@@ -1622,3 +1622,4 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .win-edge--ne { top: 0; right: 0; width: 5px; height: 5px; }
 .win-edge--sw { bottom: 0; left: 0; }
 .win.max .win-edge { display: none; }
+.start-menu__pinned > button:nth-child(-n+2) { font-weight: 700; }
