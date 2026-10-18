@@ -11,12 +11,12 @@
   "theme_color": "#1d1d20",
   "icons": [
     {
-      "src": "icons/app-icon.png?v=0f309a1148",
+      "src": "icons/app-icon.png?v=9b31fb1c3a",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
-    { "src": "icons/app-icon-512.png?v=05ade58a80", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icons/app-icon-512.png?v=1ae0dff486", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
     { "name": "Notes", "url": "./#notes" },
