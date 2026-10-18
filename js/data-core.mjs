@@ -47,6 +47,7 @@ export function makeDefaultData() {
     iconOrder: [],
     iconPositions: {},
     iconNames: {},
+    deskFolders: [],
     iconGrid: true,
     launches: {},
     startPins: ["notes", "checklist"],
@@ -406,6 +407,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     recycle: Array.isArray(source.recycle) ? source.recycle.filter((entry) => entry && typeof entry === "object").map((entry) => ({ id: typeof entry.id === "string" && entry.id ? entry.id.slice(0, 80) : makeId(), deletedAt: typeof entry.deletedAt === "string" ? entry.deletedAt.slice(0, 40) : "", items: cleanFiles(entry.items, makeId) })).filter((entry) => entry.items.length).slice(0, 50) : [],
     iconPositions: source.iconPositions && typeof source.iconPositions === "object" && !Array.isArray(source.iconPositions) ? Object.fromEntries(Object.entries(source.iconPositions).filter(([id, spot]) => id && spot && typeof spot === "object").slice(0, 100).map(([id, spot]) => [id.slice(0, 40), { x: clampNumber(spot.x, 0, 10000, 0), y: clampNumber(spot.y, 0, 10000, 0) }])) : {},
     iconNames: source.iconNames && typeof source.iconNames === "object" && !Array.isArray(source.iconNames) ? Object.fromEntries(Object.entries(source.iconNames).filter(([id, name]) => id && typeof name === "string" && name.trim()).slice(0, 50).map(([id, name]) => [id.slice(0, 40), name.trim().slice(0, 40)])) : {},
+    deskFolders: cleanDeskFolders(source.deskFolders),
     iconGrid: source.iconGrid !== false,
     volume: clampNumber(source.volume, 0, 100, defaults.volume),
     recentChars: typeof source.recentChars === "string" ? [...new Set([...source.recentChars])].slice(0, 16).join("") : "",
@@ -444,3 +446,6 @@ export function nextOccurrence(event, after) { if (!event.repeat) return event.d
 export function caretPosition(text, index) { const before = String(text).slice(0, Math.max(0, index)); const lines = before.split("\n"); return [lines.length, lines[lines.length - 1].length + 1]; }
 export function mineCustomField(value) { const [width, height, mines] = (Array.isArray(value) ? value : String(value ?? "").match(/\d+/g) || []).map(Number); if (![width, height, mines].every(Number.isFinite)) return null; const w = clampNumber(width, 8, 30, 9); const h = clampNumber(height, 8, 24, 9); return [w, h, clampNumber(mines, 1, w * h - 9, 10)]; }
 export function localDay(date = new Date()) { return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0"); }
+
+export function cleanDeskFolders(list) { const seen = new Set(); return (Array.isArray(list) ? list : []).filter((folder) => folder && typeof folder.id === "string" && folder.id && typeof folder.name === "string").slice(0, 20).map((folder) => ({ id: folder.id.slice(0, 40), name: folder.name.trim().slice(0, 40) || "New Folder", apps: (Array.isArray(folder.apps) ? folder.apps : []).filter((id) => typeof id === "string" && id && !seen.has(id) && seen.add(id)).slice(0, 40) })).filter((folder) => folder.apps.length); }
+export function newFolderName(taken) { const names = new Set(taken); if (!names.has("New Folder")) return "New Folder"; let count = 2; while (names.has("New Folder (" + count + ")")) count += 1; return "New Folder (" + count + ")"; }

@@ -1539,6 +1539,7 @@ html[data-theme="light"] .quick-launch { border-right-color: #9a9cad; box-shadow
 .tray__timer img { display: block; image-rendering: pixelated; }
 .tray__timer.scene-hover { filter: brightness(1.15); }
 .icons.free { inset: 0 0 var(--taskbar-height); display: block; max-width: none; max-height: none; }
+.icons .icon[hidden] { display: none !important; }
 .icons.free .icon { position: absolute; }
 html[data-theme="light"] { --menu-head: linear-gradient(180deg, #e3e4ec, #c9cad6 40%, #b5b7c6 90%, #a4a6b8); --menu-foot: linear-gradient(180deg, #d9dae3, #c4c5d1 50%, #aeb0c0); --menu-edge: #8c8ea3; }
 html[data-theme="light"] .start-menu__banner, html[data-theme="light"] .start-menu .start-menu__foot button { color: #000; text-shadow: 1px 1px rgba(255, 255, 255, 0.6); }
@@ -1714,3 +1715,9 @@ html[data-icons="off"] .icons { visibility: hidden; }
 html[data-autohide="on"] .taskbar { transition: transform 120ms steps(4); }
 html[data-autohide="on"] .taskbar:not(.peek):not(:has(:focus-visible, #startMenu:not(.hidden))) { transform: translateY(calc(var(--taskbar-height) - 2px)); }
 html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom: 2px; }
+.desk-folder { display: grid; grid-template-columns: repeat(auto-fill, 84px); align-content: start; gap: 6px; min-height: 160px; padding: 8px; background: #fff; border: 1px solid #7f9db9; }
+.desk-folder__item { display: grid; justify-items: center; gap: 4px; width: 84px; padding: 4px 2px; color: #000; background: transparent; border: 1px solid transparent; text-align: center; overflow-wrap: anywhere; }
+.desk-folder__item img { width: 32px; height: 32px; image-rendering: pixelated; }
+.desk-folder__item:focus-visible, .desk-folder__item.scene-hover { color: #fff; background: #316ac5; outline: none; }
+.desk-folder__item.dragging { opacity: 0.5; }
+.icon img, .desk-folder__item img, .task img { -webkit-user-drag: none; user-select: none; }

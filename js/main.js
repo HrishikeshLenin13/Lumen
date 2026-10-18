@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=49fd07edf5";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f913b5f3";
 import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
 import { atlasMap } from "./atlas-map.mjs?v=d1912f48d1";
 const sprites = await loadSprites();
@@ -1503,7 +1503,7 @@ const apps = [
       const findApp = (name) => apps.find((app) => app.id === name.toLowerCase() || app.name.toLowerCase() === name.toLowerCase());
       const commands = {
         help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
-        apps: () => apps.map((app) => app.id.padEnd(14) + app.name).join("\n"),
+        apps: () => apps.filter((app) => !isFolderId(app.id)).map((app) => app.id.padEnd(14) + app.name).join("\n"),
         open: (args) => {
           const app = findApp(args);
           if (!app) return "No program named " + args + ". Type apps to list them.";
@@ -2370,9 +2370,14 @@ window.addEventListener("resize", () => {
 const icons = document.getElementById("icons");
 const startBtn = document.getElementById("startBtn");
 const startMenu = document.getElementById("startMenu");
+const FOLDER_PREFIX = "folder:";
+function isFolderId(id) { return String(id).startsWith(FOLDER_PREFIX); }
+function folderOf(id) { return data.deskFolders.find((folder) => FOLDER_PREFIX + folder.id === id); }
+function folderApp(folder) { return { id: FOLDER_PREFIX + folder.id, name: folder.name, icon: sprite("desk-folder"), size: [380, 280], html: () => '<div class="desk-folder" data-folder-list role="listbox" tabindex="0" aria-label="Programs in this folder"></div><p class="hint hint--flush" data-folder-status></p>', bind: (root) => bindFolder(root, folder.id) }; }
+data.deskFolders = data.deskFolders.map((folder) => ({ ...folder, apps: folder.apps.filter((id) => !isFolderId(id) && apps.some((app) => app.id === id)) })).filter((folder) => folder.apps.length); data.deskFolders.forEach((folder) => apps.push(folderApp(folder)));
 const orderedApps = [...apps].sort((a, b) => { const ai = data.iconOrder.indexOf(a.id); const bi = data.iconOrder.indexOf(b.id); return (ai < 0 ? apps.length + apps.indexOf(a) : ai) - (bi < 0 ? apps.length + apps.indexOf(b) : bi); });
 
-orderedApps.forEach((app) => {
+function addDeskButton(app) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "icon";
@@ -2391,14 +2396,67 @@ orderedApps.forEach((app) => {
     if (!direction) return;
     event.preventDefault();
     const here = [button.offsetLeft, button.offsetTop];
-    const next = Array.from(iconButtons.values()).filter((item) => item !== button).map((item) => { const dx = item.offsetLeft - here[0]; const dy = item.offsetTop - here[1]; const along = dx * direction[0] + dy * direction[1]; const across = Math.abs(dx * direction[1]) + Math.abs(dy * direction[0]); return [item, along, across]; }).filter(([, along]) => along > 0).sort((a, b) => a[1] + a[2] * 3 - (b[1] + b[2] * 3))[0]?.[0];
+    const next = Array.from(iconButtons.values()).filter((item) => item !== button && !item.hidden).map((item) => { const dx = item.offsetLeft - here[0]; const dy = item.offsetTop - here[1]; const along = dx * direction[0] + dy * direction[1]; const across = Math.abs(dx * direction[1]) + Math.abs(dy * direction[0]); return [item, along, across]; }).filter(([, along]) => along > 0).sort((a, b) => a[1] + a[2] * 3 - (b[1] + b[2] * 3))[0]?.[0];
     if (!next) return;
     selectIcons(new Set([next.dataset.appId]));
     next.focus();
   });
   iconButtons.set(app.id, button);
-  icons.append(button);
-}); paintBin();
+  icons.append(button); return button;
+} orderedApps.forEach(addDeskButton); paintBin(); syncFolderIcons();
+function syncFolderIcons() { const inside = new Set(data.deskFolders.flatMap((folder) => folder.apps)); iconButtons.forEach((button, id) => { button.hidden = inside.has(id); if (button.hidden) button.classList.remove("selected"); }); document.dispatchEvent(new Event("lumen-folders-changed")); }
+function snapSpot(spot) { return data.iconGrid ? { x: Math.max(0, 8 + Math.round((spot.x - 8) / ICON_STEP_X) * ICON_STEP_X), y: Math.max(0, 10 + Math.round((spot.y - 10) / ICON_STEP_Y) * ICON_STEP_Y) } : spot; }
+function groupIcons(targetId, ids) {
+  const targetButton = iconButtons.get(targetId);
+  let folder = folderOf(targetId);
+  if (!folder) { folder = { id: makeId(), name: newFolderName(data.deskFolders.map((item) => item.name)), apps: [targetId] }; data.deskFolders.push(folder); const app = folderApp(folder); apps.push(app); addDeskButton(app); data.iconPositions[app.id] = data.iconPositions[targetId] || { x: targetButton.offsetLeft, y: targetButton.offsetTop }; delete data.iconPositions[targetId]; }
+  ids.filter((id) => id !== targetId && !isFolderId(id) && !folder.apps.includes(id)).forEach((id) => { data.deskFolders.forEach((item) => { item.apps = item.apps.filter((other) => other !== id); }); folder.apps.push(id); delete data.iconPositions[id]; });
+  data.deskFolders.filter((item) => !item.apps.length).forEach((item) => removeFolder(item.id));
+  syncFolderIcons(); persistData(); layoutIcons(); selectIcons(new Set([FOLDER_PREFIX + folder.id])); playSound("thud");
+}
+function removeFolder(folderId) {
+  const id = FOLDER_PREFIX + folderId;
+  data.deskFolders = data.deskFolders.filter((item) => item.id !== folderId);
+  const index = apps.findIndex((app) => app.id === id); if (index >= 0) apps.splice(index, 1);
+  if (open.has(id)) closeApp(id);
+  iconButtons.get(id)?.remove(); iconButtons.delete(id); delete data.iconPositions[id];
+  data.startPins = data.startPins.filter((item) => item !== id); data.quickLaunch = data.quickLaunch.filter((item) => item !== id); renderQuickLaunch();
+}
+function dissolveFolder(folderId) { removeFolder(folderId); syncFolderIcons(); persistData(); layoutIcons(); }
+function moveOutOfFolder(appId, spot) {
+  const folder = data.deskFolders.find((item) => item.apps.includes(appId)); if (!folder) return;
+  folder.apps = folder.apps.filter((id) => id !== appId);
+  if (!folder.apps.length) removeFolder(folder.id);
+  if (spot) data.iconPositions[appId] = snapSpot(spot); else delete data.iconPositions[appId];
+  syncFolderIcons(); persistData(); layoutIcons(); selectIcons(new Set([appId]));
+}
+function bindFolder(root, folderId) {
+  const list = root.querySelector("[data-folder-list]");
+  const render = () => { const folder = data.deskFolders.find((item) => item.id === folderId); if (!folder) return; list.innerHTML = folder.apps.map((id) => apps.find((app) => app.id === id)).filter(Boolean).map((app) => '<button type="button" role="option" class="desk-folder__item" data-folder-app="' + escapeHtml(app.id) + '"><img src="' + app.icon + '" alt="" width="32" height="32"><span>' + escapeHtml(data.iconNames[app.id] || app.name) + "</span></button>").join(""); writeText(root.querySelector("[data-folder-status]"), (folder.apps.length === 1 ? "1 program" : folder.apps.length + " programs") + ". Drag one onto the desk to take it out."); };
+  const refresh = () => render();
+  document.addEventListener("lumen-folders-changed", refresh);
+  list.addEventListener("dragstart", (event) => event.preventDefault());
+  list.addEventListener("dblclick", (event) => { const item = event.target.closest("[data-folder-app]"); if (item) openApp(item.dataset.folderApp); });
+  list.addEventListener("keydown", (event) => { const item = event.target.closest("[data-folder-app]"); if (!item) return; if (event.key === "Enter") { event.preventDefault(); openApp(item.dataset.folderApp); } else if (event.key === "Delete") { event.preventDefault(); moveOutOfFolder(item.dataset.folderApp); } });
+  list.addEventListener("contextmenu", (event) => { const item = event.target.closest("[data-folder-app]"); if (!item) return; event.preventDefault(); event.stopPropagation(); const id = item.dataset.folderApp; showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, { label: "Move to desktop", run: () => moveOutOfFolder(id) }]); });
+  list.addEventListener("pointerdown", (event) => {
+    const item = event.target.closest("[data-folder-app]"); if (!item || event.button !== 0) return;
+    const id = item.dataset.folderApp; const [startX, startY] = toScene(event.clientX, event.clientY); let dragging = false; let lastX = startX; let lastY = startY;
+    const move = (next) => { const [x, y] = toScene(next.clientX, next.clientY); lastX = x; lastY = y; if (!dragging && Math.abs(x - startX) + Math.abs(y - startY) > 5) { dragging = true; document.body.classList.add("dragging"); item.classList.add("dragging"); } };
+    const stop = (end) => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", stop); window.removeEventListener("pointercancel", stop);
+      if (!dragging) return; document.body.classList.remove("dragging"); item.classList.remove("dragging");
+      const x = lastX; const y = lastY; const box = root.closest(".win").getBoundingClientRect();
+      if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom) return;
+      const target = document.elementsFromPoint(x, y).map((node) => node.closest?.(".icon")).find((node) => node && !node.hidden);
+      if (target && target.dataset.appId !== FOLDER_PREFIX + folderId) { groupIcons(target.dataset.appId, [id]); return; }
+      const area = icons.getBoundingClientRect(); moveOutOfFolder(id, { x: Math.max(0, Math.round(x - area.left - 44)), y: Math.max(0, Math.round(y - area.top - 20)) });
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", stop); window.addEventListener("pointercancel", stop);
+  });
+  render();
+  return () => document.removeEventListener("lumen-folders-changed", refresh);
+}
 let ICON_STEP_X = 92;
 let ICON_STEP_Y = 76;
 let iconDragged = false;
@@ -2414,7 +2472,7 @@ function layoutIcons() {
   const rows = Math.max(1, Math.floor((height - 10) / ICON_STEP_Y));
   const saved = Object.values(data.iconPositions);
   let slot = 0;
-  icons.querySelectorAll(".icon").forEach((button) => {
+  icons.querySelectorAll(".icon:not([hidden])").forEach((button) => {
     let spot = data.iconPositions[button.dataset.appId];
     while (!spot) {
       const candidate = { x: 8 + Math.floor(slot / rows) * ICON_STEP_X, y: 10 + (slot % rows) * ICON_STEP_Y };
@@ -2429,6 +2487,7 @@ function iconEdge() {
   if (!icons.classList.contains("free")) return icons.offsetLeft + icons.offsetWidth;
   return Math.min(320, Math.max(8, ...Array.from(iconButtons.values(), (button) => button.offsetLeft < 300 ? button.offsetLeft + button.offsetWidth : 0)));
 }
+icons.addEventListener("dragstart", (event) => event.preventDefault());
 icons.addEventListener("pointerdown", (event) => {
   const button = event.target.closest(".icon");
   if (!button || event.button !== 0 || !icons.classList.contains("free")) return;
@@ -2475,6 +2534,8 @@ icons.addEventListener("pointerdown", (event) => {
     desk.classList.remove("moving");
     iconDragged = true;
     window.setTimeout(() => { iconDragged = false; }, 0);
+    const dropX = startX + shiftX; const dropY = startY + shiftY; const target = document.elementsFromPoint(dropX, dropY).map((node) => node.closest?.(".icon")).find((node) => node && !node.hidden && !starts.some(([item]) => item === node)); const grouping = target ? starts.map(([item]) => item.dataset.appId).filter((id) => !isFolderId(id)) : [];
+    if (grouping.length) { starts.forEach(([item, left, top]) => { item.style.left = left + "px"; item.style.top = top + "px"; }); groupIcons(target.dataset.appId, grouping); return; }
     starts.forEach(([item, left, top]) => {
       let x = clampX(left + shiftX);
       let y = clampY(top + shiftY);
@@ -2630,7 +2691,8 @@ function centerWindow(id) {
   zoomRects(from, node.getBoundingClientRect(), () => paintWindow(node, "restoring"));
   rememberWindows();
 }
-async function renameIcon(id) { const app = apps.find((item) => item.id === id); const button = iconButtons.get(id); if (!app || !button) return; const name = await showWindowDialog({ title: "Rename", message: "Type a new name for this shortcut. Leave it empty to use " + app.name + ".", value: data.iconNames[id] || app.name, confirmLabel: "Rename" }); if (name === null) return; const trimmed = name.trim().slice(0, 40); if (!trimmed || trimmed === app.name) delete data.iconNames[id]; else data.iconNames[id] = trimmed; persistData(); writeText(button.querySelector("span"), data.iconNames[id] || app.name); button.setAttribute("aria-label", "Open " + (data.iconNames[id] || app.name)); }
+async function renameFolder(id) { const folder = folderOf(id); const app = apps.find((item) => item.id === id); if (!folder || !app) return; const name = await showWindowDialog({ title: "Rename", message: "Type a new name for this folder.", value: folder.name, confirmLabel: "Rename" }); if (!name?.trim()) return; folder.name = app.name = name.trim().slice(0, 40); persistData(); const button = iconButtons.get(id); if (button) { writeText(button.querySelector("span"), folder.name); button.setAttribute("aria-label", "Open " + folder.name); } const entry = open.get(id); if (entry) { writeText(entry.el.querySelector(".bar-title").lastChild, folder.name); writeText(entry.tab.querySelector(".task__label"), folder.name); entry.tab.title = folder.name; } }
+async function renameIcon(id) { if (isFolderId(id)) return renameFolder(id); const app = apps.find((item) => item.id === id); const button = iconButtons.get(id); if (!app || !button) return; const name = await showWindowDialog({ title: "Rename", message: "Type a new name for this shortcut. Leave it empty to use " + app.name + ".", value: data.iconNames[id] || app.name, confirmLabel: "Rename" }); if (name === null) return; const trimmed = name.trim().slice(0, 40); if (!trimmed || trimmed === app.name) delete data.iconNames[id]; else data.iconNames[id] = trimmed; persistData(); writeText(button.querySelector("span"), data.iconNames[id] || app.name); button.setAttribute("aria-label", "Open " + (data.iconNames[id] || app.name)); }
 function showProperties(id) {
   const app = apps.find((item) => item.id === id);
   if (!app) return;
@@ -2709,6 +2771,7 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
+    if (isFolderId(id)) return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, null, { label: "Rename", run: () => renameIcon(id) }, { label: "Ungroup folder", run: () => dissolveFolder(id.slice(FOLDER_PREFIX.length)) }]);
     return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), quickItem(id), null, { label: "Rename", run: () => renameIcon(id) }, { label: "Properties", run: () => showProperties(id) }]);
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
@@ -2718,7 +2781,7 @@ desk.addEventListener("drop", async (event) => { if (!event.dataTransfer?.files.
 document.querySelector(".taskbar").addEventListener("contextmenu", (event) => { if (event.target.closest(".task, .start-wrap, .tray")) return; event.preventDefault(); showMenu(...toScene(event.clientX, event.clientY), [...arrangeMenu(), null, { label: (data.autoHideTaskbar ? "✓ " : "") + "Auto-hide the taskbar", run: () => { data.autoHideTaskbar = !data.autoHideTaskbar; persistData(); applyTheme(); } }, { label: "Properties", run: () => openApp("settings") }]); });
 document.addEventListener("pointermove", (event) => { if (!data.autoHideTaskbar) return; const bar = document.querySelector(".taskbar"); const [, y] = toScene(event.clientX, event.clientY); const bottom = desk.getBoundingClientRect().bottom; bar.classList.toggle("peek", y >= bottom - (bar.classList.contains("peek") ? bar.offsetHeight : 4) || !contextMenu.classList.contains("hidden")); }, { passive: true });
 const startItem = (id, label) => { const app = apps.find((item) => item.id === id); return '<button type="button" role="menuitem" data-open-app="' + escapeHtml(id) + '"><img class="start-menu__glyph" src="' + app.icon + '" alt=""><span>' + escapeHtml(label || app.name) + "</span></button>"; };
-startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="' + sprite("user-placeholder") + '" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.map((app) => startItem(app.id)).join("") + '</div><div class="start-menu__found" data-start-found></div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="start-menu__recent" data-start-recent></div><div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="' + sprite("run") + '" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="' + sprite("info") + '" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="' + sprite("logoff") + '" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="' + sprite("power") + '" alt="" width="22" height="22">Turn Off Computer</button></div>';
+startMenu.innerHTML = '<div class="start-menu__banner"><img class="start-menu__avatar" src="' + sprite("user-placeholder") + '" alt="" width="48" height="48"><div class="start-menu__who"><strong>LUMEN</strong><span>Builder Desk</span></div></div><div class="start-menu__cols"><div class="start-menu__left"><label class="start-menu__search"><span class="sr-only">Search apps</span><input class="field" type="search" placeholder="Find an app" autocomplete="off" data-app-search></label><div class="start-menu__pinned"></div><div class="start-menu__all">' + apps.filter((app) => !isFolderId(app.id)).map((app) => startItem(app.id)).join("") + '</div><div class="start-menu__found" data-start-found></div><div class="menu-separator" role="separator"></div><button type="button" role="menuitem" class="start-menu__more" data-all-programs><span>All Programs</span></button></div><div class="start-menu__right">' + [["files", "My Files"], ["calendar", "My Calendar"], ["charmap", "Character Map"]].map(([id, label]) => startItem(id, label)).join("") + '<div class="start-menu__recent" data-start-recent></div><div class="menu-separator" role="separator"></div>' + [["settings", "Control Panel"], ["about", "Help and Support"]].map(([id, label]) => startItem(id, label)).join("") + '<button type="button" role="menuitem" data-run><img class="start-menu__glyph" src="' + sprite("run") + '" alt=""><span>Run...</span></button><button type="button" role="menuitem" data-install-app><img class="start-menu__glyph" src="' + sprite("info") + '" alt=""><span data-install-label>Install LUMEN...</span></button></div></div><div class="start-menu__foot"><button type="button" role="menuitem" data-log-off><img src="' + sprite("logoff") + '" alt="" width="22" height="22">Log Off</button><button type="button" role="menuitem" data-power-off><img src="' + sprite("power") + '" alt="" width="22" height="22">Turn Off Computer</button></div>';
 const startSearch = startMenu.querySelector("[data-app-search]");
 function filterStartMenu(query) {
   const needle = query.trim().toLocaleLowerCase();
@@ -2738,7 +2801,7 @@ startSearch.addEventListener("keydown", (event) => {
 function pinItem(id) { const pinned = data.startPins.includes(id); return { label: pinned ? "Unpin from Start menu" : "Pin to Start menu", run: () => { data.startPins = pinned ? data.startPins.filter((item) => item !== id) : [...data.startPins, id].slice(0, 12); persistData(); renderPinned(); } }; }
 function renderPinned() {
   const pinned = data.startPins.filter((id) => apps.some((app) => app.id === id));
-  const frequent = Object.entries(data.launches).filter(([id]) => !pinned.includes(id) && apps.some((app) => app.id === id)).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  const frequent = Object.entries(data.launches).filter(([id]) => !pinned.includes(id) && !isFolderId(id) && apps.some((app) => app.id === id)).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   ["calculator", "paint", "focus", "shiplog", "minesweeper", "files"].forEach((id) => { if (!frequent.includes(id) && !pinned.includes(id)) frequent.push(id); });
   const recent = data.recentFiles.map((id) => data.files.find((item) => item.id === id && item.kind === "text")).filter(Boolean).slice(0, 3);
   startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="' + sprite("text-file") + '" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
@@ -2865,7 +2928,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "s") { event.preventDefault(); const target = activeId && open.get(activeId)?.el.querySelector({ notes: "[data-save-note-version]", paint: "[data-paint-save]" }[activeId] || "[data-save-shortcut]"); if (target) target.click(); else { persistData(); showToast("Saved on this device."); } return; }
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && !event.target.closest("input, textarea, select, .win, [contenteditable]")) { event.preventDefault(); selectIcons(new Set(iconButtons.keys())); return; }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && !event.target.closest("input, textarea, select, .win, [contenteditable]")) { event.preventDefault(); selectIcons(new Set([...iconButtons].filter(([, button]) => !button.hidden).map(([id]) => id))); return; }
   if (event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey && ["d", "e"].includes(event.key.toLowerCase()) && !event.target.closest("input, textarea, select")) { event.preventDefault(); if (event.key.toLowerCase() === "d") toggleDesktop(); else openApp("files"); return; }
   if (event.key === "F1") { event.preventDefault(); openApp("about"); return; }
   if (event.key === "F2" && !event.target.closest("input, textarea, select, .win, [contenteditable]") && selectedIconIds().length === 1) { event.preventDefault(); renameIcon(selectedIconIds()[0]); return; }
