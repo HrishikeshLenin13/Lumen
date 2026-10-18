@@ -3061,16 +3061,20 @@ function checkReminders() { if (!data.events.some((event) => event.time)) return
   if (activeId !== "calendar") open.get("calendar")?.tab.classList.add("flashing");
 }
 window.setInterval(checkReminders, 20000);
+let clockTimeout = null;
 function tickClock() {
+  window.clearTimeout(clockTimeout);
   const now = new Date();
   const clock = document.querySelector("[data-clock-time]");
   const label = clockFormat.format(now);
   writeText(clock, label);
   clock.dateTime = now.toISOString().slice(0, 16);
   clock.parentElement.title = fullDateFormat.format(now);
-  window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
+  clockTimeout = window.setTimeout(tickClock, 60000 - (now.getTime() % 60000) + 50);
 }
 tickClock();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) tickClock(); });
+window.addEventListener("focus", tickClock);
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
 document.querySelector(".tray").addEventListener("contextmenu", (event) => {
   event.preventDefault();
