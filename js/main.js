@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c7eb33b9b2";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=2f2e19c939";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1153,7 +1153,7 @@ const apps = [
     size: [372, 432],
     html() {
       const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
-      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><button type="button" class="btn" data-paint-tool="picker" aria-pressed="false">Picker</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" tabindex="0" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-open>Open...</button><input class="sr-only" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" data-paint-file><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
+      return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><button type="button" class="btn" data-paint-tool="picker" aria-pressed="false">Picker</button><button type="button" class="btn" data-paint-tool="line" aria-pressed="false">Line</button><button type="button" class="btn" data-paint-tool="rect" aria-pressed="false">Rectangle</button><button type="button" class="btn" data-paint-tool="ellipse" aria-pressed="false">Ellipse</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" tabindex="0" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-open>Open...</button><input class="sr-only" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" data-paint-file><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
     },
     bind(root) {
       const canvas = root.querySelector("[data-paint-canvas]");
@@ -1163,6 +1163,8 @@ const apps = [
       let tool = "pencil";
       let color = "#000000";
       let last = null;
+      let shapeStart = null;
+      let shapeBase = null;
       let sprayFrame = 0; let lastSpray = 0;
       let saveTimer = null;
       const undo = [];
@@ -1218,12 +1220,15 @@ const apps = [
           return;
         }
         last = at;
+        if (["line", "rect", "ellipse"].includes(tool)) { shapeStart = at; shapeBase = undo[undo.length - 1]; stamp(at); return; }
+        shapeStart = null;
         (tool === "airbrush" ? airbrush : tool === "smudge" ? smudge : stamp)(at);
         if (tool === "airbrush") { lastSpray = performance.now(); sprayFrame = requestAnimationFrame(spray); }
       });
       canvas.addEventListener("pointermove", (event) => {
         if (!last) return;
         const at = point(event);
+        if (shapeStart && shapeBase) { context.putImageData(shapeBase, 0, 0); shapePoints(tool, shapeStart[0], shapeStart[1], at[0], at[1]).forEach(stamp); last = at; return; }
         linePoints(last[0], last[1], at[0], at[1]).forEach(tool === "airbrush" ? airbrush : tool === "smudge" ? smudge : stamp);
         last = at;
       });
@@ -1231,6 +1236,8 @@ const apps = [
         cancelAnimationFrame(sprayFrame); sprayFrame = 0;
         if (!last) return;
         last = null;
+        shapeStart = null;
+        shapeBase = null;
         store();
       };
       canvas.addEventListener("pointerup", end);

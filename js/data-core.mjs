@@ -256,6 +256,17 @@ export function floodFill(pixels, width, height, x, y, color) {
   return painted;
 }
 export function smudgePixels(pixels) { const totals = [0, 0, 0, 0]; for (let offset = 0; offset < pixels.length; offset += 4) for (let channel = 0; channel < 4; channel += 1) totals[channel] += pixels[offset + channel]; const count = pixels.length / 4; for (let offset = 0; offset < pixels.length; offset += 4) for (let channel = 0; channel < 4; channel += 1) pixels[offset + channel] = Math.round((pixels[offset + channel] * 2 + totals[channel] / count) / 3); return pixels; }
+export function shapePoints(kind, x0, y0, x1, y1) {
+  if (kind === "line") return linePoints(x0, y0, x1, y1);
+  if (kind === "rect") return [...linePoints(x0, y0, x1, y0), ...linePoints(x1, y0, x1, y1), ...linePoints(x1, y1, x0, y1), ...linePoints(x0, y1, x0, y0)];
+  const cx = (x0 + x1) / 2;
+  const cy = (y0 + y1) / 2;
+  const rx = Math.abs(x1 - x0) / 2;
+  const ry = Math.abs(y1 - y0) / 2;
+  const steps = Math.max(8, Math.round(Math.PI * 2 * Math.max(rx, ry)));
+  const ring = Array.from({ length: steps + 1 }, (_, index) => [Math.round(cx + rx * Math.cos(index / steps * Math.PI * 2)), Math.round(cy + ry * Math.sin(index / steps * Math.PI * 2))]);
+  return ring.slice(1).flatMap((point, index) => linePoints(ring[index][0], ring[index][1], point[0], point[1]));
+}
 export function linePoints(x0, y0, x1, y1) {
   const points = [];
   const dx = Math.abs(x1 - x0);

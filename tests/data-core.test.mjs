@@ -4,7 +4,7 @@ import { cursorSurfaceMatrix, smudgePixels } from "../js/data-core.mjs";
 test("smudge blends color and alpha in place without changing uniform regions", () => { const pixels = new Uint8ClampedArray([255, 0, 0, 255, 0, 0, 255, 0]); assert.equal(smudgePixels(pixels), pixels); assert.deepEqual([...pixels], [213, 0, 43, 213, 43, 0, 213, 43]); const uniform = new Uint8ClampedArray([40, 80, 120, 255, 40, 80, 120, 255]); assert.deepEqual([...smudgePixels(uniform)], [40, 80, 120, 255, 40, 80, 120, 255]); assert.equal(smudgePixels(new Uint8ClampedArray()).length, 0); });
 test("cursor surface cancels the local CRT distortion at opposite corners", () => { for (const [x, y] of [[0, 0], [1200, 0], [0, 800], [1200, 800]]) { const [a, b, c, d] = cursorSurfaceMatrix(x, y, 1200, 800, 0.028); const cross = (x ? 1 : -1) * (y ? 1 : -1) * 0.028; assert.ok(Math.abs(1.056 * a + cross * 1.5 * b - 1) < 1e-12); assert.ok(Math.abs(cross / 1.5 * a + 1.056 * b) < 1e-12); assert.ok(Math.abs(1.056 * c + cross * 1.5 * d) < 1e-12); assert.ok(Math.abs(cross / 1.5 * c + 1.056 * d - 1) < 1e-12); } });
 test("cursor surface stays flat without curvature and at the screen center", () => { assert.deepEqual(cursorSurfaceMatrix(0, 0, 1200, 800), [1, 0, 0, 1]); assert.deepEqual(cursorSurfaceMatrix(600, 400, 1200, 800, 0.028).map((n) => n || 0), [1, 0, 0, 1]); });
-import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, monthGrid } from "../js/data-core.mjs";
+import { makeDefaultData, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid } from "../js/data-core.mjs";
 
 test("notes outline extracts Markdown headings with line and selection offsets", () => {
   assert.deepEqual(extractNoteHeadings("Opening\n## Plan ##\ntext\n   # Indented\n### Done\n\n```md\n# Example inside code\n```not-a-close\n## Still code\n```\n~~~~\n## Also code\n~~~~\n  # Final"), [
@@ -222,6 +222,9 @@ test("flood fill paints only the connected region of the clicked color", () => {
 test("line points connect fast strokes without gaps", () => {
   assert.deepEqual(linePoints(0, 0, 3, 1), [[0, 0], [1, 0], [2, 1], [3, 1]]);
   assert.deepEqual(linePoints(2, 2, 2, 2), [[2, 2]]);
+  assert.deepEqual(new Set(shapePoints("rect", 0, 0, 2, 2).map(String)), new Set(["0,0", "1,0", "2,0", "2,1", "2,2", "1,2", "0,2", "0,1"]));
+  const ring = shapePoints("ellipse", 0, 0, 10, 6).map(String);
+  assert.ok(ring.includes("10,3") && ring.includes("0,3") && ring.includes("5,0") && ring.includes("5,6"));
 });
 test("month grids start on Sunday and mark days outside the month", () => {
   const grid = monthGrid(2026, 9);
