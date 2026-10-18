@@ -1,5 +1,5 @@
-const CACHE_NAME = "lumen-app-dac5ef85b2";
-const APP_SHELL = ["./index.html", "./css/lumen-vintage.css?v=8183f6d023", "./js/main.js?v=540d3d1252", "./css/sprites.css?v=2c6fc34343", "./icons/favicon.png?v=04bc934e40", "./icons/app-icon.png?v=0f309a1148", "./icons/app-icon-512.png?v=05ade58a80", "./js/data-core.mjs?v=7f33c67d33", "./js/lumen-script.mjs?v=c3cc0befc4", "./js/rock-lines.mjs?v=b747b167bd", "./manifest.webmanifest?v=1a59361828", "./sounds/open.mp3", "./sounds/close.mp3", "./sounds/minimize.mp3", "./sounds/restore.mp3", "./sounds/thud.mp3", "./sounds/win.mp3", "./sounds/boom.mp3", "./sounds/degauss.mp3", "./sounds/timer.mp3", "./sounds/flip.mp3", "./icons/wallpaper.png?v=5e0b52de42", "./icons/wallpaper-spectrum.jpg"];
+const CACHE_NAME = "lumen-app-bfd69261e9";
+const APP_SHELL = ["./index.html", "./css/lumen-vintage.css?v=8183f6d023", "./js/main.js?v=08ae1752ff", "./css/sprites.css?v=2c6fc34343", "./icons/favicon.png?v=04bc934e40", "./icons/app-icon.png?v=0f309a1148", "./icons/app-icon-512.png?v=05ade58a80", "./js/data-core.mjs?v=7f33c67d33", "./js/lumen-script.mjs?v=b7a4b1d101", "./js/rock-lines.mjs?v=b747b167bd", "./manifest.webmanifest?v=1a59361828", "./sounds/open.mp3", "./sounds/close.mp3", "./sounds/minimize.mp3", "./sounds/restore.mp3", "./sounds/thud.mp3", "./sounds/win.mp3", "./sounds/boom.mp3", "./sounds/degauss.mp3", "./sounds/timer.mp3", "./sounds/flip.mp3", "./icons/wallpaper.png?v=5e0b52de42", "./icons/wallpaper-spectrum.jpg"];
 let cachePromise = null;
 
 self.addEventListener("install", (event) => {
