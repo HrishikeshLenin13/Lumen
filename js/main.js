@@ -410,7 +410,7 @@ function logListHtml(rows = filteredLogs()) {
   }).join("") + (rows.length > logLimit ? '<button type="button" class="btn log-more" data-log-action="more">Show ' + Math.min(100, rows.length - logLimit) + " more of " + (rows.length - logLimit) + " remaining</button>" : "");
 }
 function totalLoggedHours() {
-  return data.logs.reduce((sum, entry) => sum + Number(entry.h || 0), 0).toFixed(1);
+  return formatHours(data.logs.reduce((sum, entry) => sum + Number(entry.h || 0), 0));
 }
 function exportBackup() {
   const payload = {
