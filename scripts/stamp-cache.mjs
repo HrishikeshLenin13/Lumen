@@ -5,7 +5,7 @@ const check = process.argv.includes("--check");
 const digest = (value) => createHash("sha256").update(value).digest("hex").slice(0, 10);
 const locate = (ref, base) => [new URL(ref, base), new URL(ref.replace(/^(\.\.?\/)+/, ""), root)].find((url) => existsSync(url));
 const stale = [];
-for (const file of ["manifest.webmanifest", "css/lumen-vintage.css", "js/main.js", "index.html", "sw.js"]) {
+for (const file of ["manifest.webmanifest", "css/lumen-vintage.css", "js/script-editor.mjs", "js/main.js", "index.html", "sw.js"]) {
   const url = new URL(file, root);
   const source = readFileSync(url, "utf8");
   const stamped = source.replace(/([\w./-]+\.(?:css|mjs|js|png|mp3|webmanifest))\?v=[\w-]+/g, (match, ref) => { const target = locate(ref, url); return target ? ref + "?v=" + digest(readFileSync(target)) : match; });

@@ -2,6 +2,7 @@ export const scriptSamples = [
   { name: "hello.lsc", content: `rem Hello: a gentle tour of LUMEN Script. Open hello.lsc in Notes to read it and change the picture
 window "Hello", 440, 320, "notes"
 screen "auto", 2
+slider "speed", "Animation", 0, 3, 1, 0.1
 t = 0
 while 1
   w = width()
@@ -25,12 +26,13 @@ while 1
   text w / 2 + 1, h * 0.17 + 1, "Hello from LUMEN Script", "#00000090", 16, 1, "title"
   text w / 2, h * 0.17, "Hello from LUMEN Script", "#ffffff", 16, 1, "title"
   text w / 2, h * 0.17 + 22, "Open hello.lsc in Notes to change this picture", "#d8e4ff", 7, 1, "sans"
-  t = t + delta()
+  t = t + delta() * value("speed")
   frame
 wend` },
   { name: "flappy.lsc", content: `rem Flappy LUMEN: press Space, click, or tap to flap between the pipes. Your best score is saved in Files
 window "Flappy LUMEN", 360, 460, "fortune"
 screen "auto", 3
+button "restart", "Restart"; checkbox "pause", "Paused", 0
 best = 0
 if hasfile("flappy-best.txt") then best = num(readfile("flappy-best.txt"))
 pipes = 3
@@ -57,6 +59,10 @@ while 1
   w = width()
   h = height()
   ground = h - 20
+  if clicked("restart") or keyhit("r") then gosub reset
+  if keyhit("p") then setvalue "pause", not value("pause")
+  if value("pause") then frame
+  if value("pause") then continue
   k = min(3, delta() * 60)
   flap = keyhit("space") or keyhit("arrowup") or keyhit("w") or mousehit()
   if mode == 0 then
@@ -247,6 +253,7 @@ sub cap(x, y)
 end sub` },
   { name: "snake.lsc", content: `rem Snake: steer with the arrow keys or W A S D. Eat apples, grow longer, and keep clear of the walls and your tail
 window "Snake", 372, 420, "minesweeper"
+button "restart", "Restart"; checkbox "pause", "Paused", 0
 cols = 17
 rows = 15
 cell = 10
@@ -270,6 +277,10 @@ shaketime = 0
 gosub reset
 while 1
   gosub controls
+  if clicked("restart") or keyhit("r") then gosub reset
+  if keyhit("p") then setvalue "pause", not value("pause")
+  if value("pause") then frame
+  if value("pause") then continue
   t = 1
   if mode == 1 then
     acc = acc + delta()
@@ -286,7 +297,7 @@ while 1
   end if
   gosub draw
   frame
-  if mode == 2 and (keyhit("space") or keyhit("enter") or mousehit()) then gosub reset
+  if mode >= 2 and (keyhit("space") or keyhit("enter") or mousehit()) then gosub reset
 wend
 reset:
 length = 4
@@ -340,6 +351,10 @@ if mode == 1 and sx[0] == fx and sy[0] == fy then
 end if
 return
 food:
+if length >= cols * rows then mode = 3
+if mode == 3 then best = max(best, length - 4)
+if mode == 3 then writefile "snake-best.txt", best
+if mode == 3 then return
 repeat
   fx = rnd(cols)
   fy = rnd(rows)
@@ -403,10 +418,11 @@ if mode == 0 then
   text w / 2, top + 40, "SNAKE", "#ffffff", 22, 1, "title"
   text w / 2, top + 76, "Press an arrow key to start", "#f0f6e8", 8, 1, "bold"
 end if
-if mode == 2 then
+if mode >= 2 then
   rect 0, top, w, rows * cell, "#00000070"
   text w / 2 + 1, top + 37, "Game over", "#00000080", 18, 1, "title"
   text w / 2, top + 36, "Game over", "#ffffff", 18, 1, "title"
+  if mode == 3 then text w / 2, top + 36, "BOARD COMPLETE!", "#ffe9a8", 15, 1, "title"
   text w / 2, top + 64, "Score " + (length - 4) + "     Best " + best, "#ffe9a8", 9, 1, "bold"
   text w / 2, top + 84, "Press Space or click to play again", "#e8f0e0", 7, 1, "sans"
 end if
@@ -444,6 +460,7 @@ button "random", "Randomize"
 button "gun", "Glider gun"
 button "clear", "Clear"
 checkbox "run", "Running", 1
+button "step", "Single step"
 slider "speed", "Speed", 1, 60, 24
 dim cells(w * h)
 dim nxt(w * h)
@@ -469,7 +486,7 @@ while 1
       cells[(my + 1) * w + mx + 1] = 1
     end if
   end if
-  steps = 0
+  steps = clicked("step")
   if value("run") then
     acc = acc + delta() * value("speed")
     steps = min(3, floor(acc))
@@ -543,6 +560,8 @@ return` },
   { name: "mandelbrot.lsc", content: `rem Mandelbrot: a smooth-shaded render of the famous set. When it finishes, the colors cycle with a hue shader
 window "Mandelbrot", 500, 400, "paint"
 screen "auto", 2
+button "render", "Render again"; checkbox "cycle", "Cycle colors", 1
+render:
 w = width()
 h = height()
 limit = 200
@@ -569,7 +588,8 @@ text w - 4, h - 10, "", "#ffffff", 6, 2
 print "Mandelbrot done in " + fixed(clock() - started, 1) + " seconds."
 hue = 0
 while 1
-  hue = (hue + delta() * 30) % 360
+  if clicked("render") or resized() then goto render
+  if value("cycle") then hue = (hue + delta() * 30) % 360
   shader "hue", hue
   frame
 wend
@@ -609,6 +629,7 @@ checkbox "mirror", "Mirror", 0
 checkbox "rainbow", "Rainbow", 0
 button "clear", "Clear"
 colors = ["#000000", "#7f7f7f", "#880015", "#ed1c24", "#ff7f27", "#fff200", "#22b14c", "#00a2e8", "#3f48cc", "#a349a4", "#ffffff", "#c3c3c3", "#b97a57", "#ffaec9", "#ffc90e", "#b5e61d", "#99d9ea", "#7092be", "#c8bfe7"]
+button "undo", "Undo last stroke"
 paper = "#fffdf8"
 cls paper
 color = "#000000"
@@ -620,6 +641,7 @@ while 1
   w = width()
   h = height()
   bar = h - 26
+  if clicked("undo") and undoReady then stamp "undo", 0, 0
   if clicked("clear") then rect 0, 0, w, bar, paper
   if mousedown() then
     mx = mousex()
@@ -629,6 +651,8 @@ while 1
       lastx = -2
     end if
     if lastx != -2 then
+      if lastx == -1 then undoReady = 1
+      if lastx == -1 then capture "undo", 0, 0, w, bar
       if lastx < 0 then
         lastx = mx
         lasty = my
@@ -751,6 +775,7 @@ slider "detail", "Detail", 32, 1200, 160, 8
 button "colors", "Colors"
 button "reset", "Reset"
 sr = [0, 32, 237, 255, 0]
+button "tour", "Interesting location"
 sg = [7, 107, 255, 170, 2]
 sb = [100, 203, 255, 0, 0]
 tint = 0
@@ -800,6 +825,7 @@ while 1
     gosub restart
   end if
   if changed("detail") or resized() then gosub restart
+  if clicked("tour") then gosub destination
   if pass < 2 then
     limit = value("detail")
     started = clock()
@@ -843,6 +869,14 @@ restart:
 row = 0
 pass = 0
 return
+destination:
+tour = (tour + 1) % 3
+cx = [-0.6, -0.743643887037151, -0.101096363845][tour]
+cy = [0, 0.13182590420533, 0.956286510809][tour]
+zoom = [1, 180, 95][tour]
+setvalue "detail", [160, 640, 480][tour]
+gosub restart
+return
 iterate:
 x = 0
 y = 0
@@ -882,6 +916,7 @@ slider "scale", "Scale", 3, 24, 9, 1
 button "colors", "Colors"
 button "fx", "Effect"
 checkbox "crt", "CRT", 1
+checkbox "pause", "Paused", 0
 label "info", "Effect: none"
 effects = ["none", "kaleido", "ripple", "wave", "posterize", "edges", "chroma", "spin", "mirror"]
 palettes = [0, 0.33, 0.67, 0, 0.1, 0.2, 0.5, 0.6, 0.75, 0.8, 0.9, 0.3]
@@ -898,7 +933,7 @@ while 1
   scale = value("scale")
   halfw = width() / 2
   halfh = height() / 2
-  time = time + value("speed") * delta()
+  if not value("pause") then time = time + value("speed") * delta()
   if changed("crt") then call crt
   if clicked("colors") then
     choice = (choice + 1) % 4
@@ -940,6 +975,7 @@ window "Raycaster", 580, 420, "minesweeper"
 sw = 240
 sh = 150
 screen sw, sh
+button "restart", "New expedition"; checkbox "pause", "Paused", 0; checkbox "map", "Map", 1
 map = ["################", "#......#.......#", "#.SSS..#..WWW..#", "#.S....#....W..#", "#.S..###..#.W..#", "#........#.....#", "#.WW..S..#..SS.#", "#.W...S.....S..#", "#.W.SSS..##.S..#", "#........#.....#", "#..####..#..WW.#", "#..............#", "################"]
 orbs = 8
 ox = [3.5, 13.5, 5.5, 10.5, 1.5, 14.5, 7.5, 4.5]
@@ -956,7 +992,12 @@ started = clock()
 finished = 0
 shader "vignette", 0.6
 while 1
+  if keyhit("p") then setvalue "pause", not value("pause")
   k = min(0.05, delta())
+  if keyhit("m") then setvalue "map", not value("map")
+  if clicked("restart") or keyhit("r") then gosub expedition
+  if value("pause") then frame
+  if value("pause") then continue
   turn = 0
   if key("arrowleft") or key("a") then turn = -1
   if key("arrowright") or key("d") then turn = 1
@@ -970,8 +1011,8 @@ while 1
   if key("q") then side = -1
   if key("e") then side = 1
   if fwd != 0 or side != 0 then
-    mvx = (dirx * fwd - diry * side) * 2.6 * k
-    mvy = (diry * fwd + dirx * side) * 2.6 * k
+    mvx = (dirx * fwd - diry * side) * (2.6 + 1.4 * key("shift")) * k
+    mvy = (diry * fwd + dirx * side) * (2.6 + 1.4 * key("shift")) * k
     if mid(map[floor(py)], floor(px + mvx + sign(mvx) * 0.2), 1) == "." then px = px + mvx
     if mid(map[floor(py + mvy + sign(mvy) * 0.2)], floor(px), 1) == "." then py = py + mvy
     bob = bob + k * 11
@@ -983,7 +1024,7 @@ while 1
     gosub sky
     gosub walls
     gosub sprites
-    gosub minimap
+    if value("map") then gosub minimap
   end warp
   if flash > 0 then
     rect 0, 0, sw, sh, rgba(255, 230, 140, flash * 90)
@@ -991,12 +1032,15 @@ while 1
   end if
   text sw - 5, 6, "Orbs " + found + " of " + orbs, "#00000090", 8, 2, "bold"
   text sw - 6, 5, "Orbs " + found + " of " + orbs, "#ffe58a", 8, 2, "bold"
+  rect sw - 68, 17, 62, 2, "#ffffff30"; rect sw - 68, 17, 62 * found / orbs, 2, "#ffe58a"
   tip = ""
-  if clock() - started < 7 and found == 0 then tip = "W A S D or arrows to move, Q and E to step sideways"
+  if clock() - started < 7 and found == 0 then tip = "WASD / arrows move   Q/E strafe   Shift sprint   M map   P pause"
   text sw / 2, sh - 12, tip, "#ffffff", 6, 1, "sans"
   if found == orbs then
     if finished == 0 then
       finished = clock() - started
+      caption "Raycaster / Expedition complete"
+      if not hasfile("raycaster-best.txt") or finished < num(readfile("raycaster-best.txt")) then writefile "raycaster-best.txt", fixed(finished, 2)
       tone 523, 120, "triangle", 0.15
       tone 784, 400, "triangle", 0.12
     end if
@@ -1006,6 +1050,13 @@ while 1
   end if
   frame
 wend
+expedition:
+found = 0; finished = 0; started = clock(); px = 1.5; py = 1.5; angle = 0.3; bob = 0; flash = 0
+for o = 0 to orbs - 1
+  got[o] = 0
+next
+caption "Raycaster / New expedition"
+return
 sky:
 for y = 0 to sh - 1 step 2
   if y < horizon then
@@ -1150,6 +1201,7 @@ return` },
   { name: "fireworks.lsc", content: `rem Fireworks over a sleeping city. Click anywhere to launch a rocket toward that spot
 window "Fireworks", 580, 440, "fortune"
 screen "auto", 2
+slider "rate", "Launches / sec", 0, 4, 1, 0.1; checkbox "pause", "Paused", 0; checkbox "audio", "Sound", 1
 count = 1600
 dim x(count)
 dim y(count)
@@ -1179,6 +1231,9 @@ while 1
   w = width()
   h = height()
   if resized() then gosub skyline
+  if keyhit("p") then setvalue "pause", not value("pause")
+  if value("pause") then frame
+  if value("pause") then continue
   k = min(3, delta() * 60)
   d1 = pow(0.975, k)
   d2 = pow(0.955, k)
@@ -1191,7 +1246,7 @@ while 1
     pixel starx[i] * w, stary[i] * h, rgba(255, 255, 255, 110 + 90 * sin(clock() * 2 + i * 1.7))
   next
   if mousehit() then call launch(mousex(), mousey())
-  if rnd(70) == 0 then call launch(random(w * 0.12, w * 0.88), random(h * 0.12, h * 0.42))
+  if random() < 1 - exp(-value("rate") * delta()) then call launch(random(w * 0.12, w * 0.88), random(h * 0.12, h * 0.42))
   warp
     for j = 0 to rockets - 1
       if live[j] then
@@ -1263,7 +1318,7 @@ sub launch(tx, ty)
       rx[j] = tx
       ry[j] = height()
       rvy[j] = -sqrt(2 * 0.02 * max(10, height() - ty))
-      tone 260, 300, "sine", 0.025
+      if value("audio") then tone 260, 300, "sine", 0.025
       return
     end if
   next
@@ -1272,7 +1327,7 @@ sub burst(bx, by)
   kind = rnd(5)
   base = rnd(360)
   flash = 1
-  tone 60 + rnd(40), 380, "sawtooth", 0.06
+  if value("audio") then tone 60 + rnd(40), 380, "sawtooth", 0.06
   for n = 1 to 120
     a = n / 120 * 2 * pi()
     s = random(0.3, 1.9)
@@ -1324,6 +1379,7 @@ button "wave", "Wave"
 button "rec", "Record"
 button "play", "Play back"
 button "demo", "Demo song"
+button "stop", "Stop"; button "save", "Save tune"; button "load", "Load tune"
 label "info", "Square wave"
 waves = ["square", "sine", "triangle", "sawtooth"]
 wave = 0
@@ -1367,6 +1423,10 @@ while 1
   end if
   if clicked("play") and len(song) > 0 then call schedule(song, times)
   if clicked("demo") then call schedule(demo, demotimes)
+  if clicked("load") and hasfile("synth-tune.txt") then gosub loadtune
+  if clicked("save") and len(song) > 0 then writefile "synth-tune.txt", join(song, ",") + chr(10) + join(times, ",")
+  if clicked("stop") then call schedule([], [])
+  if len(qn) == 0 then qt = []
   for i = 0 to 12
     if keyhit(mid(keys, i, 1)) then call play(i)
   next
@@ -1378,13 +1438,25 @@ while 1
       if qt[0] <= now then
         due = 1
         t = shift(qt)
-        call play(shift(qn))
+        fromqueue = 1; call play(shift(qn)); fromqueue = 0
       end if
     end if
   wend
   gosub draw
   frame
 wend
+loadtune:
+saved = split(readfile("synth-tune.txt"), chr(10))
+if len(saved) < 2 then return
+loadednotes = split(saved[0], ","); loadedtimes = split(saved[1], ",")
+if len(loadednotes) != len(loadedtimes) then return
+song = loadednotes; times = loadedtimes
+for j = 0 to len(song) - 1
+  song[j] = clamp(floor(num(song[j])), 0, 23); times[j] = max(0, num(times[j]))
+  if j > 0 then times[j] = max(times[j], times[j - 1])
+next
+setvalue "info", "Loaded " + len(song) + " notes"
+return
 clickkey:
 mx = mousex()
 my = mousey()
@@ -1463,12 +1535,13 @@ sub play(n)
   glow[n] = 1
   lastnote = n
   lastat = clock()
-  if recording then
+  if recording and not fromqueue then
     c = push(song, n)
     c = push(times, clock() - recstart)
   end if
 end sub
 sub schedule(notes, offsets)
+  qn = []; qt = []
   base = clock() + 0.1
   for i = 0 to len(notes) - 1
     c = push(qn, notes[i])
@@ -1517,6 +1590,7 @@ while 1
     lines = [""]
     setvalue "info", ""
   end if
+  caption "Typewriter / " + len(join(lines, chr(10))) + " characters"
   cls "#5b3a29"
   for y = 0 to h step 6
     rect 0, y, w, 2, rgba(0, 0, 0, 18 + 14 * sin(y * 0.7))
@@ -1535,7 +1609,7 @@ while 1
   for i = first to len(lines) - 1
     text paperx + margin, 40 + (i - first) * lineh, lines[i], "#25252e", size, 0, "type"
   next
-  tick = tick + 1
+  tick = tick + delta() * 60
   cy = 40 + (len(lines) - 1 - first) * lineh
   if tick % 50 < 28 then rect paperx + margin + len(lines[len(lines) - 1]) * charw, cy, 2, size + 2, "#25252e"
   frame
@@ -1568,6 +1642,540 @@ else
 end if
 tone 900, 10, "square", 0.02
 return` },
+  { name: "breakout.lsc", content: `window "BREAKOUT / 01", 600, 500, "minesweeper"
+screen 240, 180
+button "new", "New game"
+checkbox "pause", "Paused", 0
+checkbox "audio", "Sound", 1
+dim bricks(60)
+dim sx(64)
+dim sy(64)
+dim svx(64)
+dim svy(64)
+dim life(64)
+dim shades(64)
+dim trailx(8)
+dim traily(8)
+best = 0
+if hasfile("breakout-best.txt") then best = clamp(num(readfile("breakout-best.txt")), 0, 99999999)
+slot = 0
+gosub newgame
+while 1
+  dt = min(0.04, delta())
+  fire = keyhit("space") or mousehit()
+  if keyhit("p") then setvalue "pause", not value("pause")
+  if clicked("new") or keyhit("r") then gosub newgame
+  if not value("pause") then
+    if mousex() != lastmouse then paddle = clamp(mousex(), 24, 216)
+    lastmouse = mousex()
+    if key("arrowleft") or key("a") then paddle = max(24, paddle - 170 * dt)
+    if key("arrowright") or key("d") then paddle = min(216, paddle + 170 * dt)
+    if mode == 3 and fire then
+      level = level + 1
+      gosub build
+      fire = 0
+    end if
+    if mode == 2 and fire then
+      gosub newgame
+      fire = 0
+    end if
+    if mode == 0 then
+      bx = paddle
+      by = 150
+      if fire then mode = 1
+    end if
+    if mode == 1 then
+      steps = max(1, ceil(speed * dt / 2))
+      for step = 1 to steps
+        if mode == 1 then gosub physics
+      next
+    end if
+    for i = 0 to 63
+      if life[i] > 0 then
+        sx[i] = sx[i] + svx[i] * dt
+        sy[i] = sy[i] + svy[i] * dt
+        svy[i] = svy[i] + 70 * dt
+        life[i] = max(0, life[i] - dt)
+      end if
+    next
+    for i = 7 to 1 step -1
+      trailx[i] = trailx[i - 1]
+      traily[i] = traily[i - 1]
+    next
+    trailx[0] = bx
+    traily[0] = by
+  end if
+  gosub draw
+  frame
+wend
+newgame:
+score = 0
+level = 1
+lives = 3
+paddle = 120
+lastmouse = mousex()
+setvalue "pause", 0
+gosub build
+return
+build:
+remaining = 0
+for i = 0 to 59
+  bricks[i] = 1
+  if level % 3 == 2 and (floor(i / 10) + i % 10) % 3 == 0 then bricks[i] = 0
+  if level % 3 == 0 and abs(i % 10 - 4.5) < abs(floor(i / 10) - 2.5) then bricks[i] = 0
+  remaining = remaining + bricks[i]
+next
+speed = min(190, 105 + level * 8)
+gosub ready
+return
+ready:
+mode = 0
+bx = paddle
+by = 150
+vx = speed * 0.38
+vy = -sqrt(speed * speed - vx * vx)
+for i = 0 to 7
+  trailx[i] = bx
+  traily[i] = by
+next
+return
+physics:
+prevx = bx
+prevy = by
+bx = bx + vx * dt / steps
+by = by + vy * dt / steps
+if bx <= 5 or bx >= 235 then
+  bx = clamp(bx, 5, 235)
+  vx = -vx
+end if
+if by <= 24 then
+  by = 24
+  vy = abs(vy)
+end if
+if vy > 0 and prevy <= 151 and by >= 151 and abs(bx - paddle) <= 23 then
+  bx = clamp(bx, paddle - 23, paddle + 23)
+  by = 151
+  aim = clamp((bx - paddle) / 23, -1, 1)
+  vx = sin(aim * 1.05) * speed
+  vy = -max(35, cos(aim * 1.05) * speed)
+  if value("audio") then tone 330, 45, "triangle", 0.07
+end if
+hit = -1
+for b = 0 to 59
+  if bricks[b] and hit == -1 then
+    rx = 11 + (b % 10) * 22
+    ry = 33 + floor(b / 10) * 11
+    if bx + 2 >= rx and bx - 2 < rx + 20 and by + 2 >= ry and by - 2 < ry + 8 then hit = b
+  end if
+next
+if hit >= 0 then
+  rx = 11 + (hit % 10) * 22
+  ry = 33 + floor(hit / 10) * 11
+  bricks[hit] = 0
+  remaining = remaining - 1
+  score = score + (6 - floor(hit / 10)) * 10 * level
+  if prevy + 2 <= ry or prevy - 2 >= ry + 8 then
+    vy = -vy
+    by = prevy
+  else
+    vx = -vx
+    bx = prevx
+  end if
+  for spark = 0 to 7
+    sx[slot] = rx + 10
+    sy[slot] = ry + 4
+    svx[slot] = random(-55, 55)
+    svy[slot] = random(-65, 20)
+    life[slot] = random(0.2, 0.55)
+    shades[slot] = 330 - floor(hit / 10) * 35
+    slot = (slot + 1) % 64
+  next
+  if value("audio") then tone 440 * pow(2, (6 - floor(hit / 10)) / 12), 70, "triangle", 0.06
+  if score > best then
+    best = score
+    writefile "breakout-best.txt", best
+  end if
+  if remaining == 0 then mode = 3
+end if
+if by > 174 then
+  lives = lives - 1
+  if value("audio") then tone 110, 180, "triangle", 0.08
+  gosub ready
+  if lives <= 0 then mode = 2
+end if
+return
+draw:
+cls "#080e20"
+for gx = 9 to 239 step 12
+  line gx, 23, gx, 170, "#101a30"
+next
+for gy = 26 to 170 step 12
+  line 4, gy, 235, gy, "#101a30"
+next
+rect 3, 22, 2, 149, "#2a3d61"
+rect 235, 22, 2, 149, "#2a3d61"
+text 6, 5, pad(score, 6, "0"), "#ffffff", 10, 0, "mono"
+text 120, 6, "STAGE " + level, "#82ddff", 7, 1, "bold"
+text 234, 6, "BEST " + best, "#90a4c4", 7, 2, "mono"
+for b = 0 to 59
+  if bricks[b] then
+    rx = 11 + (b % 10) * 22
+    ry = 33 + floor(b / 10) * 11
+    shade = 330 - floor(b / 10) * 35
+    rect rx + 1, ry + 2, 20, 8, "#00000070"
+    rect rx, ry, 20, 8, hsv(shade, 0.7, 0.88)
+    rect rx, ry, 20, 1, hsv(shade, 0.35, 1)
+    rect rx, ry + 7, 20, 1, hsv(shade, 0.8, 0.5)
+  end if
+next
+for i = 0 to 63
+  if life[i] > 0 then rect sx[i], sy[i], 2, 2, hsv(shades[i], 0.65, min(1, life[i] * 3))
+next
+rect paddle - 22, 156, 44, 5, "#208ac0"
+rect paddle - 22, 155, 44, 2, "#a1f3ff"
+rect paddle - 18, 157, 36, 2, "#4ec9ed"
+if mode <= 1 then
+  for i = 7 to 1 step -1
+    circle trailx[i], traily[i], 1, hsv(190, 0.6, (8 - i) / 10)
+  next
+  circle bx, by, 2, "#ffffff"
+end if
+text 6, 172, "LIVES " + max(0, lives), "#a1c4ea", 6, 0, "mono"
+text 234, 172, "P pause   R restart", "#637b9c", 6, 2, "mono"
+if mode != 1 or value("pause") then
+  rect 28, 105, 184, 39, "#080e20ed"
+  box 28, 105, 184, 39, "#3d679a"
+  heading = "READY TO LAUNCH"
+  detail = "Move mouse or arrows. Space / click to launch"
+  if mode == 2 then heading = "GAME OVER"
+  if mode == 2 then detail = "Score " + score + ". Space / click to play again"
+  if mode == 3 then heading = "STAGE CLEAR"
+  if mode == 3 then detail = "Space / click for stage " + (level + 1)
+  if value("pause") then heading = "PAUSED"
+  if value("pause") then detail = "Press P or uncheck Paused to resume"
+  text 120, 112, heading, "#f8dc8a", 12, 1, "title"
+  text 120, 130, detail, "#bdcde6", 6, 1, "sans"
+end if
+return` },
+  { name: "orbits.lsc", content: `window "ORBITAL / gravity laboratory", 660, 540, "charmap"
+screen 280, 210
+button "solar", "Orbital system"
+button "binary", "Binary stars"
+button "clear", "Clear"
+checkbox "pause", "Paused", 0
+checkbox "trails", "Trails", 1
+slider "speed", "Time", 0.1, 3, 1, 0.1
+slider "mass", "Launch mass", 1, 20, 3
+label "hint", "Drag to launch. Space pauses. R resets."
+dim x(24)
+dim y(24)
+dim vx(24)
+dim vy(24)
+dim mass(24)
+dim ax(24)
+dim ay(24)
+dim previousx(24)
+dim previousy(24)
+dim hue(24)
+count = 0
+launching = 0
+elapsed = 0
+gosub solar
+while 1
+  if clicked("solar") or keyhit("r") then gosub solar
+  if clicked("binary") then gosub binary
+  if clicked("clear") then
+    count = 0
+    cls "#050916"
+  end if
+  if keyhit("space") then setvalue "pause", not value("pause")
+  if mousehit() and mousey() > 20 then
+    launching = 1
+    startx = clamp(mousex(), 1, 279)
+    starty = clamp(mousey(), 21, 209)
+  end if
+  if launching and not mousedown() then
+    if count < 24 then call body(startx, starty, (startx - mousex()) * 0.45, (starty - mousey()) * 0.45, value("mass"), 160 + count * 37)
+    launching = 0
+  end if
+  dt = min(0.035, delta()) * value("speed")
+  previousx = copy(x); previousy = copy(y)
+  if not value("pause") and not launching then
+    for tick = 1 to 4
+      gosub gravity
+      for i = 0 to count - 1
+        vx[i] = vx[i] + ax[i] * dt / 8
+        vy[i] = vy[i] + ay[i] * dt / 8
+        x[i] = x[i] + vx[i] * dt / 4
+        y[i] = y[i] + vy[i] * dt / 4
+      next
+      gosub gravity
+      for i = 0 to count - 1
+        vx[i] = vx[i] + ax[i] * dt / 8
+        vy[i] = vy[i] + ay[i] * dt / 8
+      next
+    next
+    elapsed = elapsed + dt
+  end if
+  if not value("trails") or launching then cls "#050916"
+  text 140, 192, "", "#c3e9ff", 7, 1, "sans"
+  if value("trails") and not value("pause") and not launching then rect 0, 19, 280, 191, "#05091602"
+  for i = 0 to count - 1
+    radius = max(1, sqrt(mass[i]) * 0.55)
+    if value("trails") then line previousx[i], previousy[i], x[i], y[i], hsv(hue[i], 0.7, 0.7)
+    if x[i] >= 0 and x[i] < 280 and y[i] > 19 and y[i] < 210 then
+      circle round(x[i]), round(y[i]), radius + 2, hsv(hue[i], 0.8, 0.18)
+      circle round(x[i]), round(y[i]), radius, hsv(hue[i], 0.35, 1)
+      if mass[i] > 30 then pixel round(x[i]), round(y[i]), "#ffffff"
+    end if
+  next
+  if launching then
+    line startx, starty, mousex(), mousey(), "#587494"
+    line startx, starty, startx + (startx - mousex()) * 0.6, starty + (starty - mousey()) * 0.6, "#80e6ff"
+    circle startx, starty, sqrt(value("mass")), "#80e6ff", 0
+    text 140, 192, "Release to launch opposite your drag", "#c3e9ff", 7, 1, "sans"
+  end if
+  rect 0, 0, 280, 19, "#101b30"
+  line 0, 18, 279, 18, "#284461"
+  text 6, 5, "ORBITAL", "#9eeaff", 9, 0, "title"
+  text 274, 6, count + "/24 bodies   t " + fixed(elapsed, 1), "#a9bed5", 7, 2, "mono"
+  if count == 0 then text 140, 100, "Drag anywhere to create your first body", "#8baccb", 9, 1, "sans"
+  text 140, 28, repeat("PAUSED", num(value("pause"))), "#ffe0a3", 8, 1, "bold"
+  if count >= 24 then text 140, 192, "24 bodies. Clear or choose a preset to start again", "#ffe0a3", 7, 1, "sans"
+  frame
+wend
+gravity:
+for i = 0 to count - 1
+  ax[i] = 0
+  ay[i] = 0
+next
+for i = 0 to count - 2
+  for j = i + 1 to count - 1
+    dx = x[j] - x[i]
+    dy = y[j] - y[i]
+    r2 = dx * dx + dy * dy + 36
+    force = 90 / (r2 * sqrt(r2))
+    ax[i] = ax[i] + dx * mass[j] * force
+    ay[i] = ay[i] + dy * mass[j] * force
+    ax[j] = ax[j] - dx * mass[i] * force
+    ay[j] = ay[j] - dy * mass[i] * force
+  next
+next
+return
+solar:
+count = 0
+elapsed = 0
+launching = 0
+cls "#050916"
+call body(140, 114, 0, 0, 160, 42)
+for p = 0 to 5
+  radius = 20 + p * 14
+  angle = p * 2.39996
+  velocity = sqrt(90 * 160 / radius)
+  call body(140 + cos(angle) * radius, 114 + sin(angle) * radius, -sin(angle) * velocity, cos(angle) * velocity, 0.25 + p * 0.12, 170 + p * 37)
+next
+gosub center
+return
+binary:
+count = 0
+elapsed = 0
+launching = 0
+cls "#050916"
+call body(120, 114, 0, -10.5, 100, 32)
+call body(160, 114, 0, 10.5, 100, 210)
+for p = 0 to 9
+  angle = p / 10 * pi() * 2
+  radius = 78 + p % 3 * 5
+  velocity = sqrt(90 * 200 / radius)
+  call body(140 + cos(angle) * radius, 114 + sin(angle) * radius, -sin(angle) * velocity, cos(angle) * velocity, 0.1, p * 36)
+next
+gosub center
+return
+center:
+totalmass = 0
+mx = 0
+my = 0
+for i = 0 to count - 1
+  totalmass = totalmass + mass[i]
+  mx = mx + mass[i] * vx[i]
+  my = my + mass[i] * vy[i]
+next
+for i = 0 to count - 1
+  vx[i] = vx[i] - mx / totalmass
+  vy[i] = vy[i] - my / totalmass
+next
+return
+sub body(bx, by, bvx, bvy, bm, bh)
+  if count >= 24 then return
+  x[count] = bx
+  y[count] = by
+  vx[count] = bvx
+  vy[count] = bvy
+  mass[count] = bm
+  hue[count] = bh
+  count = count + 1
+end sub` },
+  { name: "sorting.lsc", content: `window "SORT / algorithm race", 640, 500, "logs"
+screen 288, 196
+button "shuffle", "Shuffle"
+button "reverse", "Reverse"
+button "nearly", "Nearly sorted"
+checkbox "pause", "Paused", 0
+checkbox "sound", "Sound", 0
+slider "rate", "Steps / frame", 1, 32, 4
+label "help", "Identical inputs. Live comparisons and writes. Space pauses."
+count = 56
+dim bubble(count)
+dim insertion(count)
+dim selection(count)
+dim source(count)
+dim comparisons(3)
+dim writes(3)
+dim done(3)
+dim highlights(3)
+names = ["BUBBLE", "INSERTION", "SELECTION"]
+hues = [192, 320, 42]
+pattern = 0
+gosub reset
+while 1
+  if clicked("shuffle") or keyhit("r") then
+    pattern = 0
+    gosub reset
+  end if
+  if clicked("reverse") then
+    pattern = 1
+    gosub reset
+  end if
+  if clicked("nearly") then
+    pattern = 2
+    gosub reset
+  end if
+  if keyhit("space") then setvalue "pause", not value("pause")
+  if not value("pause") then
+    for batch = 1 to value("rate")
+      if not done[0] then gosub bubbleStep
+      if not done[1] then gosub insertionStep
+      if not done[2] then gosub selectionStep
+    next
+  end if
+  cls "#090f1e"
+  for lane = 0 to 2
+    top = lane * 62 + 5
+    text 5, top, names[lane], hsv(hues[lane], 0.4, 1), 9, 0, "bold"
+    state = comparisons[lane] + " comparisons / " + writes[lane] + " writes"
+    if done[lane] then state = "SORTED / " + state
+    text 282, top + 1, state, "#9aabc3", 6, 2, "mono"
+    line 5, top + 50, 282, top + 50, "#263652"
+    values = bubble
+    if lane == 1 then values = insertion
+    if lane == 2 then values = selection
+    for i = 0 to count - 1
+      bar = values[i] / count * 34
+      c = hsv(hues[lane], 0.65, 0.7)
+      if done[lane] then c = "#76e5ad"
+      if i == highlights[lane] and not done[lane] then c = "#ffffff"
+      rect 5 + i * 5, top + 49 - bar, 4, bar, c
+    next
+  next
+  footer = "One logical step per lane. Change the input to compare."
+  if value("pause") then footer = "PAUSED / Space resumes"
+  if done[0] and done[1] and done[2] then footer = "All three agree. Try Reverse or Nearly sorted."
+  text 144, 190, footer, "#a6bed8", 6, 1, "sans"
+  if value("sound") and not value("pause") and not done[1] then tone 180 + insertion[highlights[1]] * 12, 22, "sine", 0.025
+  frame
+wend
+reset:
+for i = 0 to count - 1
+  source[i] = i + 1
+next
+if pattern == 0 then
+  for i = count - 1 to 1 step -1
+    j = rnd(i + 1)
+    swap = source[i]
+    source[i] = source[j]
+    source[j] = swap
+  next
+end if
+if pattern == 1 then n = reverse(source)
+if pattern == 2 then
+  for i = 0 to 3
+    j = 3 + i * 13
+    swap = source[j]
+    source[j] = source[j + 1]
+    source[j + 1] = swap
+  next
+end if
+bubble = copy(source)
+insertion = copy(source)
+selection = copy(source)
+for lane = 0 to 2
+  comparisons[lane] = 0
+  writes[lane] = 0
+  done[lane] = 0
+  highlights[lane] = 0
+next
+bi = 0
+bend = count - 1
+bswapped = 0
+ii = 1
+ij = 1
+si = 0
+sj = 1
+smin = 0
+return
+bubbleStep:
+comparisons[0] = comparisons[0] + 1
+highlights[0] = bi + 1
+if bubble[bi] > bubble[bi + 1] then
+  swap = bubble[bi]
+  bubble[bi] = bubble[bi + 1]
+  bubble[bi + 1] = swap
+  writes[0] = writes[0] + 2
+  bswapped = 1
+end if
+bi = bi + 1
+if bi >= bend then
+  bend = bend - 1
+  bi = 0
+  if bend <= 0 or not bswapped then done[0] = 1
+  bswapped = 0
+end if
+return
+insertionStep:
+highlights[1] = ij
+if ij > 0 then
+  comparisons[1] = comparisons[1] + 1
+  if insertion[ij - 1] > insertion[ij] then
+    swap = insertion[ij]
+    insertion[ij] = insertion[ij - 1]
+    insertion[ij - 1] = swap
+    writes[1] = writes[1] + 2
+    ij = ij - 1
+    return
+  end if
+end if
+ii = ii + 1
+ij = ii
+if ii >= count then done[1] = 1
+return
+selectionStep:
+highlights[2] = sj
+comparisons[2] = comparisons[2] + 1
+if selection[sj] < selection[smin] then smin = sj
+sj = sj + 1
+if sj >= count then
+  if smin != si then
+    swap = selection[si]
+    selection[si] = selection[smin]
+    selection[smin] = swap
+    writes[2] = writes[2] + 2
+  end if
+  si = si + 1
+  sj = si + 1
+  smin = si
+  if si >= count - 1 then done[2] = 1
+end if
+return` },
 ];
-export const retiredSamples = ["hello.lsc:10us677", "flappy.lsc:1qya8nk", "snake.lsc:cou7bx", "life.lsc:1vb7pw0", "mandelbrot.lsc:s3veta", "sketch.lsc:16lfkex", "explorer.lsc:kzp9bu", "plasma.lsc:nkojl6", "raycaster.lsc:1ozb5c3", "fireworks.lsc:mkyozi", "synth.lsc:hoipcy", "typewriter.lsc:1ibyt1c"];
+export const retiredSamples = ["hello.lsc:10us677", "flappy.lsc:1qya8nk", "snake.lsc:cou7bx", "life.lsc:1vb7pw0", "mandelbrot.lsc:s3veta", "sketch.lsc:16lfkex", "explorer.lsc:kzp9bu", "plasma.lsc:nkojl6", "raycaster.lsc:1ozb5c3", "fireworks.lsc:mkyozi", "synth.lsc:hoipcy", "typewriter.lsc:1ibyt1c", "hello.lsc:11d8pa0", "flappy.lsc:15lvqj7", "snake.lsc:1rr4amn", "life.lsc:ytihny", "mandelbrot.lsc:syvmcp", "sketch.lsc:rwbl4l", "explorer.lsc:yjc2m", "plasma.lsc:jvsdjp", "raycaster.lsc:1yyhbnm", "fireworks.lsc:v67we5", "synth.lsc:1gav2xo", "typewriter.lsc:1svenu1"];
 export const sampleHash = (text) => { let hash = 2166136261; for (let index = 0; index < text.length; index += 1) { hash ^= text.charCodeAt(index); hash = Math.imul(hash, 16777619); } return (hash >>> 0).toString(36); };

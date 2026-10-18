@@ -40,7 +40,7 @@ Draw your art in `art/`, one PNG per icon at its current size, then run `node sc
 - Add any program to Quick Launch from its right-click menu, and undo Clear completed in Checklist
 - File modified dates, important tasks, a calculator tape that survives restarts, and an optional weekly hours goal in Ship Log
 - Drop one desktop icon on another to make a folder, drag programs back out of a folder window, drag taskbar and Quick Launch buttons to rearrange them, and resize cursors on window edges
-- LUMEN Script 3 in Command Prompt: a Turing complete language with functions, recursion, subs, 2D arrays, and warp blocks that skip screen refresh, plus script windows with a fast pixel screen, sharp text, auto sizing, sliders, checkboxes, mouse wheel, sound, file access, screen effects, and custom pixel shaders written in LUMEN Script. Fifteen examples land in Files\\Programs, including a 3D raycaster, a Mandelbrot explorer, plasma, fireworks, a synth, Flappy LUMEN, and Snake
+- LUMEN Script 3 in Command Prompt: a Turing complete language with functions, recursion, subs, 2D arrays, and warp blocks that skip screen refresh, plus script windows with a fast pixel screen, sharp text, auto sizing, sliders, checkboxes, mouse wheel, sound, file access, screen effects, and custom pixel shaders written in LUMEN Script. Eighteen examples land in Files\\Programs, including Breakout, an orbital gravity sandbox, a sorting race, a 3D raycaster, a Mandelbrot explorer, plasma, fireworks, a synth, Flappy LUMEN, and Snake
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
@@ -79,3 +79,28 @@ Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are h
 - Run `node scripts/build-atlas.mjs` after changing anything in `art/`. It also refreshes the cache stamps.
 - Run `node scripts/stamp-cache.mjs` after changing cached files to refresh content-hash cache stamps.
 - Run tests with `node --test tests/*.test.mjs`.
+
+## Writing LUMEN programs
+
+Choose **New script** in Files for a runnable starter, or select an existing file in **Programs** to edit it. Double-clicking a .lsc file runs it. The editor keeps your work in this browser and shows syntax colors, line numbers, and parser diagnostics.
+
+- **F5** saves and runs the current program. **Shift+F5** stops execution.
+- **F6** checks syntax without running the program. Click an error to select its source line.
+- **Ctrl+S** saves, **Ctrl+F** opens find and replace, and **Ctrl+G** goes to a line.
+- **Tab / Shift+Tab** indent or outdent a selection. Enter continues block indentation.
+- Press **Escape**, then **Tab** to move keyboard focus out of the editor.
+- **Ctrl+D** duplicates a line. **Ctrl+Z / Ctrl+Y** undo and redo editing.
+- Runtime errors open the matching file at the reported line. Modified example files are preserved when stock samples update.
+
+Try these showcases with Run in the editor or `run <filename>` in Command Prompt:
+
+| Program | What to try |
+| --- | --- |
+| `breakout.lsc` | Clear changing brick layouts with mouse or keyboard control, particles, saved best scores, and pause/restart controls. |
+| `orbits.lsc` | Launch bodies by dragging, switch to a binary system, and explore mutual gravity, adjustable time, and orbit trails. |
+| `sorting.lsc` | Race bubble, insertion, and selection sort on identical inputs, with comparison/write counts and adjustable playback speed. |
+| `raycaster.lsc` | Collect eight orbs in a textured 3D maze. Shift sprints, M toggles the map, P pauses, and R starts a new expedition. |
+| `explorer.lsc` | Zoom and pan the Mandelbrot set, or use Interesting location for preset destinations. |
+| `synth.lsc` | Record a tune, change its waveform, and save or load `synth-tune.txt`. |
+| `life.lsc` | Paint cells, seed a glider gun, pause, and advance one generation at a time. |
+| `sketch.lsc` | Try mirror and rainbow brushes, then undo the last stroke. |

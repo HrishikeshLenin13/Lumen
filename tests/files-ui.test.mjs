@@ -12,7 +12,7 @@ test("selecting a folder preserves its row so a double-click can open it", () =>
   Object.defineProperty(list, "innerHTML", { set(value) { writes += 1; this.markup = value; } });
   const root = { querySelector: node, querySelectorAll: () => [], addEventListener() {} };
   const data = { views: { filesSort: "name" }, files: [{ id: "folder", kind: "folder", name: "Documents", parent: null, content: "" }, { id: "text", kind: "text", name: "inside.txt", parent: "folder", content: "hello" }] };
-  const context = vm.createContext({ document: { addEventListener() {}, removeEventListener() {} }, sprite: (name) => "icons/" + name + ".png", data, escapeHtml: (value) => String(value), writeText: (element, value) => { element.textContent = value; } });
+  const context = vm.createContext({ bindScriptEditor: () => ({ refresh() {}, destroy() {} }), document: { addEventListener() {}, removeEventListener() {} }, sprite: (name) => "icons/" + name + ".png", data, escapeHtml: (value) => String(value), writeText: (element, value) => { element.textContent = value; } });
   vm.runInContext(source.slice(source.indexOf("function bindFiles(root)"), source.indexOf("async function clearAllData")), context);
   context.bindFiles(root);
   const button = { dataset: { fileId: "folder" } };
