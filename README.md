@@ -28,6 +28,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Import text files into Files with a button or by dropping them on the Files window or the desk
 - Paint line, rectangle, and ellipse tools, Minesweeper chording, Command Prompt tab completion, and Start menu search that finds files
 - Your own picture as the desk background, outline window dragging, an animations switch, upcoming events in Calendar, and a nameable pet rock
+- Recent files in the Start menu, a tray menu for the clock and sound, folder names in the Files title, file sorting, and system details in About
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
