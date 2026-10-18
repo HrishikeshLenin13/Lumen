@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, caretPosition, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=1ed7a12517";
+import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=f0a8d766bc";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1098,21 +1098,21 @@ const apps = [
     icon: "icons/minesweeper.png?v=65c80a1be7",
     size: [236, 334],
     html() {
-      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><select class="field mines__level" data-mine-level aria-label="Difficulty"><option value="beginner">Beginner, 9 by 9</option><option value="intermediate">Intermediate, 16 by 16</option><option value="expert">Expert, 30 by 16</option></select><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
+      return '<div class="mines"><div class="mines__bar"><output class="mines__led" data-mine-count aria-label="Mines left">010</output><button type="button" class="btn mines__reset" data-mine-reset aria-label="New game"><img src="icons/mine-face.png?v=3aaae78e3e" alt="" width="24" height="24"></button><output class="mines__led" data-mine-time aria-label="Seconds elapsed">000</output></div><select class="field mines__level" data-mine-level aria-label="Difficulty"><option value="beginner">Beginner, 9 by 9</option><option value="intermediate">Intermediate, 16 by 16</option><option value="expert">Expert, 30 by 16</option><option value="custom">Custom...</option></select><div class="mines__board" data-mine-board role="grid" aria-label="Minefield"></div><p class="hint hint--flush" data-mine-status aria-live="polite"></p></div>';
     },
     bind(root) {
       const levels = { beginner: [9, 9, 10], intermediate: [16, 16, 40], expert: [30, 16, 99] };
-      let [width, height, mines] = levels[data.mineLevel];
+      let [width, height, mines] = data.mineLevel === "custom" ? data.mineCustom : levels[data.mineLevel];
       const levelPicker = root.querySelector("[data-mine-level]");
       levelPicker.value = data.mineLevel;
-      const best = () => data.mineLevel === "beginner" ? data.mineBest : data.mineBests[data.mineLevel];
+      const best = () => data.mineLevel === "beginner" ? data.mineBest : data.mineBests[data.mineLevel] || 0;
       const board = root.querySelector("[data-mine-board]");
       const counter = root.querySelector("[data-mine-count]");
       const clock = root.querySelector("[data-mine-time]");
       const status = root.querySelector("[data-mine-status]");
       let cells = [];
       const build = () => {
-        [width, height, mines] = levels[data.mineLevel];
+        [width, height, mines] = data.mineLevel === "custom" ? data.mineCustom : levels[data.mineLevel];
         board.style.gridTemplateColumns = "repeat(" + width + ", 20px)";
         board.innerHTML = Array.from({ length: width * height }, (_, index) => '<button type="button" class="mine-cell" data-mine-cell="' + index + '" aria-label="Hidden square"></button>').join("");
         cells = Array.from(board.children);
@@ -1159,11 +1159,11 @@ const apps = [
         stopClock();
         if (won) {
           const seconds = Math.max(1, Math.round((Date.now() - started) / 1000));
-          const record = !best() || seconds < best();
+          const record = data.mineLevel !== "custom" && (!best() || seconds < best());
           if (record && data.mineLevel === "beginner") data.mineBest = seconds;
           else if (record) data.mineBests[data.mineLevel] = seconds;
           persistData();
-          writeText(status, "Cleared in " + seconds + "s." + (record ? " New best time." : " Best is " + best() + "s."));
+          writeText(status, "Cleared in " + seconds + "s." + (record ? " New best time." : best() ? " Best is " + best() + "s." : ""));
           playSound("win");
         } else {
           field.forEach((info, index) => {
@@ -1224,7 +1224,7 @@ const apps = [
         toggleFlag(Number(cell.dataset.mineCell));
       });
       root.querySelector("[data-mine-reset]").addEventListener("click", reset);
-      levelPicker.addEventListener("change", () => { data.mineLevel = levelPicker.value; persistData(); build(); reset(); });
+      levelPicker.addEventListener("change", async () => { if (levelPicker.value === "custom") { const answer = await showWindowDialog({ title: "Custom Field", message: "Enter the width, height, and number of mines. Width runs from 8 to 30 and height from 8 to 24.", value: data.mineCustom.join(" "), confirmLabel: "OK" }); const field = answer === null ? null : mineCustomField(answer); if (!field) { levelPicker.value = data.mineLevel; return; } data.mineCustom = field; } data.mineLevel = levelPicker.value; persistData(); build(); reset(); });
       reset();
       return stopClock;
     },

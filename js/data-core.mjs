@@ -18,6 +18,7 @@ export function makeDefaultData() {
     mineBest: 0,
     mineBests: { intermediate: 0, expert: 0 },
     mineLevel: "beginner",
+    mineCustom: [12, 12, 20],
     paintImage: "",
     events: [],
     screensaver: true,
@@ -369,7 +370,8 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     sounds: source.sounds !== false,
     mineBest: clampNumber(source.mineBest, 0, 999, defaults.mineBest),
     mineBests: { intermediate: clampNumber(source.mineBests?.intermediate, 0, 999, 0), expert: clampNumber(source.mineBests?.expert, 0, 999, 0) },
-    mineLevel: ["beginner", "intermediate", "expert"].includes(source.mineLevel) ? source.mineLevel : defaults.mineLevel,
+    mineLevel: ["beginner", "intermediate", "expert", "custom"].includes(source.mineLevel) ? source.mineLevel : defaults.mineLevel,
+    mineCustom: mineCustomField(source.mineCustom) || defaults.mineCustom,
     paintImage: typeof source.paintImage === "string" && source.paintImage.startsWith("data:image/png;base64,") && source.paintImage.length < 300000 ? source.paintImage : defaults.paintImage,
     events: Array.isArray(source.events) ? source.events.filter((event) => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date) && typeof event.text === "string" && event.text.trim()).map((event) => ({ id: typeof event.id === "string" && event.id ? event.id : makeId(), date: event.date, text: event.text.trim().slice(0, 160), ...(/^([01]\d|2[0-3]):[0-5]\d$/.test(event.time) ? { time: event.time, ...(event.reminded ? { reminded: /^\d{4}-\d{2}-\d{2}$/.test(event.reminded) ? event.reminded : true } : {}) } : {}), ...(["weekly", "monthly", "yearly"].includes(event.repeat) ? { repeat: event.repeat } : {}) })).slice(0, 500) : [],
     screensaver: source.screensaver !== false,
@@ -426,3 +428,4 @@ export function cloneFiles(files, id, parent, makeId) { const source = files.fin
 export function eventOn(event, date) { if (date === event.date) return true; if (!event.repeat || date < event.date) return false; if (event.repeat === "yearly") return date.slice(5) === event.date.slice(5); if (event.repeat === "monthly") return date.slice(8) === event.date.slice(8); return Math.round((Date.parse(date + "T00:00Z") - Date.parse(event.date + "T00:00Z")) / 86400000) % 7 === 0; }
 export function nextOccurrence(event, after) { if (!event.repeat) return event.date > after ? event.date : null; const day = new Date(Date.parse((event.date > after ? event.date : after) + "T00:00Z")); if (event.date <= after) day.setUTCDate(day.getUTCDate() + 1); for (let step = 0; step < 1500; step += 1) { const date = day.toISOString().slice(0, 10); if (eventOn(event, date)) return date; day.setUTCDate(day.getUTCDate() + 1); } return null; }
 export function caretPosition(text, index) { const before = String(text).slice(0, Math.max(0, index)); const lines = before.split("\n"); return [lines.length, lines[lines.length - 1].length + 1]; }
+export function mineCustomField(value) { const [width, height, mines] = (Array.isArray(value) ? value : String(value ?? "").match(/\d+/g) || []).map(Number); if (![width, height, mines].every(Number.isFinite)) return null; const w = clampNumber(width, 8, 30, 9); const h = clampNumber(height, 8, 24, 9); return [w, h, clampNumber(mines, 1, w * h - 9, 10)]; }
