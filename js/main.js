@@ -1333,9 +1333,9 @@ const apps = [
     id: "calendar",
     name: "Calendar",
     icon: "icons/calendar.png?v=65c80a1be7",
-    size: [300, 380],
+    size: [340, 560],
     html() {
-      return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><input class="field cal__time" type="time" aria-label="Reminder time, optional" title="Optional reminder time" data-cal-time><button type="submit" class="btn">Add</button></form></div>';
+      return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><input class="field cal__time" type="time" aria-label="Reminder time, optional" title="Optional reminder time" data-cal-time><button type="submit" class="btn">Add</button></form><h3 class="cal__upcoming-title">Upcoming</h3><ul class="cal__upcoming" data-cal-upcoming></ul></div>';
     },
     bind(root) {
       const localDate = (date) => date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
@@ -1352,6 +1352,8 @@ const apps = [
         writeText(root.querySelector("[data-cal-title]"), monthTitleFormat.format(new Date(year, month, 1)));
         grid.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => '<span class="cal__weekday" aria-hidden="true">' + day + "</span>").join("") + monthGrid(year, month).map((cell) => '<button type="button" class="cal__day' + (cell.inMonth ? "" : " out") + (cell.date === today ? " today" : "") + (cell.date === selected ? " selected" : "") + (busy.has(cell.date) ? " busy" : "") + '" data-cal-date="' + cell.date + '" aria-pressed="' + (cell.date === selected) + '" aria-label="' + escapeHtml(fullDateFormat.format(new Date(cell.date + "T12:00"))) + (busy.has(cell.date) ? ", has events" : "") + '">' + cell.day + "</button>").join("");
         const focusDay = grid.querySelector('[data-cal-date="' + selected + '"]') || grid.querySelector(".cal__day:not(.out)"); grid.querySelectorAll("[data-cal-date]").forEach((day) => { day.tabIndex = day === focusDay ? 0 : -1; if (day.dataset.calDate === today) day.setAttribute("aria-current", "date"); }); writeText(root.querySelector("[data-cal-selected]"), dayHeadingFormat.format(new Date(selected + "T12:00")));
+        const upcoming = data.events.filter((event) => event.date > today).slice(0, 5);
+        root.querySelector("[data-cal-upcoming]").innerHTML = upcoming.length ? upcoming.map((event) => '<li><button type="button" class="cal__jump" data-cal-jump="' + event.date + '"><span>' + escapeHtml(new Date(event.date + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })) + "</span> " + (event.time ? escapeHtml(event.time) + " " : "") + escapeHtml(event.text) + "</button></li>").join("") : '<li class="hint">Nothing coming up.</li>';
         const events = data.events.filter((event) => event.date === selected);
         list.innerHTML = events.length ? events.map((event) => '<li class="checklist-item"><span>' + (event.time ? '<strong class="cal__at">' + escapeHtml(event.time) + "</strong> " : "") + escapeHtml(event.text) + '</span><button type="button" class="btn" data-cal-delete="' + escapeHtml(event.id) + '" aria-label="Delete ' + escapeHtml(event.text) + '">Delete</button></li>').join("") : '<li class="hint">Nothing planned.</li>';
       };
@@ -1390,6 +1392,7 @@ const apps = [
         persistData();
         render();
       });
+      root.querySelector("[data-cal-upcoming]").addEventListener("click", (event) => { const jump = event.target.closest("[data-cal-jump]"); if (!jump) return; selected = jump.dataset.calJump; const picked = new Date(selected + "T12:00"); year = picked.getFullYear(); month = picked.getMonth(); render(); });
       list.addEventListener("click", (event) => {
         const button = event.target.closest("[data-cal-delete]");
         if (!button) return;

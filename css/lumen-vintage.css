@@ -1650,3 +1650,9 @@ html[data-transitions="off"] .task.opening, html[data-transitions="off"] .task.c
 .icon.selected span, .icon:focus span { -webkit-line-clamp: unset; }
 .task__label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .files__sort.field { flex: 0 0 auto; width: auto; margin: 0 0 0 6px; }
+.cal__upcoming-title { margin: 10px 0 4px; color: var(--window-heading); font-size: 11px; }
+.cal__upcoming { margin: 0; padding: 0; list-style: none; }
+.cal__jump { display: block; width: 100%; padding: 2px 4px; overflow: hidden; color: #000; background: transparent; border: 0; text-align: left; white-space: nowrap; text-overflow: ellipsis; }
+.cal__jump span { display: inline-block; min-width: 48px; color: var(--window-muted); }
+.cal__jump.scene-hover { color: #fff; background: #316ac5; }
+.cal__jump.scene-hover span { color: #fff; }
