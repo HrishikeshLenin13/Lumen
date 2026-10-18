@@ -53,7 +53,7 @@ function loadData() {
   try {
     return JSON.parse(localStorage.getItem(KEY) || "{}");
   } catch {
-    return {};
+    try { const raw = localStorage.getItem(KEY); if (raw) { localStorage.setItem(KEY + "-unreadable", raw); window.setTimeout(() => showToast("Saved data could not be read, so LUMEN started fresh. A copy was kept in this browser."), 2000); } } catch {} return {};
   }
 }
 let data = normalizeData(loadData(), makeId);
@@ -99,7 +99,7 @@ function showToast(message, undo) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), undo ? 6000 : Math.max(3200, String(message).length * 70));
 }
-function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false, suggestions = [] } = {}) {
+function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false, suggestions = [], cancelLabel = "Cancel" } = {}) {
   return new Promise((resolve) => {
     const host = !onDesk && activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
     const previousFocus = document.activeElement;
@@ -108,7 +108,7 @@ function showWindowDialog({ title = "LUMEN", message, value, options, confirmLab
     overlay.className = "window-dialog";
     overlay.setAttribute("role", "presentation");
     const control = Array.isArray(options) ? '<select class="field" data-dialog-value>' + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join("") + "</select>" : value !== undefined ? '<input class="field" data-dialog-value value="' + escapeHtml(value) + '"' + (suggestions.length ? ' list="windowDialogSuggestions" autocomplete="off"><datalist id="windowDialogSuggestions">' + suggestions.map((item) => '<option value="' + escapeHtml(item) + '">').join("") + "</datalist>" : ">") : "";
-    overlay.innerHTML = '<form class="window-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="windowDialogTitle"><strong class="window-dialog__title" id="windowDialogTitle">' + escapeHtml(title) + '</strong><div class="window-dialog__content"><span>' + escapeHtml(message) + '</span>' + control + '<div class="window-dialog__actions"><button type="button" class="btn" data-dialog-cancel>Cancel</button><button type="submit" class="btn' + (danger ? " danger" : " primary") + '">' + escapeHtml(confirmLabel) + "</button></div></div></form>";
+    overlay.innerHTML = '<form class="window-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="windowDialogTitle"><strong class="window-dialog__title" id="windowDialogTitle">' + escapeHtml(title) + '</strong><div class="window-dialog__content"><span>' + escapeHtml(message) + '</span>' + control + '<div class="window-dialog__actions"><button type="button" class="btn" data-dialog-cancel>' + escapeHtml(cancelLabel) + '</button><button type="submit" class="btn' + (danger ? " danger" : " primary") + '">' + escapeHtml(confirmLabel) + "</button></div></div></form>";
     const settle = (result) => { overlay.remove(); previousFocus?.focus({ preventScroll: true }); resolve(result); };
     host.append(overlay);
     overlay.querySelector("form").addEventListener("submit", (event) => { event.preventDefault(); settle(overlay.querySelector("[data-dialog-value]")?.value ?? true); });
@@ -118,7 +118,7 @@ function showWindowDialog({ title = "LUMEN", message, value, options, confirmLab
   });
 }
 let lastSaved = "";
-function persistData() {
+let savingPaused = false; function persistData() { if (savingPaused) return false;
   try {
     const serialized = JSON.stringify({ ...data, paintImage: "" });
     if (serialized !== lastSaved) localStorage.setItem(KEY, serialized);
@@ -3388,4 +3388,5 @@ function wake(event) {
 window.setInterval(() => {
   if (data.screensaver && saver.classList.contains("hidden") && performance.now() - lastActive > data.saverWait * 60000) startSaver();
 }, 5000);
+window.addEventListener("storage", async (event) => { if (event.key !== KEY || event.newValue === null || savingPaused) return; savingPaused = true; const reload = await showWindowDialog({ title: "LUMEN", message: "LUMEN was changed in another tab or window. Reload to bring those changes here, or keep this tab's version and save it over them.", confirmLabel: "Reload", cancelLabel: "Keep this tab", onDesk: true }); if (reload) { location.reload(); return; } savingPaused = false; lastSaved = ""; persistData(); });
 boot();
