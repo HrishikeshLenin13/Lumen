@@ -1631,3 +1631,6 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .checklist-entry .btn { white-space: nowrap; }
 .cal__time.field { flex: 0 0 auto; width: 92px; }
 .cal__at { font-family: var(--mono); }
+.volume-pop { position: absolute; right: 60px; bottom: calc(var(--taskbar-height) + 4px); z-index: 120; display: grid; justify-items: center; gap: 6px; width: 120px; overflow: hidden; padding: 8px 6px; color: #000; background: var(--window-bg); border: 1px solid #000; box-shadow: inset 1px 1px #fff, 2px 2px 4px rgba(0, 0, 0, 0.4); font-size: 11px; }
+.volume-pop__slider { width: 110px; height: 22px; margin: 44px 0; transform: rotate(-90deg); }
+.volume-pop__mute { display: flex; align-items: center; gap: 3px; }

@@ -16,8 +16,8 @@
     <title>LUMEN - builder desk</title>
 
     <link rel="preload" href="icons/wallpaper.png?v=5e0b52de42" as="image" fetchpriority="high">
-    <link rel="stylesheet" href="css/lumen-vintage.css?v=15687f378a" />
-    <link rel="modulepreload" href="js/data-core.mjs?v=afa313610d">
+    <link rel="stylesheet" href="css/lumen-vintage.css?v=7b8e96d711" />
+    <link rel="modulepreload" href="js/data-core.mjs?v=9257b45bcc">
   </head>
   <body>
     <span class="screen-cursor" data-screen-cursor aria-hidden="true"></span>
@@ -60,7 +60,7 @@
         </div>
         <div class="quick-launch"><button type="button" class="quick-launch__desktop" data-show-desktop aria-label="Show desktop"></button></div>
         <div class="tasks" id="tasks" role="tablist" aria-label="Open windows"></div>
-        <div class="tray"><button type="button" class="tray__timer hidden" id="trayTimer" aria-label="Open Focus timer"><img src="icons/timer.png?v=13bd7c6582" alt="" width="16" height="16"></button><button type="button" class="tray__volume" id="volume" aria-label="Mute system sounds" aria-pressed="false"></button><button type="button" class="tray__clock" id="clock" aria-label="Open calendar"><time data-clock-time></time></button></div>
+        <div class="volume-pop hidden" id="volumePop" role="dialog" aria-label="Volume"><span class="volume-pop__title">Volume</span><input class="knob volume-pop__slider" type="range" min="0" max="100" step="5" aria-label="Volume" data-volume-slider><label class="volume-pop__mute"><input type="checkbox" data-volume-mute> Mute</label></div><div class="tray"><button type="button" class="tray__timer hidden" id="trayTimer" aria-label="Open Focus timer"><img src="icons/timer.png?v=13bd7c6582" alt="" width="16" height="16"></button><button type="button" class="tray__volume" id="volume" aria-label="Mute system sounds" aria-pressed="false"></button><button type="button" class="tray__clock" id="clock" aria-label="Open calendar"><time data-clock-time></time></button></div>
       </footer>
 
       <div class="toast hidden" id="toast" role="status" aria-live="assertive"></div>
@@ -69,6 +69,6 @@
     <div class="crt-mask" aria-hidden="true"></div>
     <div class="crt-roll" aria-hidden="true"></div>
 
-    <script type="module" src="js/main.js?v=336d108b9b"></script>
+    <script type="module" src="js/main.js?v=4390425289"></script>
   </body>
 </html>

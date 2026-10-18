@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=afa313610d";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=9257b45bcc";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -198,7 +198,7 @@ function playSound(name) {
     if (!buffer || !audioContext) return;
     const source = audioContext.createBufferSource();
     const gain = audioContext.createGain();
-    gain.gain.value = 0.5;
+    gain.gain.value = data.volume / 100;
     source.buffer = buffer;
     source.connect(gain).connect(audioContext.destination);
     source.start();
@@ -2738,9 +2738,26 @@ function paintVolume() {
   const volume = document.getElementById("volume");
   volume.classList.toggle("muted", !data.sounds);
   volume.setAttribute("aria-pressed", String(!data.sounds));
-  volume.setAttribute("aria-label", data.sounds ? "Mute system sounds" : "Turn system sounds on");
+  volume.setAttribute("aria-label", "Volume");
+  volume.title = data.sounds ? "Volume " + data.volume + "%" : "Muted";
 }
-document.getElementById("volume").addEventListener("click", () => { data.sounds = !data.sounds; persistData(); paintVolume(); if (data.sounds) playSound("restore"); showToast(data.sounds ? "System sounds are on." : "System sounds are muted."); });
+const volumePop = document.getElementById("volumePop");
+document.getElementById("volume").addEventListener("click", (event) => {
+  event.stopPropagation();
+  volumePop.querySelector("[data-volume-slider]").value = String(data.volume);
+  volumePop.querySelector("[data-volume-mute]").checked = !data.sounds;
+  volumePop.classList.toggle("hidden");
+  document.getElementById("toast").classList.add("hidden");
+});
+document.getElementById("volume").addEventListener("dblclick", () => { data.sounds = !data.sounds; persistData(); paintVolume(); });
+volumePop.addEventListener("input", (event) => {
+  if (event.target.matches("[data-volume-slider]")) data.volume = Number(event.target.value);
+  if (event.target.matches("[data-volume-mute]")) data.sounds = !event.target.checked;
+  persistData();
+  paintVolume();
+});
+volumePop.addEventListener("change", (event) => { if (event.target.matches("[data-volume-slider]") && data.sounds) playSound("restore"); });
+document.addEventListener("pointerdown", (event) => { if (!event.target.closest("#volumePop, #volume")) volumePop.classList.add("hidden"); });
 document.getElementById("toast").addEventListener("click", () => document.getElementById("toast").classList.add("hidden"));
 paintVolume();
 window.addEventListener("beforeunload", persistData);
