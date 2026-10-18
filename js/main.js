@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=f0a8d766bc";
+import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=f483a1f2cd";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -166,6 +166,8 @@ function saveTimerState() {
 function recordCompletedSession() {
   if (timer.mode !== "focus") return;
   data.sessions = appendCompletedSession(data.sessions, timer.mode, timerMinutes("focus"));
+  const logged = data.focusLabel.trim() && validateLogEntry({ hours: Math.max(0.25, Math.round(timerMinutes("focus") / 15) / 4), description: data.focusLabel, tags: "focus" });
+  if (!logged?.ok) return null; const entry = { id: makeId(), ...logged.value, at: new Date().toISOString() }; data.logs.unshift(entry); return entry;
 }
 function renderSessionHistory(root = open.get("focus")?.el.querySelector(".body")) {
   const history = root?.querySelector("[data-session-history]");
@@ -269,14 +271,14 @@ function finishTimer() {
   timer.finished = true;
   timer.secondsLeft = 0;
   timer.endAt = null;
-  recordCompletedSession();
+  const logged = recordCompletedSession();
   saveTimerState();
   const message = timerLabel() + " timer finished.";
   document.title = "✓ " + message + " - LUMEN";
   paintTimer();
   renderSessionHistory();
   playSound("timer");
-  showToast(message);
+  if (logged) showToast(message + " Logged " + logged.h + "h to Ship Log.", () => { data.logs = data.logs.filter((item) => item.id !== logged.id); persistData(); }); else showToast(message);
   if (activeId !== "focus") open.get("focus")?.tab.classList.add("flashing");
   if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
@@ -721,14 +723,15 @@ const apps = [
     id: "focus",
     name: "Focus",
     icon: "icons/timer.png?v=13bd7c6582",
-    size: [380, 320],
+    size: [380, 344],
     html() {
-      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
+      return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><input class="field focus-label" type="text" maxlength="80" placeholder="What are you working on?" title="Finished focus sessions are added to Ship Log under this name" aria-label="What are you working on? Finished sessions go to Ship Log." data-focus-label><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
     },
     bind(root) {
       root.querySelectorAll("[data-timer-mode]").forEach((button) => {
         button.addEventListener("click", () => selectTimerMode(button.dataset.timerMode));
       });
+      const label = root.querySelector("[data-focus-label]"); label.value = data.focusLabel; label.addEventListener("input", () => { data.focusLabel = label.value.slice(0, 80); persistData(); });
       root.querySelector("[data-focus-start]").addEventListener("click", startTimer);
       root.querySelector("[data-focus-pause]").addEventListener("click", pauseTimer);
       root.querySelector("[data-focus-reset]").addEventListener("click", () => resetTimer());

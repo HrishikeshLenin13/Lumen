@@ -34,6 +34,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Repeating calendar events, a Zune color scheme, programs you can pin to the Start menu, and checklist tasks you can drag or Alt+arrow into your own order
 - Auto-hide the taskbar and hide desktop icons from the right-click menus or Display Properties
 - Rename desktop shortcuts with F2, see the caret line and column in Notes, pick a custom Minesweeper field, and find desktop and taskbar options on their own Display Properties tab
+- Name what you are focusing on and finished sessions land in Ship Log, Ctrl+S saves inside LUMEN, and Paint has a Colors picker plus window-wide Ctrl+Z and Ctrl+O
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
