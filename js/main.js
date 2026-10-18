@@ -2820,7 +2820,7 @@ function setStartMenu(show) { if (!show && startMenu.classList.contains("hidden"
   startBtn.setAttribute("aria-expanded", String(show));
   if (show) {
     startSearch.value = "";
-    startMenu.classList.remove("show-all"); writeText(startMenu.querySelector("[data-all-programs] span"), "All Programs");
+    startMenu.classList.remove("show-all"); writeText(startMenu.querySelector("[data-all-programs] span"), "All Programs"); document.getElementById("toast").classList.add("hidden");
     renderPinned();
     filterStartMenu("");
     startSearch.focus();
@@ -2958,6 +2958,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (event.key === "Escape") {
+    if (!volumePop.classList.contains("hidden")) { volumePop.classList.add("hidden"); return; }
     if (!contextMenu.classList.contains("hidden")) {
       hideMenu();
       return;
