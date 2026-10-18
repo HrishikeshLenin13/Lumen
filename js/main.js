@@ -167,7 +167,7 @@ function recordCompletedSession() {
   if (timer.mode !== "focus") return;
   data.sessions = appendCompletedSession(data.sessions, timer.mode, timerMinutes("focus"));
   const logged = data.focusLabel.trim() && validateLogEntry({ hours: Math.max(0.25, Math.round(timerMinutes("focus") / 15) / 4), description: data.focusLabel, tags: "focus" });
-  if (!logged?.ok) return null; const entry = { id: makeId(), ...logged.value, at: new Date().toISOString() }; data.logs.unshift(entry); return entry;
+  if (!logged?.ok) return null; const entry = { id: makeId(), ...logged.value, at: new Date().toISOString() }; data.logs.unshift(entry); document.dispatchEvent(new Event("lumen-logs-changed")); return entry;
 }
 function renderSessionHistory(root = open.get("focus")?.el.querySelector(".body")) {
   const history = root?.querySelector("[data-session-history]");
@@ -278,7 +278,7 @@ function finishTimer() {
   paintTimer();
   renderSessionHistory();
   playSound("timer");
-  if (logged) showToast(message + " Logged " + logged.h + "h to Ship Log.", () => { data.logs = data.logs.filter((item) => item.id !== logged.id); persistData(); }); else showToast(message);
+  if (logged) showToast(message + " Logged " + logged.h + "h to Ship Log.", () => { data.logs = data.logs.filter((item) => item.id !== logged.id); persistData(); document.dispatchEvent(new Event("lumen-logs-changed")); }); else showToast(message);
   if (activeId !== "focus") open.get("focus")?.tab.classList.add("flashing");
   if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     new Notification(message, {
@@ -782,6 +782,7 @@ const apps = [
           selectVisible.indeterminate = visibleSelected > 0 && visibleSelected < visibleIds.length;
         }
       };
+      const refreshLogs = () => { if (!root.isConnected) return document.removeEventListener("lumen-logs-changed", refreshLogs); render(); }; document.addEventListener("lumen-logs-changed", refreshLogs);
       const addEntry = () => {
         const validated = validateLogEntry({ hours: hoursInput.value, description: textInput.value, project: projectInput.value, tags: tagsInput.value });
         if (!validated.ok) {
