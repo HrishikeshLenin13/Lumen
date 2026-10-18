@@ -184,6 +184,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.deepEqual(normalizeData({ iconPositions: { notes: { x: -4, y: 30 }, bad: null }, iconGrid: false }).iconPositions, { notes: { x: 0, y: 30 } });
   assert.equal(normalizeData({}).iconGrid, true);
   assert.deepEqual([normalizeData({ volume: 140 }).volume, normalizeData({}).volume], [100, 50]);
+  assert.deepEqual([normalizeData({ dragContents: false, transitions: false })].map((d) => [d.dragContents, d.transitions])[0], [false, false]);
   assert.deepEqual([normalizeData({ notesWrap: false, notesFont: "mono", notesSize: "16" })].map((d) => [d.notesWrap, d.notesFont, d.notesSize])[0], [false, "mono", 16]);
   assert.deepEqual([normalizeData({ notesFont: "comic", notesSize: 99 })].map((d) => [d.notesFont, d.notesSize])[0], ["sans", 12]);
   assert.deepEqual(normalizeData({ launches: { paint: 3, notes: -1, calc: "x" } }).launches, { paint: 3 });

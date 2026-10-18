@@ -1640,3 +1640,5 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .week__bar { display: block; width: 14px; min-height: 1px; background: #316ac5; box-shadow: inset -1px 0 #0a246a; }
 .week__label { color: var(--window-muted); font-size: 10px; line-height: 12px; }
 .log-entry-form #logProject { grid-column: 1 / 3; }
+.drag-outline { position: absolute; z-index: 1000001; pointer-events: none; border: 3px solid #fff; mix-blend-mode: difference; }
+html[data-transitions="off"] .task.opening, html[data-transitions="off"] .task.closing, html[data-transitions="off"] .toast, html[data-transitions="off"] .window-dialog__panel { animation: none; }
