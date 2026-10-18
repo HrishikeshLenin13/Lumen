@@ -1937,7 +1937,7 @@ function openApp(id, geometry) {
   tab.className = "task on opening";
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-selected", "true");
-  tab.innerHTML = '<img src="' + app.icon + '" alt="">' + escapeHtml(app.name);
+  tab.innerHTML = '<img src="' + app.icon + '" alt=""><span class="task__label">' + escapeHtml(app.name) + '</span>';
   tab.title = app.name;
   tasks.append(tab);
   onOwnAnimationEnd(tab, () => tab.classList.remove("opening"));
