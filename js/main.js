@@ -14,7 +14,7 @@ let cursorFrame = 0;
 let cursorX = -40;
 let cursorY = -40;
 function angleCursor(x, y) { const [surfaceX, surfaceY] = toScene(x, y); screenCursor.classList.toggle("hidden", surfaceX < 0 || surfaceY < lens.top || surfaceX >= innerWidth || surfaceY >= lens.top + lens.height); const matrix = cursorSurfaceMatrix(x, y - lens.top, lens.width, lens.height, data.effects === "full" ? lens.strength : 0); screenCursor.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0) matrix(" + matrix.join(",") + ",0,0)"; }
-document.addEventListener("pointermove", (event) => { cursorX = event.clientX; cursorY = event.clientY; if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
+document.addEventListener("pointermove", (event) => { if (data.cursorType !== "pixel") return; cursorX = event.clientX; cursorY = event.clientY; if (!cursorFrame) cursorFrame = requestAnimationFrame(() => { cursorFrame = 0; angleCursor(cursorX, cursorY); }); }, { passive: true });
 document.documentElement.addEventListener("pointerleave", () => screenCursor.classList.add("hidden"));
 let lens = { strength: 0, top: 0, width: 1, height: 1 };
 
