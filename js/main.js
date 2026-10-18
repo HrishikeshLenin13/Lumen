@@ -132,7 +132,9 @@ function persistData() {
 let binFull = null; function paintBin() { const full = data.recycle.length > 0; if (full === binFull) return; const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); if (!image) return; binFull = full; image.src = sprite(full ? "recycle-bin-full" : "recycle-bin"); }
 function readDisplayChoices(root) {
   data.fontSize = root.querySelector("#fontChoice").value;
-  data.iconSize = root.querySelector("#iconChoice").value;
+  const iconSize = root.querySelector("#iconChoice").value;
+  const iconSizeChanged = data.iconSize !== iconSize;
+  data.iconSize = iconSize;
   data.wallpaperFit = root.querySelector("#fitChoice").value;
   data.cursorType = root.querySelector("#cursorChoice").value;
   data.deskColor = /^#[0-9a-f]{6}$/i.test(root.querySelector("#deskColor").value) ? root.querySelector("#deskColor").value : data.deskColor;
@@ -141,7 +143,7 @@ function readDisplayChoices(root) {
   data.showIcons = root.querySelector("#iconsShown").value === "on"; data.autoHideTaskbar = root.querySelector("#autoHide").value === "on"; data.showTips = root.querySelector("#tipsShown").value === "on";
   data.dragContents = root.querySelector("#dragChoice").value === "on";
   data.transitions = root.querySelector("#motionChoice").value === "on";
-  requestAnimationFrame(layoutIcons);
+  if (iconSizeChanged) requestAnimationFrame(layoutIcons);
 }
 function applyTheme() {
   document.documentElement.dataset.theme = data.theme;
