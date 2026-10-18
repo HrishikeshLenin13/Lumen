@@ -1989,7 +1989,7 @@ function launcherRect(id) {
 }
 function activateTopWindow() {
   const next = visibleWindowsByZ()[0];
-  if (next) focusWin(next[0]);
+  if (next) focusWin(next[0]); else icons.classList.remove("blurred");
 }
 
 function constrainWindow(node) {
@@ -2119,7 +2119,7 @@ function openApp(id, geometry) {
   focusWin(id);
 }
 
-function focusWin(id) {
+function focusWin(id) { refreshSceneHover(); icons.classList.add("blurred");
   const selected = open.get(id);
   if (!selected) return;
   selected.tab.classList.remove("flashing");
@@ -2575,6 +2575,7 @@ function selectIcons(ids) {
 function selectedIconIds() {
   return Array.from(iconButtons).filter(([, button]) => button.classList.contains("selected")).map(([id]) => id);
 }
+desk.addEventListener("pointerdown", (event) => { if (!event.target.closest(".win, .taskbar, .context-menu")) icons.classList.remove("blurred"); }, true);
 desk.addEventListener("pointerdown", (event) => {
   if (event.button !== 0 || (event.target !== desk && event.target !== icons)) return;
   event.preventDefault();
@@ -2642,6 +2643,7 @@ let sceneHover = null;
 let hoverFrame = 0;
 let hoverX = 0;
 let hoverY = 0;
+function refreshSceneHover() { sceneHover?.classList.remove("scene-hover"); sceneHover = null; if (!hoverFrame) hoverFrame = requestAnimationFrame(updateSceneHover); }
 function updateSceneHover() {
   hoverFrame = 0;
   const [x, y] = toScene(hoverX, hoverY);
@@ -2675,7 +2677,7 @@ contextMenu.setAttribute("role", "menu");
 desk.append(contextMenu);
 let menuItems = [];
 let iconsByName = false;
-function hideMenu() {
+function hideMenu() { refreshSceneHover();
   contextMenu.classList.add("hidden");
   menuItems = [];
 }
@@ -2813,12 +2815,12 @@ function renderPinned() {
   startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="' + sprite("text-file") + '" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
   startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + (pinned.length ? '<div class="menu-separator" role="separator"></div>' : "") + frequent.slice(0, Math.max(2, 7 - pinned.length)).map((id) => startItem(id)).join("");
 }
-function setStartMenu(show) { if (!show && startMenu.classList.contains("hidden")) return;
+function setStartMenu(show) { if (!show && startMenu.classList.contains("hidden")) return; refreshSceneHover();
   startMenu.classList.toggle("hidden", !show);
   startBtn.setAttribute("aria-expanded", String(show));
   if (show) {
     startSearch.value = "";
-    startMenu.classList.remove("show-all");
+    startMenu.classList.remove("show-all"); writeText(startMenu.querySelector("[data-all-programs] span"), "All Programs");
     renderPinned();
     filterStartMenu("");
     startSearch.focus();
