@@ -1,9 +1,9 @@
 import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=49fd07edf5";
 import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
-import { atlasMap } from "./atlas-map.mjs?v=fe06793173";
+import { atlasMap } from "./atlas-map.mjs?v=d1912f48d1";
 const sprites = await loadSprites();
 function sprite(name) { return sprites[name] || ""; }
-async function loadSprites() { const urls = {}; try { const sheet = new Image(); await new Promise((resolve, reject) => { sheet.onload = resolve; sheet.onerror = reject; sheet.src = "icons/atlas.png?v=772387d617"; }); const canvas = document.createElement("canvas"); const context = canvas.getContext("2d"); for (const [name, [x, y, width, height]] of Object.entries(atlasMap)) { canvas.width = width; canvas.height = height; context.drawImage(sheet, x, y, width, height, 0, 0, width, height); urls[name] = canvas.toDataURL(); document.documentElement.style.setProperty("--icon-" + name, 'url("' + urls[name] + '")'); } } catch {} return urls; }
+async function loadSprites() { const urls = {}; try { const sheet = new Image(); await new Promise((resolve, reject) => { sheet.onload = resolve; sheet.onerror = reject; sheet.src = "icons/atlas.png?v=c90e3db2e5"; }); const canvas = document.createElement("canvas"); const context = canvas.getContext("2d"); for (const [name, [x, y, width, height]] of Object.entries(atlasMap)) { canvas.width = width; canvas.height = height; context.drawImage(sheet, x, y, width, height, 0, 0, width, height); urls[name] = canvas.toDataURL(); document.documentElement.style.setProperty("--icon-" + name, 'url("' + urls[name] + '")'); } } catch {} return urls; }
 document.querySelectorAll("img[data-icon]").forEach((image) => { image.src = sprite(image.dataset.icon); });
 
 const KEY = "lumen-desk-v1";
@@ -2260,7 +2260,7 @@ function resizeGrip(node) {
     const minimumHeight = parseInt(style.minHeight, 10) || 150;
     let box = { ...start };
     let frame = 0;
-    desk.classList.add("moving");
+    desk.classList.add("moving"); document.body.dataset.resizing = edge;
     const apply = () => {
       frame = 0;
       node.style.cssText += "left:" + box.left + "px;top:" + box.top + "px;width:" + box.width + "px;height:" + box.height + "px";
@@ -2285,7 +2285,7 @@ function resizeGrip(node) {
       grip.removeEventListener("pointermove", move);
       grip.removeEventListener("pointerup", stop);
       grip.removeEventListener("pointercancel", stop);
-      desk.classList.remove("moving");
+      desk.classList.remove("moving"); delete document.body.dataset.resizing;
       rememberWindows();
     };
     grip.addEventListener("pointermove", move);
@@ -2579,7 +2579,7 @@ function updateSceneHover() {
   hoverFrame = 0;
   const [x, y] = toScene(hoverX, hoverY);
   const hit = document.elementFromPoint(x, y); const next = hit?.closest("button") || null;
-  writeAttribute(screenCursor, "data-shape", hit?.closest("button:not(:disabled), a[href], select:not(:disabled), label") ? "pointing" : "pointer");
+  const grip = document.body.dataset.resizing ?? hit?.closest("[data-grip]")?.dataset.grip; writeAttribute(screenCursor, "data-shape", grip !== undefined ? "resize-" + ({ n: "ns", s: "ns", e: "ew", w: "ew", ne: "nesw", sw: "nesw" }[grip] || "nwse") : hit?.closest("button:not(:disabled), a[href], select:not(:disabled), label") ? "pointing" : "pointer");
   if (next === sceneHover) return;
   sceneHover?.classList.remove("scene-hover");
   next?.classList.add("scene-hover");

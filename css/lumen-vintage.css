@@ -1252,6 +1252,11 @@ select,
 .screen-cursor.hidden { display: none; }
 .screen-cursor { filter: var(--tone, none); }
 .screen-cursor[data-shape="pointing"] { background-image: var(--icon-cursor-pointing); }
+.screen-cursor[data-shape^="resize-"] { margin: -8px 0 0 -8px; }
+.screen-cursor[data-shape="resize-ew"] { background-image: var(--icon-cursor-resize-ew); }
+.screen-cursor[data-shape="resize-ns"] { background-image: var(--icon-cursor-resize-ns); }
+.screen-cursor[data-shape="resize-nwse"] { background-image: var(--icon-cursor-resize-nwse); }
+.screen-cursor[data-shape="resize-nesw"] { background-image: var(--icon-cursor-resize-nesw); }
 body.dragging .screen-cursor { background-image: var(--icon-cursor-dragging); }
 
 body::before,
