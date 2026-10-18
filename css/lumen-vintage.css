@@ -1660,3 +1660,6 @@ html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--c
 .row--center { justify-content: center; }
 .start-menu__right .start-menu__heading { color: #0a246a; border-top-color: #95bdee; }
 .start-menu__recent button { font-weight: 400; }
+.about-stats { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.about-stats dt { color: var(--window-muted); }
+.about-stats dd { margin: 0; }

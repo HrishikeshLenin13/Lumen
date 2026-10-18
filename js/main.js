@@ -1786,9 +1786,14 @@ const apps = [
     icon: "icons/info.png?v=b8b38795ff",
     size: [460, 460],
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p class="hint hint--flush">Version 1.05</p><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul><h3 class="section-title">System</h3><dl class="about-stats" data-about-stats></dl>';
     },
-    bind() {},
+    bind(root) {
+      let used = 0;
+      try { used = Object.keys(localStorage).reduce((sum, key) => sum + key.length + (localStorage.getItem(key) || "").length, 0); } catch {}
+      const count = (number, one, many) => number + " " + (number === 1 ? one : many);
+      root.querySelector("[data-about-stats]").innerHTML = [["Storage used", Math.max(1, Math.round(used / 1024)) + " KB in this browser"], ["Files", count(data.files.filter((item) => item.kind === "text").length, "text file", "text files") + " in " + count(data.files.filter((item) => item.kind === "folder").length, "folder", "folders")], ["Tasks", data.tasks.filter((task) => !task.done).length + " open of " + data.tasks.length], ["Ship Log", count(data.logs.length, "entry", "entries") + ", " + totalLoggedHours() + " hours"], ["Events", count(data.events.length, "event", "events") + " on the calendar"], ["Installed", isInstalled() ? "Yes" : "No"]].map(([label, value]) => "<dt>" + label + "</dt><dd>" + escapeHtml(value) + "</dd>").join("");
+    },
   },
   {
     id: "recycle",
@@ -2818,7 +2823,7 @@ document.addEventListener("keydown", (event) => {
 
 let deferredInstallPrompt = null;
 function isInstalled() {
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  return window.matchMedia("(display-mode: standalone), (display-mode: window-controls-overlay)").matches || window.navigator.standalone === true;
 }
 function refreshInstallControls() {
   const installed = isInstalled();
