@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=6de6d8fdbc";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=bb52d4f984";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -890,8 +890,9 @@ const apps = [
     id: "checklist",
     name: "Checklist",
     icon: "icons/checklist.png?v=0e27a20bbd",
+    size: [500, 420],
     html() {
-      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><select class="field checklist-view" data-task-show aria-label="Show"><option value="all">All</option><option value="open">To do</option><option value="done">Done</option></select><select class="field checklist-view" data-task-sort aria-label="Sort"><option value="newest">Newest</option><option value="name">A to Z</option><option value="open">Unfinished first</option></select><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
+      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><input class="field checklist-due" type="date" aria-label="Due date, optional" title="Optional due date" data-task-due><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><select class="field checklist-view" data-task-show aria-label="Show"><option value="all">All</option><option value="open">To do</option><option value="done">Done</option></select><select class="field checklist-view" data-task-sort aria-label="Sort"><option value="newest">Newest</option><option value="name">A to Z</option><option value="open">Unfinished first</option><option value="due">Due date</option></select><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
     },
     bind(root) {
       const form = root.querySelector("[data-task-form]");
@@ -899,13 +900,15 @@ const apps = [
       const list = root.querySelector("[data-task-list]");
       const summary = root.querySelector("[data-task-summary]");
       const clearCompleted = root.querySelector("[data-clear-completed]");
+      const today = () => { const now = new Date(); return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0"); };
       const render = () => {
         const show = root.querySelector("[data-task-show]").value;
         const sort = root.querySelector("[data-task-sort]").value;
         const shown = data.tasks.filter((task) => show === "all" || (show === "done") === task.done);
         if (sort === "name") shown.sort((a, b) => a.text.localeCompare(b.text));
         if (sort === "open") shown.sort((a, b) => Number(a.done) - Number(b.done));
-        list.innerHTML = shown.length ? shown.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span data-task-text="' + escapeHtml(task.id) + '" title="Double-click to rename">' + escapeHtml(task.text) + '</span></label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">' + (data.tasks.length ? "Nothing to show here." : "No tasks yet.") + "</p>";
+        if (sort === "due") shown.sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
+        list.innerHTML = shown.length ? shown.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span data-task-text="' + escapeHtml(task.id) + '" title="Double-click to rename">' + escapeHtml(task.text) + '</span>' + (task.due ? '<small class="checklist-when' + (!task.done && task.due < today() ? " late" : !task.done && task.due === today() ? " soon" : "") + '">' + escapeHtml(task.due === today() ? "Today" : new Date(task.due + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })) + "</small>" : "") + '</label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">' + (data.tasks.length ? "Nothing to show here." : "No tasks yet.") + "</p>";
         summary.textContent = data.tasks.filter((task) => !task.done).length + " remaining · " + data.tasks.length + " total";
         clearCompleted.disabled = !data.tasks.some((task) => task.done);
       };
@@ -931,8 +934,10 @@ const apps = [
         event.preventDefault();
         const text = input.value.trim();
         if (!text) return;
-        data.tasks.unshift({ id: makeId(), text: text.slice(0, 160), done: false, createdAt: new Date().toISOString() });
+        const due = root.querySelector("[data-task-due]").value;
+        data.tasks.unshift({ id: makeId(), text: text.slice(0, 160), done: false, createdAt: new Date().toISOString(), ...(due ? { due } : {}) });
         input.value = "";
+        root.querySelector("[data-task-due]").value = "";
         persistData();
         render();
       });
@@ -3069,6 +3074,8 @@ async function boot() {
   const now = new Date();
   const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   const agenda = data.events.filter((event) => event.date === today);
+  const dueTasks = data.tasks.filter((task) => !task.done && task.due && task.due <= today);
+  if (dueTasks.length) window.setTimeout(() => showToast(dueTasks.length === 1 ? "Task due: " + dueTasks[0].text : dueTasks.length + " tasks are due, starting with " + dueTasks[0].text + "."), agenda.length ? 4200 : 900);
   if (agenda.length) window.setTimeout(() => showToast(agenda.length === 1 ? "Today: " + agenda[0].text : "You have " + agenda.length + " events today, starting with " + agenda[0].text + "."), 900);
   window.setTimeout(checkReminders, 4500);
   refreshInstallControls();

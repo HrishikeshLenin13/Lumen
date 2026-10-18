@@ -75,6 +75,7 @@ test("migration preserves existing logs and supplies empty project metadata", ()
 
 test("migration repairs note version metadata and rejects invalid versions", () => {
   assert.deepEqual(normalizeData({ tasks: [{ id: "task", text: "  Ship update  ", done: 1, createdAt: "now" }, { text: "  " }] }).tasks, [{ id: "task", text: "Ship update", done: true, createdAt: "now" }]);
+  assert.deepEqual(normalizeData({ tasks: [{ id: "t", text: "Due", due: "2026-10-20", createdAt: "x" }, { id: "u", text: "Bad", due: "soon", createdAt: "x" }] }).tasks, [{ id: "t", text: "Due", done: false, createdAt: "x", due: "2026-10-20" }, { id: "u", text: "Bad", done: false, createdAt: "x" }]);
   const migrated = normalizeData({ noteHistory: [
     { id: "old", text: "One two", at: "2026-01-02", words: 900 },
     { text: "" },

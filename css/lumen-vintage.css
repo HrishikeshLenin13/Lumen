@@ -1663,3 +1663,7 @@ html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--c
 .about-stats { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
 .about-stats dt { color: var(--window-muted); }
 .about-stats dd { margin: 0; }
+.checklist-due.field { flex: 0 0 auto; width: 130px; }
+.checklist-when { margin-left: 8px; padding: 0 4px; color: var(--window-muted); border: 1px solid #d0d0bf; border-radius: 2px; font-size: 10px; }
+.checklist-when.soon { color: #8a5a00; border-color: #e5a01a; }
+.checklist-when.late { color: #fff; background: #b42336; border-color: #b42336; }
