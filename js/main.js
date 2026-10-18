@@ -1917,7 +1917,7 @@ let z = 10;
 
 function visibleWindowsByZ() {
   return Array.from(open.entries())
-    .filter(([, entry]) => !entry.el.classList.contains("min"))
+    .filter(([, entry]) => !entry.el.classList.contains("min") && !entry.el.classList.contains("minimizing"))
     .sort((a, b) => Number(b[1].el.style.zIndex) - Number(a[1].el.style.zIndex));
 }
 
@@ -1952,7 +1952,8 @@ function zoomRects(from, to, done) {
     frames.push(frame);
     frames.forEach((trail, index) => { trail.style.opacity = String((index + 1) / frames.length); });
   };
-  const tick = (now) => { if (document.hidden || now - started >= 198) { frames.forEach((frame) => frame.remove()); done?.(); return; } const step = Math.min(8, Math.floor((now - started) / 22) + 1); if (step !== lastStep) { draw(step); lastStep = step; } requestAnimationFrame(tick); }; requestAnimationFrame(tick);
+  let finished = false; const finish = () => { if (finished) return; finished = true; frames.forEach((frame) => frame.remove()); done?.(); }; window.setTimeout(finish, 400);
+  const tick = (now) => { if (document.hidden || now - started >= 198) { finish(); return; } const step = Math.min(8, Math.floor((now - started) / 22) + 1); if (step !== lastStep) { draw(step); lastStep = step; } requestAnimationFrame(tick); }; requestAnimationFrame(tick);
 }
 function paintWindow(element, phase) {
   if (!data.transitions) { element.classList.remove(phase); element.querySelector("[data-autofocus]")?.focus({ preventScroll: true }); return; }
