@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=ab5e5bc773";
+import { makeDefaultData, cloneFiles, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c3a0209bc3";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1841,7 +1841,7 @@ const apps = [
     icon: "icons/info.png?v=b8b38795ff",
     size: [460, 460],
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p class="hint hint--flush">Version 1.05</p><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Alt</kbd> + <kbd>Up</kbd> or <kbd>Down</kbd> - move a checklist task</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li><kbd>F1</kbd> - this window</li><li><kbd>Ctrl</kbd> + <kbd>A</kbd> - select every desktop icon</li><li>Tap the Windows or Command key to open the Start menu</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul><h3 class="section-title">System</h3><dl class="about-stats" data-about-stats></dl>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p class="hint hint--flush">Version 1.05</p><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>F5</kbd> - stamp the time and date in Notes</li><li><kbd>Alt</kbd> + <kbd>Space</kbd> - window menu</li><li><kbd>Alt</kbd> + <kbd>Up</kbd> or <kbd>Down</kbd> - move a checklist task</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li><kbd>F1</kbd> - this window</li><li><kbd>F2</kbd> - rename the selected desktop icon</li><li><kbd>Ctrl</kbd> + <kbd>A</kbd> - select every desktop icon</li><li>Tap the Windows or Command key to open the Start menu</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul><h3 class="section-title">System</h3><dl class="about-stats" data-about-stats></dl>';
     },
     bind(root) {
       let used = 0;
@@ -2355,8 +2355,8 @@ orderedApps.forEach((app) => {
   button.type = "button";
   button.className = "icon";
   button.dataset.appId = app.id;
-  button.setAttribute("aria-label", "Open " + app.name);
-  button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(app.name) + '</span>';
+  button.setAttribute("aria-label", "Open " + (data.iconNames[app.id] || app.name));
+  button.innerHTML = '<img class="desktop-icon" src="' + app.icon + '" alt=""><span>' + escapeHtml(data.iconNames[app.id] || app.name) + '</span>';
   button.addEventListener("click", (event) => {
     if (iconDragged || event.ctrlKey || event.metaKey) return;
     selectIcons(new Set([app.id]));
@@ -2608,6 +2608,7 @@ function centerWindow(id) {
   zoomRects(from, node.getBoundingClientRect(), () => paintWindow(node, "restoring"));
   rememberWindows();
 }
+async function renameIcon(id) { const app = apps.find((item) => item.id === id); const button = iconButtons.get(id); if (!app || !button) return; const name = await showWindowDialog({ title: "Rename", message: "Type a new name for this shortcut. Leave it empty to use " + app.name + ".", value: data.iconNames[id] || app.name, confirmLabel: "Rename" }); if (name === null) return; const trimmed = name.trim().slice(0, 40); if (!trimmed || trimmed === app.name) delete data.iconNames[id]; else data.iconNames[id] = trimmed; persistData(); writeText(button.querySelector("span"), data.iconNames[id] || app.name); button.setAttribute("aria-label", "Open " + (data.iconNames[id] || app.name)); }
 function showProperties(id) {
   const app = apps.find((item) => item.id === id);
   if (!app) return;
@@ -2685,7 +2686,7 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
-    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), null, { label: "Properties", run: () => showProperties(id) }]);
+    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), null, { label: "Rename", run: () => renameIcon(id) }, { label: "Properties", run: () => showProperties(id) }]);
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
@@ -2843,6 +2844,7 @@ document.addEventListener("keydown", (event) => {
   }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && !event.target.closest("input, textarea, select, .win, [contenteditable]")) { event.preventDefault(); selectIcons(new Set(iconButtons.keys())); return; }
   if (event.key === "F1") { event.preventDefault(); openApp("about"); return; }
+  if (event.key === "F2" && !event.target.closest("input, textarea, select, .win, [contenteditable]") && selectedIconIds().length === 1) { event.preventDefault(); renameIcon(selectedIconIds()[0]); return; }
   if (event.altKey && event.code === "Space" && activeId && open.has(activeId)) {
     event.preventDefault();
     const box = open.get(activeId).el.querySelector(".bar-title img").getBoundingClientRect();
