@@ -24,6 +24,8 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Command Prompt commands for dir, tree, type, time, whoami, mem, color, start, and shutdown
 - Windows resize from any edge, the Start menu learns your most used programs, and a balloon lists today's events at startup
 - Notes word wrap and font choices, and Checklist filtering, sorting, and renaming
+- Calendar reminders at a set time, a tray volume popup, Alt+Esc window switching, and a weekly hours chart in Ship Log
+- Import text files into Files with a button or by dropping them on the Files window or the desk
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
