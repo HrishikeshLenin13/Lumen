@@ -2895,10 +2895,23 @@ async function runDialog() {
   openApp(app.id);
 }
 async function logOff() {
-  if (!open.size) return showToast("There is nothing open to log off from.");
-  if (!await showWindowDialog({ title: "Log Off LUMEN", message: "Close every open window? Your notes, files, and drawings stay saved.", confirmLabel: "Log Off" })) return;
+  if (!await showWindowDialog({ title: "Log Off LUMEN", message: "Are you sure you want to log off? Your notes, files, and drawings stay saved.", confirmLabel: "Log Off", onDesk: true })) return;
   Array.from(open.keys()).forEach((id) => closeApp(id));
-  showToast("Logged off. Everything is saved.");
+  setStartMenu(false);
+  showWelcome();
+}
+function showWelcome() {
+  if (desk.querySelector(".welcome")) return;
+  const screen = document.createElement("div");
+  screen.className = "welcome";
+  screen.setAttribute("role", "dialog");
+  screen.setAttribute("aria-label", "Welcome");
+  screen.innerHTML = '<div class="welcome__band"></div><div class="welcome__middle"><div class="welcome__intro"><img class="welcome__mark" src="' + sprite("l") + '" alt="" width="28" height="32"><strong>LUMEN</strong><span>To begin, click your user name</span></div><div class="welcome__divider"></div><button type="button" class="welcome__user" data-welcome-user><img src="' + sprite("user-placeholder") + '" alt="" width="48" height="48"><span><strong>LUMEN</strong><small>Builder Desk</small></span></button></div><div class="welcome__band welcome__band--foot"><button type="button" class="welcome__off" data-welcome-off><img src="' + sprite("power") + '" alt="" width="22" height="22">Turn off LUMEN</button><span>Your notes, files, and drawings are saved.</span></div>';
+  desk.append(screen);
+  playSound("close");
+  screen.querySelector("[data-welcome-user]").addEventListener("click", () => { screen.classList.add("leaving"); playSound("open"); window.setTimeout(() => screen.remove(), 320); });
+  screen.querySelector("[data-welcome-off]").addEventListener("click", () => { screen.remove(); turnOffDialog(); });
+  screen.querySelector("[data-welcome-user]").focus({ preventScroll: true });
 }
 function turnOffDialog() {
   if (desk.querySelector(".shutdown")) return;
@@ -2946,6 +2959,7 @@ function degauss() {
   window.setTimeout(() => desk.classList.remove("degauss"), 900);
 }
 document.addEventListener("keydown", (event) => {
+  if (desk.querySelector(".welcome")) return;
   konamiStep = event.key === konami[konamiStep] ? konamiStep + 1 : event.key === konami[0] ? 1 : 0;
   if (konamiStep === konami.length) {
     konamiStep = 0;

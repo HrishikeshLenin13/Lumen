@@ -1743,6 +1743,25 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .win .body button, .win .body label, .win .body .tabs, .win .body .desk-folder { -webkit-user-select: none; user-select: none; }
 .win .body, .icon span, .start-menu span, .toast, .window-dialog__content span, .context-menu button { overflow-wrap: anywhere; }
 @media (max-width: 640px) { .boot-post { right: 32px; font-size: 11px; line-height: 16px; white-space: pre-wrap; } }
-.boot::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at center, #fff 0, #dff4ff 35%, rgba(170, 220, 255, 0.4) 60%, transparent 75%); opacity: 0; animation: crt-on 950ms ease-out; }
-@keyframes crt-on { 0% { opacity: 1; transform: scale(0.012, 0.004); } 28% { opacity: 1; transform: scale(1, 0.004); } 58% { opacity: 0.6; transform: scale(1, 1); } 100% { opacity: 0; transform: scale(1, 1); } }
-@media (prefers-reduced-motion: reduce) { .boot::before { animation: none; } }
+
+.welcome { position: absolute; inset: 0; z-index: 9000; display: grid; grid-template-rows: 78px 1fr 78px; color: #fff; background: #5a7edc; font-family: var(--font); }
+.welcome__band { background: #00309c; box-shadow: inset 0 -2px 0 #7ea1f2; }
+.welcome__band--foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 24px; box-shadow: inset 0 2px 0 #e8a03a; font-size: 12px; }
+.welcome__middle { display: grid; grid-template-columns: 1fr 2px 1fr; align-items: center; gap: 32px; background: radial-gradient(circle at 18% 22%, #93b2f2 0, #6b8fe3 28%, #5a7edc 52%, #4a6cc9 100%); }
+.welcome__intro { display: grid; justify-items: end; gap: 6px; text-align: right; }
+.welcome__mark { width: 28px; height: 32px; image-rendering: pixelated; }
+.welcome__intro strong { font: italic 700 40px/1 "Trebuchet MS", var(--font); text-shadow: 2px 2px rgba(0, 0, 0, 0.3); }
+.welcome__intro span { font-size: 15px; }
+.welcome__divider { align-self: stretch; margin: 48px 0; background: linear-gradient(transparent, rgba(255, 255, 255, 0.75), transparent); }
+.welcome__user { display: flex; align-items: center; justify-self: start; gap: 12px; padding: 6px 14px 6px 6px; color: #fff; background: transparent; border: 1px solid transparent; border-radius: 6px; text-align: left; }
+.welcome__user img { width: 48px; height: 48px; border: 2px solid #fff; border-radius: 4px; image-rendering: pixelated; }
+.welcome__user span { display: grid; }
+.welcome__user strong { font-size: 18px; }
+.welcome__user small { color: #dbe6ff; font-size: 12px; }
+.welcome__user.scene-hover, .welcome__user:focus-visible { background: rgba(0, 32, 128, 0.35); border-color: rgba(255, 255, 255, 0.4); outline: none; }
+.welcome__off { display: flex; align-items: center; gap: 8px; padding: 4px 8px; color: #fff; background: transparent; border: 0; font: 700 13px var(--font); }
+.welcome__off img { width: 22px; height: 22px; image-rendering: pixelated; }
+.welcome__off.scene-hover { text-decoration: underline; }
+.welcome.leaving { animation: welcome-out 320ms ease-out forwards; }
+@keyframes welcome-out { to { opacity: 0; } }
+@media (max-width: 640px) { .welcome__middle { grid-template-columns: 1fr; justify-items: center; gap: 16px; } .welcome__intro { justify-items: center; text-align: center; } .welcome__divider { display: none; } .welcome__user { justify-self: center; } .welcome__band--foot span { display: none; } }
