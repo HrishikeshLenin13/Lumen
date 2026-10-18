@@ -33,6 +33,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
   assert.match(source, /\.\/js\/lumen-script\.mjs/);
+  assert.ok(source.includes("./icons/wallpaper-spectrum.jpg"), "spectrum background stays available offline");
   for (const file of ["css/sprites.css", "icons/favicon.png", "icons/app-icon.png", "icons/app-icon-512.png"]) assert.ok(source.includes("./" + file + "?v="), file);
   assert.doesNotMatch(source, /\.\/icons\/(?!atlas|favicon|app-icon|wallpaper)[a-z-]+\.png/);
   assert.match(source, /lumen-app-\w{10}/);
@@ -40,7 +41,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   assert.match(source, /lumen-vintage\.css\?v=\w+/);
 });
 test('cache stamps match the current file contents', () => assert.equal(spawnSync(process.execPath, ['scripts/stamp-cache.mjs', '--check'], { cwd: new URL('..', import.meta.url) }).status, 0));
-test('the interface owns its cursor and dialogs', () => { const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'); const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8'); const css = readFileSync(new URL('../css/lumen-vintage.css', import.meta.url), 'utf8'); assert.doesNotMatch(main, /window\.(?:prompt|confirm|alert)/); assert.match(html, /data-screen-cursor/); assert.match(css, /width: 16px; height: 16px/); assert.match(main, /cursorFrame = requestAnimationFrame/); });
+test('the interface owns its cursor and dialogs', () => { const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'); const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8'); const css = readFileSync(new URL('../css/lumen-vintage.css', import.meta.url), 'utf8'); assert.doesNotMatch(main, /window\.(?:prompt|confirm|alert)/); assert.match(html, /data-screen-cursor/); assert.match(css, /width: 16px; height: 16px/); assert.match(css, /data-wallpaper="spectrum"/); for (const cursor of ["system", "crosshair", "pointer", "wait", "text"]) assert.ok(css.includes(`html[data-cursor="${cursor}"]`), `${cursor} cursor style`); assert.match(main, /cursorFrame = requestAnimationFrame/); });
 test('content-hashed assets are served from cache without the network', async () => {
   const listeners = {};
   let fetched = 0;
