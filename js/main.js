@@ -1474,6 +1474,7 @@ const apps = [
     id: "fortune",
     name: "Fortune",
     icon: "icons/fortune.png?v=65c80a1be7",
+    size: [380, 200],
     html() {
       return '<div class="toy"><p class="toy__slip" data-fortune aria-live="polite"></p><button type="button" class="btn primary" data-fortune-next>Crack another cookie</button></div>';
     },
@@ -1676,6 +1677,7 @@ const apps = [
     id: "about",
     name: "About",
     icon: "icons/info.png?v=b8b38795ff",
+    size: [460, 460],
     html() {
       return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
     },
