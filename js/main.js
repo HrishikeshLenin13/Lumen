@@ -527,7 +527,7 @@ function bindFiles(root) {
   root.querySelector("[data-files-delete]").addEventListener("click", async () => { const item = selectedItem(); if (!item || !await showWindowDialog({ title: "Delete " + item.name, message: item.kind === "folder" ? "Move this folder and everything inside it to the Recycle Bin?" : "Move this text file to the Recycle Bin?", confirmLabel: "Delete" })) return; const removing = new Set([item.id]); let changed = true; while (changed) { changed = false; data.files.forEach((candidate) => { if (candidate.parent && removing.has(candidate.parent) && !removing.has(candidate.id)) { removing.add(candidate.id); changed = true; } }); } data.recycle = [{ id: makeId(), deletedAt: new Date().toISOString(), items: data.files.filter((candidate) => removing.has(candidate.id)) }, ...data.recycle].slice(0, 50); data.files = data.files.filter((candidate) => !removing.has(candidate.id)); selected = null; persistData(); render(); document.dispatchEvent(new Event("lumen-files-changed")); });
   list.addEventListener("keydown", (event) => { const shortcut = { c: "[data-files-copy]", v: "[data-files-paste]", d: "[data-files-duplicate]" }[event.key.toLowerCase()]; if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcut) { event.preventDefault(); event.stopPropagation(); root.querySelector(shortcut).click(); return; } if (event.ctrlKey || event.metaKey || event.altKey) return; const buttons = Array.from(list.querySelectorAll("[data-file-id]")); const index = buttons.findIndex((button) => button.dataset.fileId === selected); if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && buttons.length) { event.preventDefault(); event.stopPropagation(); const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : Math.max(0, Math.min(buttons.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))); selected = buttons[next].dataset.fileId; render(false); buttons[next].focus(); } else if (event.key === "Enter" && selectedItem()) { event.preventDefault(); if (selectedItem().kind === "folder") { current = selected; selected = null; render(); list.querySelector("button")?.focus(); } else content.focus(); } else if (event.key === "F2" && selectedItem()) { event.preventDefault(); root.querySelector("[data-files-rename]").click(); } else if (event.key === "Delete" && selectedItem()) { event.preventDefault(); root.querySelector("[data-files-delete]").click(); } else if (event.key === "Backspace" && current) { event.preventDefault(); root.querySelector("[data-files-up]").click(); list.querySelector("button")?.focus(); } });
   render();
-  return (flush = true) => { clearTimeout(saveTimer); if (flush) persistData(); };
+  return (flush = true) => { clearTimeout(saveTimer); document.removeEventListener("lumen-files-changed", refreshFromBin); document.removeEventListener("lumen-open-file", openFromSearch); if (flush) persistData(); };
 }
 let fileClipboard = null;
 async function clearAllData() {
@@ -731,7 +731,7 @@ const apps = [
       root.querySelectorAll("[data-timer-mode]").forEach((button) => {
         button.addEventListener("click", () => selectTimerMode(button.dataset.timerMode));
       });
-      const label = root.querySelector("[data-focus-label]"); label.value = data.focusLabel; label.addEventListener("input", () => { data.focusLabel = label.value.slice(0, 80); persistData(); });
+      const label = root.querySelector("[data-focus-label]"); label.value = data.focusLabel; label.addEventListener("input", () => { data.focusLabel = label.value.slice(0, 80); clearTimeout(label.saveTimer); label.saveTimer = setTimeout(persistData, 400); }); label.addEventListener("change", persistData);
       root.querySelector("[data-focus-start]").addEventListener("click", startTimer);
       root.querySelector("[data-focus-pause]").addEventListener("click", pauseTimer);
       root.querySelector("[data-focus-reset]").addEventListener("click", () => resetTimer());
@@ -905,6 +905,7 @@ const apps = [
           showToast("Ship log entry updated.");
         }
       });
+      return () => document.removeEventListener("lumen-logs-changed", refreshLogs);
     },
   },
   {
@@ -1905,6 +1906,7 @@ const apps = [
       root.querySelector("[data-bin-delete]").addEventListener("click", async () => { const entry = data.recycle.find((item) => item.id === selected); if (!entry || !await showWindowDialog({ title: "Delete " + entry.items[0].name, message: "Permanently delete this item? This cannot be undone.", confirmLabel: "Delete", danger: true })) return; data.recycle = data.recycle.filter((item) => item !== entry); persistData(); render(); });
       root.querySelector("[data-bin-empty]").addEventListener("click", async () => { if (!data.recycle.length || !await showWindowDialog({ title: "Empty Recycle Bin", message: "Permanently delete all " + data.recycle.length + " items in the Recycle Bin?", confirmLabel: "Empty", danger: true })) return; data.recycle = []; persistData(); playSound("close"); render(); });
       render();
+      return () => document.removeEventListener("lumen-files-changed", refresh);
     },
   },
 ];
@@ -2570,7 +2572,7 @@ function updateSceneHover() {
   hoverFrame = 0;
   const [x, y] = toScene(hoverX, hoverY);
   const hit = document.elementFromPoint(x, y); const next = hit?.closest("button") || null;
-  screenCursor.dataset.shape = hit?.closest("button:not(:disabled), a[href], select:not(:disabled), label") ? "pointing" : "pointer";
+  writeAttribute(screenCursor, "data-shape", hit?.closest("button:not(:disabled), a[href], select:not(:disabled), label") ? "pointing" : "pointer");
   if (next === sceneHover) return;
   sceneHover?.classList.remove("scene-hover");
   next?.classList.add("scene-hover");
