@@ -1657,3 +1657,4 @@ html[data-transitions="off"] .task.opening, html[data-transitions="off"] .task.c
 .cal__jump.scene-hover { color: #fff; background: #316ac5; }
 .cal__jump.scene-hover span { color: #fff; }
 html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--custom-wall, none) center / cover no-repeat; }
+.row--center { justify-content: center; }

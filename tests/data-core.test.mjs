@@ -176,6 +176,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(makeDefaultData().timerState, null);
   assert.deepEqual(makeDefaultData().noteHistory, []);
   assert.equal(normalizeData({ rockPets: -4 }).rockPets, 0);
+  assert.equal(normalizeData({ rockName: "  Sir Pebble the Magnificent and Wise  " }).rockName, "Sir Pebble the Magnifice");
   assert.equal(normalizeData({ sounds: false }).sounds, false);
   assert.equal(normalizeData({ screensaver: false }).screensaver, false);
   assert.deepEqual(["olive", "royale", "classic", "neon"].map((theme) => normalizeData({ theme }).theme), ["olive", "royale", "classic", "dark"]);

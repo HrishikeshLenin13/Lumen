@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=4b7864fd6c";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=15539b5f85";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1526,19 +1526,22 @@ const apps = [
     icon: "icons/pet-rock.png?v=65c80a1be7",
     size: [320, 300],
     html() {
-      return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite">Your rock is resting.</p><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><p class="hint hint--flush" data-rock-count></p></div>';
+      return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite"></p><div class="row row--center"><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><button type="button" class="btn" data-rock-name>Name...</button></div><p class="hint hint--flush" data-rock-count></p></div>';
     },
     bind(root) {
       const mood = root.querySelector("[data-rock-mood]");
       const count = root.querySelector("[data-rock-count]");
       const moods = ["The rock remains a rock.", "The rock appreciates you, probably.", "The rock is unmoved.", "The rock has achieved inner peace.", "The rock did not notice.", "The rock is thinking about geology."];
+      const who = () => data.rockName || "The rock";
       const render = () => {
         count.textContent = data.rockPets === 1 ? "Petted once." : "Petted " + data.rockPets + " times.";
       };
+      mood.textContent = who() + " is resting.";
+      root.querySelector("[data-rock-name]").addEventListener("click", async () => { const name = await showWindowDialog({ title: "Name your rock", message: "Every rock deserves a name.", value: data.rockName, confirmLabel: "Name" }); if (name === null) return; data.rockName = name.trim().slice(0, 24); persistData(); mood.textContent = who() + " likes that name, probably."; });
       root.querySelector("[data-rock-pet]").addEventListener("click", () => {
         data.rockPets += 1;
         persistData();
-        mood.textContent = data.rockPets % 100 === 0 ? "The rock has chosen you." : moods[data.rockPets % moods.length];
+        mood.textContent = (data.rockPets % 100 === 0 ? "The rock has chosen you." : moods[data.rockPets % moods.length]).replace(/^The rock/, who());
         render();
       });
       render();
