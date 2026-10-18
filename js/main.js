@@ -548,7 +548,7 @@ async function clearAllData() {
   try {
     localStorage.removeItem(KEY);
     localStorage.removeItem(PAINT_KEY);
-    localStorage.removeItem(WALLPAPER_KEY);
+    localStorage.removeItem(WALLPAPER_KEY); localStorage.removeItem(KEY + "-unreadable");
     showCustomWallpaper();
     lastSaved = "";
   } catch {
@@ -563,7 +563,7 @@ async function clearAllData() {
   resetTimer("focus");
   closeAllWindows();
   openApp("settings");
-  showToast("All LUMEN data was cleared.");
+  installScriptSamples(); showToast("All LUMEN data was cleared.");
 }
 async function installScriptSamples() { const { scriptSamples } = await import("./script-samples.mjs?v=379e94c5ad"); let folder = data.files.find((item) => item.kind === "folder" && item.parent === null && item.name === "Programs"); if (!folder) { folder = { id: makeId(), kind: "folder", name: "Programs", parent: null, content: "", modifiedAt: new Date().toISOString() }; data.files.push(folder); } const added = scriptSamples.filter((sample) => !data.files.some((item) => item.parent === folder.id && item.name === sample.name)); added.forEach((sample) => data.files.push({ id: makeId(), kind: "text", name: sample.name, parent: folder.id, content: sample.content, modifiedAt: new Date().toISOString() })); data.samplesInstalled = true; persistData(); document.dispatchEvent(new Event("lumen-files-changed")); return added.length; }
 function createScriptHost(stop) {
@@ -1663,7 +1663,7 @@ const apps = [
       root.querySelector("[data-cmd]").addEventListener("click", () => {
         if (!window.getSelection()?.toString()) input.focus();
       });
-      print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands, or run flappy.lsc to play.\n"); if (!data.samplesInstalled) installScriptSamples().then((added) => { if (added && root.isConnected) print("Example programs were copied to Files, in the Programs folder. Type samples to list them.\n"); });
+      print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands, or run flappy.lsc to play.\n");
       return () => { scriptController?.abort(); document.removeEventListener("lumen-run-script", runRequested); };
     },
   },
@@ -3334,7 +3334,7 @@ async function boot() {
   if (dueTasks.length) window.setTimeout(() => showToast(dueTasks.length === 1 ? "Task due: " + dueTasks[0].text : dueTasks.length + " tasks are due, starting with " + dueTasks[0].text + "."), agenda.length ? 4200 : 900);
   if (agenda.length) window.setTimeout(() => showToast(agenda.length === 1 ? "Today: " + agenda[0].text : "You have " + agenda.length + " events today, starting with " + agenda[0].text + "."), 900);
   if (!agenda.length && !dueTasks.length) window.setTimeout(showTip, 1400);
-  window.setTimeout(checkReminders, 4500);
+  window.setTimeout(checkReminders, 4500); installScriptSamples().catch(() => {});
   refreshInstallControls();
 }
 window.addEventListener("hashchange", () => {
