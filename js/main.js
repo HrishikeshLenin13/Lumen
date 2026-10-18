@@ -128,7 +128,7 @@ function persistData() {
     return false;
   }
 }
-function paintBin() { const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); const src = data.recycle.length ? sprite("recycle-bin-full") : sprite("recycle-bin"); if (image && image.getAttribute("src") !== src) image.src = src; }
+let binFull = null; function paintBin() { const full = data.recycle.length > 0; if (full === binFull) return; const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); if (!image) return; binFull = full; image.src = sprite(full ? "recycle-bin-full" : "recycle-bin"); }
 function readDisplayChoices(root) {
   data.fontSize = root.querySelector("#fontChoice").value;
   data.iconSize = root.querySelector("#iconChoice").value;
@@ -3359,7 +3359,7 @@ function wake(event) {
     event.stopPropagation();
   }
 }
-["pointermove", "pointerdown", "keydown", "wheel"].forEach((type) => document.addEventListener(type, wake, { capture: true }));
+["pointermove", "pointerdown", "keydown", "wheel"].forEach((type) => document.addEventListener(type, wake, { capture: true, passive: type === "pointermove" || type === "wheel" }));
 window.setInterval(() => {
   if (saver.classList.contains("hidden") && performance.now() - lastActive > data.saverWait * 60000) startSaver();
 }, 5000);
