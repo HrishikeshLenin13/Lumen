@@ -1658,3 +1658,5 @@ html[data-transitions="off"] .task.opening, html[data-transitions="off"] .task.c
 .cal__jump.scene-hover span { color: #fff; }
 html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--custom-wall, none) center / cover no-repeat; }
 .row--center { justify-content: center; }
+.start-menu__right .start-menu__heading { color: #0a246a; border-top-color: #95bdee; }
+.start-menu__recent button { font-weight: 400; }
