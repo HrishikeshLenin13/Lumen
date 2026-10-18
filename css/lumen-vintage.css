@@ -1610,3 +1610,15 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .notes-find { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; padding: 6px; background: var(--window-bg); border: 1px solid #aca899; }
 .notes-find[hidden] { display: none; }
 .notes-find .field { flex: 1 1 120px; width: auto; margin: 0; }
+.win-edge { position: absolute; z-index: 2; }
+.win-edge--n, .win-edge--s { right: 6px; left: 6px; height: 4px; }
+.win-edge--e, .win-edge--w { top: 6px; bottom: 6px; width: 4px; }
+.win-edge--n { top: 0; }
+.win-edge--s { bottom: 0; }
+.win-edge--e { right: 0; }
+.win-edge--w { left: 0; }
+.win-edge--nw, .win-edge--ne, .win-edge--sw { width: 8px; height: 8px; }
+.win-edge--nw { top: 0; left: 0; }
+.win-edge--ne { top: 0; right: 0; width: 5px; height: 5px; }
+.win-edge--sw { bottom: 0; left: 0; }
+.win.max .win-edge { display: none; }
