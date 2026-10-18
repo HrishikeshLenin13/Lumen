@@ -1623,3 +1623,7 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .win-edge--sw { bottom: 0; left: 0; }
 .win.max .win-edge { display: none; }
 .start-menu__pinned > button:nth-child(-n+2) { font-weight: 700; }
+.notes-format { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 6px; }
+.notes-format label { display: flex; align-items: center; gap: 4px; }
+.notes-format .field { width: auto; min-height: 21px; margin: 0; padding: 1px 2px; }
+.notes-format select.field { height: 21px; }

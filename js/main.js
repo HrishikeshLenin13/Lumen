@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=54f1acfc30";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=bcd4528595";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -505,9 +505,10 @@ const apps = [
   {
     id: "notes",
     name: "Notes",
+    size: [580, 440],
     icon: "icons/notes.png?v=8c65e95fff",
     html() {
-      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes. Press Ctrl+F to find.</p><div class="notes-find" data-note-find hidden><input class="field" data-note-find-input aria-label="Find" placeholder="Find"><input class="field" data-note-replace-input aria-label="Replace with" placeholder="Replace with"><button type="button" class="btn" data-note-find-next>Find Next</button><button type="button" class="btn" data-note-replace-all>Replace All</button><span class="hint hint--flush" data-note-find-count aria-live="polite"></span><button type="button" class="btn" data-note-find-close>Close</button></div><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
+      return '<p class="hint">Saved automatically on this device. Use Markdown headings to navigate longer notes. Press Ctrl+F to find.</p><div class="notes-format"><label class="notes-format__wrap"><input type="checkbox" data-notes-wrap> Word wrap</label><label>Font <select class="field" data-notes-font><option value="sans">Tahoma</option><option value="mono">Lucida Console</option><option value="serif">Times New Roman</option></select></label><label>Size <select class="field" data-notes-size><option value="11">11</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="20">20</option></select></label></div><div class="notes-find" data-note-find hidden><input class="field" data-note-find-input aria-label="Find" placeholder="Find"><input class="field" data-note-replace-input aria-label="Replace with" placeholder="Replace with"><button type="button" class="btn" data-note-find-next>Find Next</button><button type="button" class="btn" data-note-replace-all>Replace All</button><span class="hint hint--flush" data-note-find-count aria-live="polite"></span><button type="button" class="btn" data-note-find-close>Close</button></div><div class="notes-layout"><textarea id="notesArea" aria-label="Project notes" placeholder="Write a note">' + escapeHtml(data.notes) + '</textarea><aside class="notes-sidebar"><nav class="notes-outline" data-note-outline aria-label="Notes outline"></nav><section class="notes-history" data-note-history aria-label="Notes version history"></section></aside></div><div class="row row--actions notes-status-row"><span class="hint hint--flush" data-notes-status aria-live="polite">All changes saved.</span><span class="notes-status-actions"><span class="hint hint--flush" data-note-stats></span><button type="button" class="btn" data-save-note-version aria-keyshortcuts="Control+Shift+S Meta+Shift+S" title="Save version (Ctrl/Command+Shift+S)">Save version</button><button type="button" class="btn" data-note-trim>Trim lines</button><button type="button" class="btn" data-note-copy>Copy</button></span></div>';
     },
     bind(root) {
       const area = root.querySelector("#notesArea");
@@ -515,6 +516,12 @@ const apps = [
       const outline = root.querySelector("[data-note-outline]");
       const history = root.querySelector("[data-note-history]");
       const stats = root.querySelector("[data-note-stats]");
+      const formatNotes = () => { area.style.whiteSpace = data.notesWrap ? "pre-wrap" : "pre"; area.style.overflowX = data.notesWrap ? "hidden" : "auto"; area.style.fontFamily = { sans: "var(--font)", mono: "var(--mono)", serif: '"Times New Roman", Times, serif' }[data.notesFont]; area.style.fontSize = data.notesSize + "px"; };
+      root.querySelector("[data-notes-wrap]").checked = data.notesWrap;
+      root.querySelector("[data-notes-font]").value = data.notesFont;
+      root.querySelector("[data-notes-size]").value = String(data.notesSize);
+      root.querySelector(".notes-format").addEventListener("change", () => { data.notesWrap = root.querySelector("[data-notes-wrap]").checked; data.notesFont = root.querySelector("[data-notes-font]").value; data.notesSize = Number(root.querySelector("[data-notes-size]").value); formatNotes(); persistData(); });
+      formatNotes();
       const finder = root.querySelector("[data-note-find]");
       const findInput = root.querySelector("[data-note-find-input]");
       const findCount = root.querySelector("[data-note-find-count]");
@@ -2614,8 +2621,6 @@ document.addEventListener("keydown", (event) => {
     if (!startMenu.classList.contains("hidden")) {
       setStartMenu(false);
       startBtn.focus();
-    } else if (activeId && !event.target.closest("input, textarea, select, [contenteditable]")) {
-      closeApp(activeId);
     }
     return;
   }
