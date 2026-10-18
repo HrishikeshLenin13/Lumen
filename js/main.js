@@ -1,4 +1,4 @@
-import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=2f2e19c939";
+import { makeDefaultData, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=2f2e19c939";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -1081,7 +1081,7 @@ const apps = [
         over = false;
         stopClock();
         writeText(clock, "000");
-        writeText(status, best() ? "Best time " + best() + "s. Right click or press F to flag." : "Click a square to start. Right click or press F to flag.");
+        writeText(status, best() ? "Best time " + best() + "s. Right click or press F to flag." : "Click a square to start. Right click or press F to flag, and click a number to clear around it.");
         paint();
       };
       const finish = (won) => {
@@ -1114,7 +1114,20 @@ const apps = [
         const cell = event.target.closest("[data-mine-cell]");
         if (!cell || over) return;
         const index = Number(cell.dataset.mineCell);
-        if (flags.has(index) || revealed.has(index)) return;
+        if (flags.has(index)) return;
+        if (revealed.has(index)) {
+          const info = field?.[index];
+          if (!info || info.mine || !info.count) return;
+          const around = neighbors(index, width, height);
+          if (around.filter((cell) => flags.has(cell)).length !== info.count) return;
+          for (const cell of around) {
+            if (flags.has(cell) || revealed.has(cell)) continue;
+            revealed = revealArea(field, width, height, cell, revealed, flags);
+            if (field[cell].mine) return finish(false);
+          }
+          if (revealed.size === width * height - mines) return finish(true);
+          return paint();
+        }
         if (!field) {
           field = createMinefield(width, height, mines, index);
           started = Date.now();
