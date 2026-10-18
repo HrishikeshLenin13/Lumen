@@ -32,6 +32,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Save notes as files, due dates on tasks, calculator copy and paste, recent characters, a Mystify screen saver, and a long break after every fourth focus session
 - Undo after deleting tasks, ship log entries, and events, copy, paste, and duplicate in Files, a full Recycle Bin icon, Ctrl+A on the desk, F1 for help, and the Windows key for Start
 - Repeating calendar events, a Zune color scheme, programs you can pin to the Start menu, and checklist tasks you can drag or Alt+arrow into your own order
+- Auto-hide the taskbar and hide desktop icons from the right-click menus or Display Properties
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch

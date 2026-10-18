@@ -1693,3 +1693,7 @@ html[data-wallpaper="custom"] { --desktop-bg: var(--desk-color, #3a6ea5) var(--c
 .charmap__recent .hint { margin-right: 6px; }
 .charmap__recent .charmap__cell { border: 1px solid #d4d0c8; margin-right: -1px; }
 .toast__undo.btn { grid-column: 2; justify-self: start; min-height: 21px; margin-top: 2px; padding: 1px 10px; }
+html[data-icons="off"] .icons { visibility: hidden; }
+html[data-autohide="on"] .taskbar { transition: transform 120ms steps(4); }
+html[data-autohide="on"] .taskbar:not(.peek):not(:has(:focus-visible, #startMenu:not(.hidden))) { transform: translateY(calc(var(--taskbar-height) - 2px)); }
+html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom: 2px; }
