@@ -1510,6 +1510,10 @@ form > .tab-panel + .row--actions { margin-top: 8px; }
 .quick-launch__desktop { width: 22px; height: 22px; padding: 0; background: url("../icons/show-desktop.png?v=466fc6b9b5") center / 16px 16px no-repeat; border: 1px solid transparent; border-radius: 2px; image-rendering: pixelated; }
 .quick-launch__desktop.scene-hover { background-color: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); }
 .quick-launch__desktop:active { background-color: rgba(0, 0, 0, 0.18); }
+.quick-launch__app { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 2px; }
+.quick-launch__app img { width: 16px; height: 16px; image-rendering: pixelated; }
+.quick-launch__app.scene-hover { background-color: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); }
+.quick-launch__app:active { background-color: rgba(0, 0, 0, 0.18); }
 html[data-theme="light"] .quick-launch { border-right-color: #9a9cad; box-shadow: 1px 0 #fff; }
 .bin { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; height: 100%; }
 .bin__list { min-height: 0; overflow: auto; background: #fff; border: 1px solid #7f9db9; outline: none; }

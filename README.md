@@ -37,6 +37,7 @@ Replace `icons/mine-bomb.png`, `icons/cursor-pointing.png`, and `icons/cursor-dr
 - Name what you are focusing on and finished sessions land in Ship Log, Ctrl+S saves inside LUMEN, and Paint has a Colors picker plus window-wide Ctrl+Z and Ctrl+O
 - A rotating Did you know tip at startup, which you can hide from the Screen Saver tab
 - Log a Ship Log entry again, restore the whole Recycle Bin at once, edit calendar events by double-clicking, and pick recent commands in Run
+- Add any program to Quick Launch from its right-click menu, and undo Clear completed in Checklist
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch

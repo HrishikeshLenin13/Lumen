@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=ea63b3d6ad";
+import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=3d82674660";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -2698,7 +2698,7 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
-    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), null, { label: "Rename", run: () => renameIcon(id) }, { label: "Properties", run: () => showProperties(id) }]);
+    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), quickItem(id), null, { label: "Rename", run: () => renameIcon(id) }, { label: "Properties", run: () => showProperties(id) }]);
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
@@ -2760,7 +2760,7 @@ startMenu.addEventListener("keydown", (event) => {
   const index = buttons.indexOf(event.target);
   buttons[(index + (event.key === "ArrowDown" ? 1 : buttons.length - 1) + (index < 0 && event.key === "ArrowUp" ? 1 : 0)) % buttons.length]?.focus();
 });
-startMenu.addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-open-app]"); event.preventDefault(); if (!button) return; const id = button.dataset.openApp; showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => { setStartMenu(false); openApp(id); } }, pinItem(id), null, { label: "Properties", run: () => { setStartMenu(false); showProperties(id); } }]); });
+startMenu.addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-open-app]"); event.preventDefault(); if (!button) return; const id = button.dataset.openApp; showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => { setStartMenu(false); openApp(id); } }, pinItem(id), quickItem(id), null, { label: "Properties", run: () => { setStartMenu(false); showProperties(id); } }]); });
 startMenu.addEventListener("click", (event) => {
   const appButton = event.target.closest("[data-open-app]");
   if (appButton) {
@@ -2981,6 +2981,11 @@ document.querySelector(".tray").addEventListener("contextmenu", (event) => {
 });
 document.getElementById("trayTimer").addEventListener("click", () => openApp("focus"));
 document.querySelector("[data-show-desktop]").addEventListener("click", toggleDesktop);
+function renderQuickLaunch() { const bar = document.querySelector(".quick-launch"); bar.querySelectorAll("[data-quick-app]").forEach((button) => button.remove()); data.quickLaunch.map((id) => apps.find((app) => app.id === id)).filter(Boolean).forEach((app) => { const button = document.createElement("button"); button.type = "button"; button.className = "quick-launch__app"; button.dataset.quickApp = app.id; button.title = app.name; button.setAttribute("aria-label", "Open " + app.name); button.innerHTML = '<img src="' + app.icon + '" alt="" width="16" height="16">'; bar.append(button); }); }
+function quickItem(id) { const added = data.quickLaunch.includes(id); return { label: added ? "Remove from Quick Launch" : "Add to Quick Launch", run: () => { data.quickLaunch = added ? data.quickLaunch.filter((item) => item !== id) : [...data.quickLaunch, id].slice(0, 8); persistData(); renderQuickLaunch(); } }; }
+document.querySelector(".quick-launch").addEventListener("click", (event) => { const button = event.target.closest("[data-quick-app]"); if (button) openApp(button.dataset.quickApp); });
+document.querySelector(".quick-launch").addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-quick-app]"); if (!button) return; event.preventDefault(); event.stopPropagation(); showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(button.dataset.quickApp) }, quickItem(button.dataset.quickApp)]); });
+renderQuickLaunch();
 function paintVolume() {
   const volume = document.getElementById("volume");
   volume.classList.toggle("muted", !data.sounds);
