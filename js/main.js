@@ -947,9 +947,9 @@ const apps = [
         render();
       });
       clearCompleted.addEventListener("click", () => {
-        data.tasks = data.tasks.filter((task) => !task.done);
+        const before = data.tasks.slice(); const removed = before.length - before.filter((task) => !task.done).length; data.tasks = data.tasks.filter((task) => !task.done);
         persistData();
-        render();
+        render(); if (removed) showToast(removed === 1 ? "Cleared 1 completed task." : "Cleared " + removed + " completed tasks.", () => { data.tasks = before; persistData(); if (root.isConnected) render(); });
       });
       form.addEventListener("submit", (event) => {
         event.preventDefault();
