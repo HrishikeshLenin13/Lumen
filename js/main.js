@@ -756,12 +756,13 @@ const apps = [
       const list = root.querySelector("[data-log-list]");
       const total = root.querySelector("[data-log-total]");
       let filterFrame = 0;
+      let weekTotal = null;
       const paintWeek = () => {
         const days = Array.from({ length: 7 }, (_, index) => { const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() - 6 + index); return [day, 0]; });
         data.logs.forEach((entry) => { const at = new Date(entry.at); at.setHours(0, 0, 0, 0); const slot = days.find(([day]) => day.getTime() === at.getTime()); if (slot) slot[1] += Number(entry.h || 0); });
         const peak = Math.max(1, ...days.map(([, hours]) => hours));
         root.querySelector("[data-log-week]").innerHTML = days.map(([day, hours]) => '<div class="week__day" title="' + escapeHtml(fullDateFormat.format(day)) + ": " + formatHours(hours) + 'h"><span class="week__bar" style="height:' + Math.round(hours / peak * 40) + 'px"></span><span class="week__label">' + escapeHtml(narrowDayFormat.format(day)) + "</span></div>").join("");
-        writeText(root.querySelector("[data-log-week-total]"), formatHours(days.reduce((sum, [, hours]) => sum + hours, 0)) + "h" + (data.weekGoal ? " of " + data.weekGoal + "h" : ""));
+        const total = days.reduce((sum, [, hours]) => sum + hours, 0); writeText(root.querySelector("[data-log-week-total]"), formatHours(total) + "h" + (data.weekGoal ? " of " + data.weekGoal + "h" : "")); if (data.weekGoal && weekTotal !== null && weekTotal < data.weekGoal && total >= data.weekGoal) { const goal = data.weekGoal; setTimeout(() => { showToast("You reached your " + goal + "h goal for the week."); playSound("win"); }, 0); } weekTotal = total;
       };
       paintWeek();
       const render = () => {
