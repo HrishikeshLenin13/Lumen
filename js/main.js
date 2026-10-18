@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=617f4671f9";
+import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=ea63b3d6ad";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -95,7 +95,7 @@ function showToast(message, undo) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), undo ? 6000 : Math.max(3200, String(message).length * 70));
 }
-function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false } = {}) {
+function showWindowDialog({ title = "LUMEN", message, value, options, confirmLabel = "OK", danger = false, onDesk = false, suggestions = [] } = {}) {
   return new Promise((resolve) => {
     const host = !onDesk && activeId && open.get(activeId) ? open.get(activeId).el : document.getElementById("desk");
     const previousFocus = document.activeElement;
@@ -103,7 +103,7 @@ function showWindowDialog({ title = "LUMEN", message, value, options, confirmLab
     const overlay = document.createElement("div");
     overlay.className = "window-dialog";
     overlay.setAttribute("role", "presentation");
-    const control = Array.isArray(options) ? '<select class="field" data-dialog-value>' + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join("") + "</select>" : value !== undefined ? '<input class="field" data-dialog-value value="' + escapeHtml(value) + '">' : "";
+    const control = Array.isArray(options) ? '<select class="field" data-dialog-value>' + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join("") + "</select>" : value !== undefined ? '<input class="field" data-dialog-value value="' + escapeHtml(value) + '"' + (suggestions.length ? ' list="windowDialogSuggestions" autocomplete="off"><datalist id="windowDialogSuggestions">' + suggestions.map((item) => '<option value="' + escapeHtml(item) + '">').join("") + "</datalist>" : ">") : "";
     overlay.innerHTML = '<form class="window-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="windowDialogTitle"><strong class="window-dialog__title" id="windowDialogTitle">' + escapeHtml(title) + '</strong><div class="window-dialog__content"><span>' + escapeHtml(message) + '</span>' + control + '<div class="window-dialog__actions"><button type="button" class="btn" data-dialog-cancel>Cancel</button><button type="submit" class="btn' + (danger ? " danger" : " primary") + '">' + escapeHtml(confirmLabel) + "</button></div></div></form>";
     const settle = (result) => { overlay.remove(); previousFocus?.focus({ preventScroll: true }); resolve(result); };
     host.append(overlay);
@@ -2782,14 +2782,13 @@ document.addEventListener("mousedown", (event) => {
   if (!event.target.closest(".start-wrap, .context-menu")) setStartMenu(false);
 });
 const runAliases = { notepad: "notes", calc: "calculator", mspaint: "paint", cmd: "terminal", command: "terminal", winmine: "minesweeper", explorer: "files", control: "settings", desk: "settings", timedate: "calendar", winver: "about", sol: "busywork", recycler: "recycle" };
-let lastRun = "";
 async function runDialog() {
-  const typed = await showWindowDialog({ title: "Run", message: "Type the name of a program, and LUMEN will open it for you.", value: lastRun, onDesk: true });
+  const typed = await showWindowDialog({ title: "Run", message: "Type the name of a program, and LUMEN will open it for you.", value: data.runHistory[0] || "", suggestions: data.runHistory, onDesk: true });
   if (!typed || !typed.trim()) return;
   const name = typed.trim().toLowerCase().replace(/\.exe$/, "");
   const app = apps.find((item) => item.id === (runAliases[name] || name) || item.name.toLowerCase() === name) || apps.find((item) => item.name.toLowerCase().startsWith(name));
   if (!app) return showToast("LUMEN cannot find " + typed.trim() + ". Check the spelling and try again.");
-  lastRun = typed.trim();
+  data.runHistory = [typed.trim(), ...data.runHistory.filter((item) => item.toLowerCase() !== typed.trim().toLowerCase())].slice(0, 8); persistData();
   openApp(app.id);
 }
 async function logOff() {
