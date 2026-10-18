@@ -1741,3 +1741,4 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .desktop { -webkit-user-select: none; user-select: none; }
 .win .body { -webkit-user-select: text; user-select: text; }
 .win .body button, .win .body label, .win .body .tabs, .win .body .desk-folder { -webkit-user-select: none; user-select: none; }
+.win .body, .icon span, .start-menu span, .toast, .window-dialog__content span, .context-menu button { overflow-wrap: anywhere; }
