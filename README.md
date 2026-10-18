@@ -21,7 +21,7 @@ Draw your art in `art/`, one PNG per icon at its current size, then run `node sc
 - A Recycle Bin that keeps deleted files and folders until you restore or empty them
 - A Run dialog that understands classic names like notepad, calc, mspaint, cmd, and winmine
 - Minesweeper difficulty levels, find and replace in Notes, Paint can open pictures, and calculator square root, percent, sign, and reciprocal keys
-- Command Prompt commands for dir, tree, type, time, whoami, mem, color, start, and shutdown
+- A programmable Command Prompt with local scripts, loops, conditions, and safe window automation
 - Windows resize from any edge, the Start menu learns your most used programs, and a balloon lists today's events at startup
 - Notes word wrap and font choices, and Checklist filtering, sorting, and renaming
 - Calendar reminders at a set time, a tray volume popup, Alt+Esc window switching, and a weekly hours chart in Ship Log

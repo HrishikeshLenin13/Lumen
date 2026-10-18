@@ -32,6 +32,7 @@ test('the app shell caches current scripts, styles, and app icons', () => {
   const source = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(source, /\.\/js\/data-core\.mjs/);
+  assert.match(source, /\.\/js\/lumen-script\.mjs/);
   for (const file of ["css/sprites.css", "icons/favicon.png", "icons/app-icon.png", "icons/app-icon-512.png"]) assert.ok(source.includes("./" + file + "?v="), file);
   assert.doesNotMatch(source, /\.\/icons\/(?!atlas|favicon|app-icon|wallpaper)[a-z-]+\.png/);
   assert.match(source, /lumen-app-\w{10}/);

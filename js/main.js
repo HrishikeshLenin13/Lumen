@@ -1,4 +1,5 @@
 import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=56a93d9f4a";
+import { runScript } from "./lumen-script.mjs?v=c3cc0befc4";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -513,6 +514,7 @@ function bindFiles(root) {
   list.addEventListener("click", (event) => { const button = event.target.closest("[data-file-id]"); if (!button || selected === button.dataset.fileId) return; selected = button.dataset.fileId; render(false); });
   list.addEventListener("focusin", (event) => { const button = event.target.closest("[data-file-id]"); if (!button || selected === button.dataset.fileId) return; selected = button.dataset.fileId; render(false); });
   list.addEventListener("dblclick", (event) => { const item = data.files.find((candidate) => candidate.id === event.target.closest("[data-file-id]")?.dataset.fileId); if (!item) return; if (item.kind === "folder") { current = item.id; selected = null; render(); } else content.focus(); });
+  list.addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-file-id]"); const item = button && data.files.find((candidate) => candidate.id === button.dataset.fileId); if (!item) return; event.preventDefault(); event.stopPropagation(); selected = item.id; render(false); const run = () => { openApp("terminal"); document.dispatchEvent(new CustomEvent("lumen-run-script", { detail: { name: item.name, content: item.content } })); }; showMenu(...toScene(event.clientX, event.clientY), [{ label: item.kind === "folder" ? "Open" : "Edit", run: () => item.kind === "folder" ? (current = item.id, selected = null, render()) : content.focus() }, ...(item.kind === "text" && /\.txt$/i.test(item.name) ? [{ label: "Run in Command Prompt", run }] : []), null, { label: "Rename", run: () => root.querySelector("[data-files-rename]").click() }, { label: "Duplicate", run: () => root.querySelector("[data-files-duplicate]").click() }, { label: "Delete", run: () => root.querySelector("[data-files-delete]").click() }]); });
   list.addEventListener("dragover", (event) => { if (event.dataTransfer.types.includes("Files")) event.preventDefault(); });
   list.addEventListener("drop", async (event) => { const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("text/") || /\.txt$/i.test(file.name)); if (!files.length) return; event.preventDefault(); const destination = current; try { const imported = await Promise.all(files.slice(0, Math.min(20, Math.max(0, 500 - data.files.length))).map(async (file) => ({ id: makeId(), kind: "text", name: file.name.replace(/[\\/]/g, "-").slice(0, 80), parent: destination, content: (await file.slice(0, 800000).text()).slice(0, 200000) }))); data.files.push(...imported.slice(0, Math.max(0, 500 - data.files.length))); const saved = persistData(); render(); root.querySelector("[data-files-status]").textContent = saved ? "Imported " + imported.length + (imported.length === 1 ? " text file." : " text files.") : "Import could not be saved. Export your files to keep them."; } catch { showToast("These text files could not be imported."); } });
   root.querySelector("[data-files-up]").addEventListener("click", () => { current = data.files.find((item) => item.id === current)?.parent ?? null; selected = null; render(); });
@@ -1494,13 +1496,19 @@ const apps = [
       const input = root.querySelector("[data-cmd-input]");
       const history = [];
       let cursor = 0;
+      let scriptController = null;
       const print = (text) => {
         log.textContent += text + "\n";
         log.scrollTop = log.scrollHeight;
       };
       const findApp = (name) => apps.find((app) => app.id === name.toLowerCase() || app.name.toLowerCase() === name.toLowerCase());
+      const scriptTargets = (selector) => selector === "*" ? [...open.values()] : [...open.values()].filter((entry) => entry.app.id.toLowerCase() === selector.toLowerCase() || entry.app.name.toLowerCase() === selector.toLowerCase());
+      const scriptAction = async (command, args) => { const [selector = "", ...parts] = args.split(/\s+/); const targets = scriptTargets(selector); if (command === "open") { const app = findApp(args); if (!app) throw new Error("No program named " + args); openApp(app.id); } else if (command === "close") targets.forEach((entry) => closeApp(entry.app.id)); else if (command === "focus") targets[0] && focusWin(targets[0].app.id); else if (command === "minimize") targets.forEach((entry) => minimizeApp(entry.app.id)); else if (command === "restore") targets.forEach((entry) => restoreApp(entry.app.id)); else if (command === "title") targets.forEach((entry) => { entry.el.querySelector(".bar-title").lastChild.textContent = parts.join(" ").slice(0, 80); }); else if (command === "move") { const [x, y] = parts.map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("Usage: MOVE window x y"); targets.forEach((entry) => { entry.el.style.left = Math.round(x) + "px"; entry.el.style.top = Math.round(y) + "px"; constrainWindow(entry.el); }); } else if (command === "jitter") { const amount = Math.max(1, Math.min(96, Number(parts[0]) || 16)); targets.forEach((entry) => { entry.el.style.left = entry.el.offsetLeft + Math.round((Math.random() * 2 - 1) * amount) + "px"; entry.el.style.top = entry.el.offsetTop + Math.round((Math.random() * 2 - 1) * amount) + "px"; constrainWindow(entry.el); }); } else if (command === "toast") showToast(args); else throw new Error("Unknown script command: " + command); };
+      const demoScript = 'open calculator\nopen notes\nopen files\nlet n = 0\nloop:\ntitle * You are an idiot\njitter * 28\nsleep 90\nlet n = n + 1\nif n < 45 goto loop\ntitle * LUMEN survived\ntoast Harmless chaos complete.';
+      const executeScript = async (source) => { scriptController?.abort(); const controller = new AbortController(); scriptController = controller; try { await runScript(source, { action: scriptAction, output: print, signal: controller.signal }); return "Script complete."; } catch (error) { return error.name === "AbortError" ? "Script stopped." : "Script error: " + error.message; } finally { if (scriptController === controller) scriptController = null; } };
+      const runRequested = (event) => { print("C:\\LUMEN>run " + event.detail.name); executeScript(event.detail.content).then(print); }; document.addEventListener("lumen-run-script", runRequested);
       const commands = {
-        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
+        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\nrun <file>      run a local Lumen script\nscript help     show the scripting language\nscript demo     run harmless window chaos\nstop            stop a running script\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
         apps: () => apps.filter((app) => !isFolderId(app.id)).map((app) => app.id.padEnd(14) + app.name).join("\n"),
         open: (args) => {
           const app = findApp(args);
@@ -1519,6 +1527,7 @@ const apps = [
           return "Added to Checklist.";
         },
         tasks: () => data.tasks.length ? data.tasks.map((task) => (task.done ? "[x] " : "[ ] ") + task.text).join("\n") : "No tasks.",
+        run: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? executeScript(file.content) : "The system cannot find the script file."; },
         note: (args) => {
           if (!args) return "Usage: note <text>";
           if (open.has("notes")) return "Close Notes first so its open edits are not overwritten.";
@@ -1527,6 +1536,8 @@ const apps = [
           return "Appended to Notes.";
         },
         start: (args) => commands.open(args),
+        script: (args) => args.toLowerCase() === "demo" ? executeScript(demoScript) : "Lumen Script commands:\nLET name = value\nPRINT value\nlabel:\nIF condition GOTO label\nGOTO label\nSLEEP milliseconds\nOPEN, CLOSE, FOCUS, MINIMIZE, RESTORE window\nTITLE window text\nMOVE window x y\nJITTER window amount\nTOAST text\nEND\n\nUse * for every open window. Separate commands with new lines or semicolons. Save scripts as text files and use RUN <file>. Press Ctrl+C or type STOP to interrupt.",
+        stop: () => { if (!scriptController) return "No script is running."; scriptController.abort(); return "Stopping script..."; },
         dir: () => { const top = data.files.filter((item) => !item.parent); return top.length ? " Directory of C:\\\n\n" + top.map((item) => (item.kind === "folder" ? "<DIR>     " : String(item.content.length).padStart(9) + " ") + item.name).join("\n") + "\n\n" + top.length + " item(s)" : " Directory of C:\\\n\nFile Not Found"; },
         tree: () => { const lines = []; const walk = (parent, depth) => data.files.filter((item) => item.parent === parent).forEach((item) => { lines.push("    ".repeat(depth) + (item.kind === "folder" ? "+-- " : "|   ") + item.name); if (item.kind === "folder") walk(item.id, depth + 1); }); walk(null, 0); return "C:\\\n" + (lines.join("\n") || "No subfolders exist"); },
         type: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? file.content || "(empty)" : "The system cannot find the file specified."; },
@@ -1547,7 +1558,7 @@ const apps = [
           return null;
         },
       };
-      root.querySelector("[data-cmd-form]").addEventListener("submit", (event) => {
+      root.querySelector("[data-cmd-form]").addEventListener("submit", async (event) => {
         event.preventDefault();
         const line = input.value.trim();
         input.value = "";
@@ -1557,14 +1568,15 @@ const apps = [
         cursor = history.length;
         const [name, ...rest] = line.split(/\s+/);
         const command = Object.hasOwn(commands, name.toLowerCase()) ? commands[name.toLowerCase()] : null;
-        const output = command ? command(rest.join(" ")) : "'" + name + "' is not recognized as a command. Type help.";
+        const output = command ? await command(rest.join(" ")) : "'" + name + "' is not recognized as a command. Type help.";
         if (output !== null) print(output);
       });
       input.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.key.toLowerCase() === "c") { event.preventDefault(); scriptController?.abort(); print("^C"); return; }
         if (event.key === "Tab" && input.value.trim()) {
           event.preventDefault();
           const [word, ...rest] = input.value.split(" ");
-          const pool = rest.length ? (["open", "start"].includes(word.toLowerCase()) ? apps.map((app) => app.id) : ["type"].includes(word.toLowerCase()) ? data.files.filter((item) => item.kind === "text").map((item) => item.name) : []) : Object.keys(commands);
+          const pool = rest.length ? (["open", "start"].includes(word.toLowerCase()) ? apps.map((app) => app.id) : ["type", "run"].includes(word.toLowerCase()) ? data.files.filter((item) => item.kind === "text").map((item) => item.name) : []) : Object.keys(commands);
           const partial = (rest.length ? rest.join(" ") : word).toLowerCase();
           const matches = pool.filter((option) => option.toLowerCase().startsWith(partial));
           if (matches.length === 1) input.value = rest.length ? word + " " + matches[0] : matches[0] + " ";
@@ -1585,6 +1597,7 @@ const apps = [
         if (!window.getSelection()?.toString()) input.focus();
       });
       print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands.\n");
+      return () => { scriptController?.abort(); document.removeEventListener("lumen-run-script", runRequested); };
     },
   },
   {

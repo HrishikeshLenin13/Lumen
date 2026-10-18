@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+test("text files offer a Command Prompt context action", () => assert.match(readFileSync(new URL("../js/main.js", import.meta.url), "utf8"), /Run in Command Prompt[\s\S]+lumen-run-script/));
 test("selecting a folder preserves its row so a double-click can open it", () => {
   const source = readFileSync(new URL("../js/main.js", import.meta.url), "utf8");
   const nodes = new Map();
