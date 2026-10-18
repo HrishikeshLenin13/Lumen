@@ -2755,6 +2755,11 @@ function restoreWindows() {
     openApp(item.id, item);
     const entry = open.get(item.id);
     if (!entry) return;
+    if (wins.clientWidth && wins.clientHeight) {
+      entry.el.style.width = Math.min(item.width, wins.clientWidth) + "px";
+      entry.el.style.height = Math.min(item.height, wins.clientHeight) + "px";
+      constrainWindow(entry.el);
+    }
     if (item.maximized) {
       entry.el.classList.add("max");
       entry.el.querySelector("[data-max]")?.setAttribute("aria-pressed", "true");
