@@ -367,7 +367,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     paintImage: typeof source.paintImage === "string" && source.paintImage.startsWith("data:image/png;base64,") && source.paintImage.length < 300000 ? source.paintImage : defaults.paintImage,
     events: Array.isArray(source.events) ? source.events.filter((event) => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date) && typeof event.text === "string" && event.text.trim()).map((event) => ({ id: typeof event.id === "string" && event.id ? event.id : makeId(), date: event.date, text: event.text.trim().slice(0, 160), ...(/^([01]\d|2[0-3]):[0-5]\d$/.test(event.time) ? { time: event.time, ...(event.reminded ? { reminded: true } : {}) } : {}) })).slice(0, 500) : [],
     screensaver: source.screensaver !== false,
-    saverStyle: ["logo", "starfield", "blank"].includes(source.saverStyle) ? source.saverStyle : defaults.saverStyle,
+    saverStyle: ["logo", "starfield", "mystify", "blank"].includes(source.saverStyle) ? source.saverStyle : defaults.saverStyle,
     saverWait: [1, 3, 5, 10, 15].includes(Number(source.saverWait)) ? Number(source.saverWait) : defaults.saverWait,
     wallpaperFit: ["stretch", "center", "tile"].includes(source.wallpaperFit) ? source.wallpaperFit : defaults.wallpaperFit,
     deskColor: /^#[0-9a-f]{6}$/i.test(source.deskColor) ? source.deskColor.toLowerCase() : defaults.deskColor,
