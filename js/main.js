@@ -445,7 +445,7 @@ function bindFiles(root) {
   const folderPath = () => { const names = []; const visited = new Set(); let id = current; while (id && !visited.has(id)) { visited.add(id); const folder = data.files.find((item) => item.id === id && item.kind === "folder"); if (!folder) break; names.unshift(folder.name); id = folder.parent; } return "C:\\" + names.join("\\"); };
   const render = (refreshList = true) => {
     const items = refreshList ? data.files.filter((item) => item.parent === current).sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1)) : [];
-    if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><span class="files__glyph">' + (item.kind === "folder" ? "DIR" : "TXT") + '</span><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
+    if (refreshList) list.innerHTML = items.length ? items.map((item) => '<li><button type="button" class="files__item' + (item.id === selected ? " selected" : "") + '" data-file-id="' + escapeHtml(item.id) + '"><img class="files__glyph" src="' + (item.kind === "folder" ? "icons/folder.png?v=466fc6b9b5" : "icons/text-file.png?v=466fc6b9b5") + '" alt="" width="16" height="16"><span>' + escapeHtml(item.name) + '</span></button></li>').join("") : '<li class="hint">This folder is empty.</li>';
     root.querySelector("[data-files-path]").textContent = folderPath();
     list.querySelectorAll("[data-file-id]").forEach((button) => { button.classList.toggle("selected", button.dataset.fileId === selected); button.setAttribute("aria-pressed", String(button.dataset.fileId === selected)); });
     root.querySelector("[data-files-up]").disabled = current === null;
@@ -659,6 +659,7 @@ const apps = [
     id: "focus",
     name: "Focus",
     icon: "icons/timer.png?v=13bd7c6582",
+    size: [380, 320],
     html() {
       return '<div class="timer-modes" aria-label="Timer mode"><button type="button" class="btn" data-timer-mode="focus" aria-pressed="false">Focus</button><button type="button" class="btn" data-timer-mode="break" aria-pressed="false">Break</button></div><p class="hint" data-timer-status aria-live="polite"></p><div class="timer" id="timer" role="timer"></div><div class="row"><button type="button" class="btn primary" data-focus-start>Start</button><button type="button" class="btn" data-focus-pause>Pause</button><button type="button" class="btn" data-focus-reset>Reset</button></div><section class="session-history" data-session-history aria-live="polite"></section>';
     },
@@ -677,6 +678,7 @@ const apps = [
     id: "shiplog",
     name: "Ship Log",
     icon: "icons/logs.png?v=7ce34f25cf",
+    size: [540, 460],
     html() {
       return '<p class="hint">Total logged: <strong class="stat-strong" data-log-total>' + totalLoggedHours() + 'h</strong></p><div class="log-entry-form"><input class="field" type="number" min="0.25" max="24" step="0.25" value="1" id="logH" aria-label="Hours shipped"><input class="field" type="text" maxlength="240" placeholder="What did you ship?" id="logText" aria-label="Ship description"><input class="field" type="text" maxlength="48" placeholder="Project (optional)" id="logProject" aria-label="Project"><input class="field" type="text" placeholder="Tags, comma separated" id="logTags" aria-label="Tags"><button type="button" class="btn primary" data-add-log>Add entry</button></div><div class="log-tools"><label class="form-label log-filter">Search entries<input class="field" type="search" placeholder="Description, project, tag, hours, or date" value="' + escapeHtml(shipFilter) + '" data-log-filter></label><label class="form-label">Date range<select class="field" data-log-range><option value="all"' + (shipDateRange === "all" ? " selected" : "") + '>All time</option><option value="7"' + (shipDateRange === "7" ? " selected" : "") + '>Last 7 days</option><option value="30"' + (shipDateRange === "30" ? " selected" : "") + '>Last 30 days</option></select></label><button type="button" class="btn" data-export-log>Export filtered CSV</button></div><div class="log-list" data-log-list>' + logListHtml() + '</div>';
     },
@@ -1448,6 +1450,7 @@ const apps = [
     id: "petrock",
     name: "Pet Rock",
     icon: "icons/pet-rock.png?v=65c80a1be7",
+    size: [320, 300],
     html() {
       return '<div class="toy"><img class="toy__art" src="icons/pet-rock-art.png?v=e8e02ecb64" alt="Your pet rock" width="96" height="96"><p class="toy__line" data-rock-mood aria-live="polite">Your rock is resting.</p><button type="button" class="btn primary" data-rock-pet>Pet the rock</button><p class="hint hint--flush" data-rock-count></p></div>';
     },
@@ -1542,6 +1545,7 @@ const apps = [
     id: "busywork",
     name: "Busy Work",
     icon: "icons/busy.png?v=65c80a1be7",
+    size: [380, 210],
     html() {
       return '<p class="hint" data-busy-task aria-live="polite">Ready to look busy.</p><div class="busy-bar" role="progressbar" aria-label="Busy work progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-busy-bar><span></span></div><div class="row row--actions"><button type="button" class="btn primary" data-busy-start>Look busy</button><button type="button" class="btn" data-busy-stop disabled>Stop</button></div>';
     },
@@ -1688,7 +1692,7 @@ const apps = [
     bind(root) {
       const list = root.querySelector("[data-bin-list]");
       const status = root.querySelector("[data-bin-status]");
-      const icons = { folder: apps.find((app) => app.id === "files").icon, text: apps.find((app) => app.id === "notes").icon };
+      const icons = { folder: "icons/folder.png?v=466fc6b9b5", text: "icons/text-file.png?v=466fc6b9b5" };
       let selected = null;
       const render = () => {
         if (!data.recycle.some((entry) => entry.id === selected)) selected = null;
