@@ -833,7 +833,7 @@ const apps = [
     name: "Checklist",
     icon: "icons/checklist.png?v=0e27a20bbd",
     html() {
-      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
+      return '<form class="checklist-entry" data-task-form><input class="field" type="text" maxlength="160" placeholder="Add a task" aria-label="New task" data-task-input required><button type="submit" class="btn primary">Add task</button></form><div class="checklist-toolbar"><span class="hint hint--flush" data-task-summary></span><select class="field checklist-view" data-task-show aria-label="Show"><option value="all">All</option><option value="open">To do</option><option value="done">Done</option></select><select class="field checklist-view" data-task-sort aria-label="Sort"><option value="newest">Newest</option><option value="name">A to Z</option><option value="open">Unfinished first</option></select><button type="button" class="btn" data-clear-completed>Clear completed</button></div><div class="checklist" data-task-list></div>';
     },
     bind(root) {
       const form = root.querySelector("[data-task-form]");
@@ -842,11 +842,28 @@ const apps = [
       const summary = root.querySelector("[data-task-summary]");
       const clearCompleted = root.querySelector("[data-clear-completed]");
       const render = () => {
-        list.innerHTML = data.tasks.length ? data.tasks.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span>' + escapeHtml(task.text) + '</span></label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">No tasks yet.</p>';
+        const show = root.querySelector("[data-task-show]").value;
+        const sort = root.querySelector("[data-task-sort]").value;
+        const shown = data.tasks.filter((task) => show === "all" || (show === "done") === task.done);
+        if (sort === "name") shown.sort((a, b) => a.text.localeCompare(b.text));
+        if (sort === "open") shown.sort((a, b) => Number(a.done) - Number(b.done));
+        list.innerHTML = shown.length ? shown.map((task) => '<div class="checklist-item"><label><input type="checkbox" data-task-toggle="' + escapeHtml(task.id) + '"' + (task.done ? " checked" : "") + '><span data-task-text="' + escapeHtml(task.id) + '" title="Double-click to rename">' + escapeHtml(task.text) + '</span></label><button type="button" class="btn" data-task-delete="' + escapeHtml(task.id) + '" aria-label="Delete ' + escapeHtml(task.text) + '">Delete</button></div>').join("") : '<p class="hint">' + (data.tasks.length ? "Nothing to show here." : "No tasks yet.") + "</p>";
         summary.textContent = data.tasks.filter((task) => !task.done).length + " remaining · " + data.tasks.length + " total";
         clearCompleted.disabled = !data.tasks.some((task) => task.done);
       };
       render();
+      root.querySelectorAll(".checklist-view").forEach((picker) => picker.addEventListener("change", render));
+      list.addEventListener("dblclick", async (event) => {
+        const label = event.target.closest("[data-task-text]");
+        if (!label) return;
+        event.preventDefault();
+        const task = data.tasks.find((item) => item.id === label.dataset.taskText);
+        const text = task && await showWindowDialog({ title: "Rename task", message: "Change the task text.", value: task.text, confirmLabel: "Rename" });
+        if (!text || !text.trim()) return;
+        task.text = text.trim().slice(0, 160);
+        persistData();
+        render();
+      });
       clearCompleted.addEventListener("click", () => {
         data.tasks = data.tasks.filter((task) => !task.done);
         persistData();
@@ -2740,6 +2757,7 @@ window.addEventListener("resize", () => {
   bendTimer = window.setTimeout(bendScreen, 160);
 });
 function rememberWindows() {
+  if (document.getElementById("boot")) return;
   data.windows = Array.from(open.entries()).sort((a, b) => Number(a[1].el.style.zIndex) - Number(b[1].el.style.zIndex)).map(([id, entry]) => {
     const maximized = entry.el.classList.contains("max");
     return {

@@ -1627,3 +1627,5 @@ html[data-quick-launch="off"] .quick-launch { display: none; }
 .notes-format label { display: flex; align-items: center; gap: 4px; }
 .notes-format .field { width: auto; min-height: 21px; margin: 0; padding: 1px 2px; }
 .notes-format select.field { height: 21px; }
+.checklist-view.field { width: auto; min-height: 23px; margin: 0; }
+.checklist-entry .btn { white-space: nowrap; }
