@@ -1046,7 +1046,19 @@ const apps = [
         evaluated = true;
         render(expression, false);
       });
+      calc.addEventListener("paste", (event) => {
+        const text = event.clipboardData?.getData("text/plain").replace(/,/g, "").trim() || "";
+        if (!/^[\d\s()+\-*/%.]+$/.test(text)) return;
+        event.preventDefault();
+        press("clear");
+        [...text.replace(/\s+/g, "")].slice(0, 120).forEach((character) => press(character));
+      });
       calc.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {
+          event.preventDefault();
+          navigator.clipboard?.writeText(valueView.textContent).then(() => showToast("Copied " + valueView.textContent + "."), () => {});
+          return;
+        }
         if (event.ctrlKey || event.metaKey || event.altKey) return;
         const key = { Enter: "equals", "=": "equals", Backspace: "back", Escape: "clear", Delete: "clear", x: "*", X: "*", "@": "sqrt", F9: "negate", r: "inverse", R: "inverse" }[event.key] || (/^[\d.+\-*/%()]$/.test(event.key) ? event.key : null);
         if (!key) return;
