@@ -1233,7 +1233,7 @@ const apps = [
     id: "paint",
     name: "Paint",
     icon: "icons/paint.png?v=65c80a1be7",
-    size: [372, 432],
+    size: [372, 444],
     html() {
       const colors = ["#000000", "#808080", "#800000", "#808000", "#008000", "#008080", "#000080", "#800080", "#ffffff", "#c0c0c0", "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
       return '<div class="paint"><div class="paint__tools" role="toolbar" aria-label="Paint tools" data-paint-tools><button type="button" class="btn active" data-paint-tool="pencil" aria-pressed="true">Pencil</button><button type="button" class="btn" data-paint-tool="eraser" aria-pressed="false">Eraser</button><button type="button" class="btn" data-paint-tool="fill" aria-pressed="false">Fill</button><button type="button" class="btn" data-paint-tool="airbrush" aria-pressed="false">Airbrush</button><button type="button" class="btn" data-paint-tool="smudge" aria-pressed="false">Smudge</button><button type="button" class="btn" data-paint-tool="picker" aria-pressed="false">Picker</button><button type="button" class="btn" data-paint-tool="line" aria-pressed="false">Line</button><button type="button" class="btn" data-paint-tool="rect" aria-pressed="false">Rectangle</button><button type="button" class="btn" data-paint-tool="ellipse" aria-pressed="false">Ellipse</button><label class="paint__size">Size <select class="field" data-paint-size><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="8">8</option></select></label></div><canvas class="paint__canvas" data-paint-canvas width="160" height="104" tabindex="0" aria-label="Drawing canvas"></canvas><div class="paint__palette" role="radiogroup" aria-label="Colors" data-paint-palette>' + colors.map((color, index) => '<button type="button" class="paint__swatch" style="--swatch:' + color + '" data-paint-color="' + color + '" role="radio" aria-checked="' + (index === 0) + '" aria-label="Color ' + color + '"></button>').join("") + '</div><div class="row row--actions"><button type="button" class="btn" data-paint-undo disabled>Undo</button><button type="button" class="btn" data-paint-clear>Clear</button><button type="button" class="btn" data-paint-open>Open...</button><input class="sr-only" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" data-paint-file><button type="button" class="btn" data-paint-save>Save PNG</button><span class="hint hint--flush" data-paint-status aria-live="polite">Saved on this device.</span></div></div>';
@@ -1623,6 +1623,7 @@ const apps = [
     id: "coinflip",
     name: "Coin Flip",
     icon: "icons/coin.png?v=65c80a1be7",
+    size: [420, 332],
     html() {
       return '<div class="toy"><div class="coin-stage"><div class="coin" data-coin><img class="coin__face" src="icons/coin-heads.png?v=634e3d3375" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="icons/coin-tails.png?v=634e3d3375" alt="" width="64" height="64"></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
     },
