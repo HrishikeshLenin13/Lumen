@@ -118,13 +118,14 @@ function persistData() {
   try {
     const serialized = JSON.stringify({ ...data, paintImage: "" });
     if (serialized !== lastSaved) localStorage.setItem(KEY, serialized);
-    lastSaved = serialized;
+    lastSaved = serialized; paintBin();
     return true;
   } catch {
     showToast("LUMEN could not save data in this browser.");
     return false;
   }
 }
+function paintBin() { const image = document.querySelector('.icon[data-app-id="recycle"] .desktop-icon'); const src = data.recycle.length ? "icons/recycle-bin-full.png?v=65c80a1be7" : "icons/recycle-bin.png?v=65c80a1be7"; if (image && image.getAttribute("src") !== src) image.src = src; }
 function readDisplayChoices(root) {
   data.fontSize = root.querySelector("#fontChoice").value;
   data.iconSize = root.querySelector("#iconChoice").value;
@@ -2364,7 +2365,7 @@ orderedApps.forEach((app) => {
   });
   iconButtons.set(app.id, button);
   icons.append(button);
-});
+}); paintBin();
 let ICON_STEP_X = 92;
 let ICON_STEP_Y = 76;
 let iconDragged = false;
