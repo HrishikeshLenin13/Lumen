@@ -1658,7 +1658,7 @@ const apps = [
     icon: sprite("coin"),
     size: [420, 332],
     html() {
-      return '<div class="toy"><div class="coin-stage"><div class="coin" data-coin><img class="coin__face" src="' + sprite("coin-heads") + '" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="' + sprite("coin-tails") + '" alt="" width="64" height="64"></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
+      return '<div class="toy"><div class="coin-stage"><div class="coin-tilt"><div class="coin" data-coin>' + Array.from({ length: 7 }, (_, index) => '<img class="coin__edge" src="' + sprite("coin-heads") + '" alt="" width="64" height="64" style="--depth:' + (index - 3) + 'px">').join("") + '<img class="coin__face" src="' + sprite("coin-heads") + '" alt="" width="64" height="64"><img class="coin__face coin__face--tails" src="' + sprite("coin-tails") + '" alt="" width="64" height="64"></div></div><span class="coin-shadow" data-coin-shadow></span></div><output class="toy__line" data-coin-result aria-live="polite">Ready to flip.</output><button type="button" class="btn primary" data-coin-flip>Flip the coin</button><p class="hint hint--flush" data-coin-tally>No flips yet.</p></div>';
     },
     bind(root) {
       const coin = root.querySelector("[data-coin]");
