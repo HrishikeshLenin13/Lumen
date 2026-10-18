@@ -3025,7 +3025,7 @@ window.addEventListener("appinstalled", () => {
   showToast("LUMEN was installed.");
 });
 
-function checkReminders() {
+function checkReminders() { if (!data.events.some((event) => event.time)) return;
   const now = new Date();
   const today = localDay(now);
   const minutes = now.getHours() * 60 + now.getMinutes();
@@ -3361,6 +3361,6 @@ function wake(event) {
 }
 ["pointermove", "pointerdown", "keydown", "wheel"].forEach((type) => document.addEventListener(type, wake, { capture: true, passive: type === "pointermove" || type === "wheel" }));
 window.setInterval(() => {
-  if (saver.classList.contains("hidden") && performance.now() - lastActive > data.saverWait * 60000) startSaver();
+  if (data.screensaver && saver.classList.contains("hidden") && performance.now() - lastActive > data.saverWait * 60000) startSaver();
 }, 5000);
 boot();
