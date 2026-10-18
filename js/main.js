@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f913b5f3";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=8b323b9107";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -2816,7 +2816,7 @@ function renderPinned() {
   startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="' + sprite("text-file") + '" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
   startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + (pinned.length ? '<div class="menu-separator" role="separator"></div>' : "") + frequent.slice(0, Math.max(2, 7 - pinned.length)).map((id) => startItem(id)).join("");
 }
-function setStartMenu(show) {
+function setStartMenu(show) { if (!show && startMenu.classList.contains("hidden")) return;
   startMenu.classList.toggle("hidden", !show);
   startBtn.setAttribute("aria-expanded", String(show));
   if (show) {
