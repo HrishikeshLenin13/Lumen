@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=8b323b9107";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=56a93d9f4a";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -496,7 +496,7 @@ function bindFiles(root) {
     if (item?.kind === "text" && data.recentFiles[0] !== item.id) data.recentFiles = [item.id, ...data.recentFiles.filter((id) => id !== item.id)].slice(0, 10);
     writeText(root.querySelector("[data-files-status]"), item?.kind === "text" ? item.content.length.toLocaleString() + " characters" : (refreshList ? items.length + (items.length === 1 ? " item" : " items") : "Folder selected"));
   };
-  root.querySelector("[data-files-sort]").addEventListener("change", () => render());
+  root.querySelector("[data-files-sort]").value = data.views.filesSort; root.querySelector("[data-files-sort]").addEventListener("change", () => { data.views.filesSort = root.querySelector("[data-files-sort]").value; persistData(); render(); });
   const refreshFromBin = () => { if (!root.isConnected) return document.removeEventListener("lumen-files-changed", refreshFromBin); render(); };
   document.addEventListener("lumen-files-changed", refreshFromBin);
   const openFromSearch = (event) => { if (!root.isConnected) return document.removeEventListener("lumen-open-file", openFromSearch); const item = data.files.find((file) => file.id === event.detail); if (!item) return; current = item.parent; selected = item.id; render(); };
@@ -938,8 +938,8 @@ const apps = [
         summary.textContent = data.tasks.filter((task) => !task.done).length + " remaining · " + data.tasks.length + " total";
         clearCompleted.disabled = !data.tasks.some((task) => task.done);
       };
-      render();
-      root.querySelectorAll(".checklist-view").forEach((picker) => picker.addEventListener("change", render));
+      root.querySelector("[data-task-show]").value = data.views.taskShow; root.querySelector("[data-task-sort]").value = data.views.taskSort; render();
+      root.querySelectorAll(".checklist-view").forEach((picker) => picker.addEventListener("change", () => { data.views.taskShow = root.querySelector("[data-task-show]").value; data.views.taskSort = root.querySelector("[data-task-sort]").value; persistData(); render(); }));
       list.addEventListener("dblclick", async (event) => {
         const label = event.target.closest("[data-task-text]");
         if (!label) return;
