@@ -1,5 +1,5 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=7f33c67d33";
-import { runScript } from "./lumen-script.mjs?v=b7a4b1d101";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=7759b7477f";
+import { runScript, display, suggest } from "./lumen-script.mjs?v=b95526b43e";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -564,6 +564,65 @@ async function clearAllData() {
   closeAllWindows();
   openApp("settings");
   showToast("All LUMEN data was cleared.");
+}
+async function installScriptSamples() { const { scriptSamples } = await import("./script-samples.mjs?v=379e94c5ad"); let folder = data.files.find((item) => item.kind === "folder" && item.parent === null && item.name === "Programs"); if (!folder) { folder = { id: makeId(), kind: "folder", name: "Programs", parent: null, content: "", modifiedAt: new Date().toISOString() }; data.files.push(folder); } const added = scriptSamples.filter((sample) => !data.files.some((item) => item.parent === folder.id && item.name === sample.name)); added.forEach((sample) => data.files.push({ id: makeId(), kind: "text", name: sample.name, parent: folder.id, content: sample.content, modifiedAt: new Date().toISOString() })); data.samplesInstalled = true; persistData(); document.dispatchEvent(new Event("lumen-files-changed")); return added.length; }
+function createScriptHost(stop) {
+  const palette = ["#000000", "#000080", "#008000", "#008080", "#800000", "#800080", "#808000", "#c0c0c0", "#808080", "#0000ff", "#00ff00", "#00ffff", "#ff0000", "#ff00ff", "#ffff00", "#ffffff"];
+  const paint = (value) => typeof value === "number" ? palette[((Math.floor(value) % 16) + 16) % 16] : String(value);
+  const keyName = (key) => { const name = String(key).toLowerCase(); return name === " " || name === "spacebar" ? "space" : name; };
+  const iconFor = (name) => sprite(String(name).toLowerCase()) || apps.find((app) => app.id === String(name).toLowerCase())?.icon || sprite("terminal");
+  let current = null;
+  const need = () => { if (!current?.canvas?.isConnected) throw new Error("Open a window first, for example: window \"My program\", 320, 240, \"paint\""); return current; };
+  const fill = (x, y, width, height, color) => { const state = need(); state.context.fillStyle = paint(color); state.context.fillRect(Math.floor(x), Math.floor(y), Math.max(0, Math.round(width)), Math.max(0, Math.round(height))); };
+  const commands = {
+    window: (title = "Program", width = 320, height = 240, icon = "terminal") => {
+      const id = "script:" + makeId().slice(0, 8);
+      const state = { id, keys: new Set(), hits: new Set(), clicks: new Set(), mouse: { x: 0, y: 0, down: false, hits: 0 }, cleanup: [] };
+      const app = { id, name: display(title).slice(0, 60), icon: iconFor(icon), size: [Math.max(200, Math.min(960, Math.round(Number(width) || 320))), Math.max(150, Math.min(720, Math.round(Number(height) || 240)))], html: () => '<div class="script-window"><div class="script-window__bar" data-script-bar hidden></div><canvas class="script-window__canvas" data-script-canvas width="160" height="120" tabindex="0" aria-label="Program screen"></canvas></div>', bind: (root) => {
+        state.root = root; state.canvas = root.querySelector("[data-script-canvas]"); state.context = state.canvas.getContext("2d"); state.bar = root.querySelector("[data-script-bar]");
+        state.context.imageSmoothingEnabled = false; state.context.fillStyle = "#000"; state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
+        root.addEventListener("keydown", (event) => { const key = keyName(event.key); state.keys.add(key); state.hits.add(key); if (["arrowup", "arrowdown", "arrowleft", "arrowright", "space"].includes(key)) event.preventDefault(); });
+        root.addEventListener("keyup", (event) => state.keys.delete(keyName(event.key)));
+        const locate = (event) => { const [x, y] = toScene(event.clientX, event.clientY); const box = state.canvas.getBoundingClientRect(); const scale = Math.min(box.width / state.canvas.width, box.height / state.canvas.height) || 1; const left = box.left + (box.width - state.canvas.width * scale) / 2; const top = box.top + (box.height - state.canvas.height * scale) / 2; state.mouse.x = Math.floor((x - left) / scale); state.mouse.y = Math.floor((y - top) / scale); return x >= left && y >= top && x < left + state.canvas.width * scale && y < top + state.canvas.height * scale; };
+        const move = (event) => locate(event); const release = () => { state.mouse.down = false; };
+        state.canvas.addEventListener("pointerdown", (event) => { if (event.button !== 0 || !locate(event)) return; state.mouse.down = true; state.mouse.hits += 1; state.canvas.focus({ preventScroll: true }); });
+        document.addEventListener("pointermove", move, { passive: true }); window.addEventListener("pointerup", release);
+        state.cleanup.push(() => { document.removeEventListener("pointermove", move); window.removeEventListener("pointerup", release); });
+        state.bar.addEventListener("click", (event) => { const button = event.target.closest("[data-script-button]"); if (!button) return; state.clicks.add(button.dataset.scriptButton); state.canvas.focus({ preventScroll: true }); });
+        state.canvas.focus({ preventScroll: true });
+        return () => { state.cleanup.forEach((cleanup) => cleanup()); const index = apps.indexOf(app); if (index >= 0) apps.splice(index, 1); delete data.launches[id]; if (current === state) stop(); };
+      } };
+      state.app = app; apps.push(app); current = state; openApp(id);
+      if (!state.canvas) throw new Error("The window could not open");
+    },
+    screen: (width = 160, height = 120) => { const state = need(); state.canvas.width = Math.max(1, Math.min(640, Math.round(width))); state.canvas.height = Math.max(1, Math.min(480, Math.round(height))); state.context.imageSmoothingEnabled = false; fill(0, 0, state.canvas.width, state.canvas.height, 0); },
+    cls: (color = 0) => { const state = need(); fill(0, 0, state.canvas.width, state.canvas.height, color); },
+    pixel: (x, y, color = 15) => fill(x, y, 1, 1, color),
+    rect: (x, y, width, height, color = 15) => fill(x, y, width, height, color),
+    box: (x, y, width, height, color = 15) => { fill(x, y, width, 1, color); fill(x, y + height - 1, width, 1, color); fill(x, y, 1, height, color); fill(x + width - 1, y, 1, height, color); },
+    line: (x1, y1, x2, y2, color = 15) => { let x = Math.floor(x1); let y = Math.floor(y1); const endX = Math.floor(x2); const endY = Math.floor(y2); const dx = Math.abs(endX - x); const dy = -Math.abs(endY - y); const sx = x < endX ? 1 : -1; const sy = y < endY ? 1 : -1; let error = dx + dy; for (let guard = 0; guard < 4000; guard += 1) { fill(x, y, 1, 1, color); if (x === endX && y === endY) break; const twice = 2 * error; if (twice >= dy) { error += dy; x += sx; } if (twice <= dx) { error += dx; y += sy; } } },
+    circle: (x, y, radius, color = 15, solid = 1) => { const r = Math.max(0, Math.round(radius)); for (let dy = -r; dy <= r; dy += 1) { const dx = Math.floor(Math.sqrt(r * r - dy * dy)); if (solid) fill(x - dx, y + dy, dx * 2 + 1, 1, color); else { fill(x - dx, y + dy, 1, 1, color); fill(x + dx, y + dy, 1, 1, color); fill(x + dy, y - dx, 1, 1, color); fill(x + dy, y + dx, 1, 1, color); } } },
+    text: (x, y, value, color = 15, size = 8) => { const state = need(); state.context.fillStyle = paint(color); state.context.font = Math.max(4, Math.round(size)) + "px 'Lucida Console', monospace"; state.context.textBaseline = "top"; state.context.fillText(display(value), Math.floor(x), Math.floor(y)); },
+    button: (name, label = name) => { const state = need(); state.bar.hidden = false; if ([...state.bar.children].some((item) => item.dataset.scriptButton === String(name))) return; const button = document.createElement("button"); button.type = "button"; button.className = "btn"; button.dataset.scriptButton = String(name); button.textContent = display(label); state.bar.append(button); },
+    frame: () => new Promise((resolve) => { let done = false; const finish = () => { if (done) return; done = true; resolve(); }; requestAnimationFrame(finish); window.setTimeout(finish, 34); }),
+    sound: (name = "thud") => playSound(String(name)),
+    caption: (title) => { const state = need(); state.app.name = display(title).slice(0, 60); const entry = open.get(state.id); if (entry) { writeText(entry.el.querySelector(".bar-title").lastChild, state.app.name); writeText(entry.tab.querySelector(".task__label"), state.app.name); } },
+    icon: (name) => { const state = need(); state.app.icon = iconFor(name); const entry = open.get(state.id); if (entry) { entry.el.querySelector(".bar-title img").src = state.app.icon; entry.tab.querySelector("img").src = state.app.icon; } },
+    closewindow: () => { if (current && open.has(current.id)) closeApp(current.id); },
+  };
+  const functions = {
+    key: (name) => Boolean(current?.keys.has(keyName(name))),
+    keyhit: (name) => { const key = keyName(name); if (!current?.hits.has(key)) return false; current.hits.delete(key); return true; },
+    mousex: () => current?.mouse.x ?? 0,
+    mousey: () => current?.mouse.y ?? 0,
+    mousedown: () => Boolean(current?.mouse.down),
+    mousehit: () => { if (!current?.mouse.hits) return false; current.mouse.hits -= 1; return true; },
+    clicked: (name) => { if (!current?.clicks.has(String(name))) return false; current.clicks.delete(String(name)); return true; },
+    width: () => current?.canvas?.width ?? 0,
+    height: () => current?.canvas?.height ?? 0,
+    getpixel: (x, y) => { const state = need(); const [r, g, b] = state.context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data; return "#" + [r, g, b].map((value) => value.toString(16).padStart(2, "0")).join(""); },
+  };
+  return { commands, functions, input: (prompt) => showWindowDialog({ title: current?.app.name || "Input", message: prompt, value: "", confirmLabel: "OK", onDesk: true }) };
 }
 const apps = [
   {
@@ -1510,16 +1569,16 @@ const apps = [
       };
       const findApp = (name) => apps.find((app) => app.id === name.toLowerCase() || app.name.toLowerCase() === name.toLowerCase());
       const scriptTargets = (selector) => selector === "*" ? [...open.values()] : [...open.values()].filter((entry) => entry.app.id.toLowerCase() === selector.toLowerCase() || entry.app.name.toLowerCase() === selector.toLowerCase());
-      const scriptAction = async (command, args) => { const [selector = "", ...parts] = args.split(/\s+/); const targets = scriptTargets(selector); if (command === "open") { const app = findApp(args); if (!app) throw new Error("No program named " + args); openApp(app.id); } else if (command === "close") targets.forEach((entry) => closeApp(entry.app.id)); else if (command === "focus") targets[0] && focusWin(targets[0].app.id); else if (command === "minimize") targets.forEach((entry) => minimizeApp(entry.app.id)); else if (command === "restore") targets.forEach((entry) => restoreApp(entry.app.id)); else if (command === "title") targets.forEach((entry) => { entry.el.querySelector(".bar-title").lastChild.textContent = parts.join(" ").slice(0, 80); }); else if (command === "move") { const [x, y] = parts.map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("Usage: MOVE window x y"); targets.forEach((entry) => { entry.el.style.left = Math.round(x) + "px"; entry.el.style.top = Math.round(y) + "px"; constrainWindow(entry.el); }); } else if (command === "jitter") { const amount = Math.max(1, Math.min(96, Number(parts[0]) || 16)); targets.forEach((entry) => { entry.el.style.left = entry.el.offsetLeft + Math.round((Math.random() * 2 - 1) * amount) + "px"; entry.el.style.top = entry.el.offsetTop + Math.round((Math.random() * 2 - 1) * amount) + "px"; constrainWindow(entry.el); }); } else if (command === "toast") showToast(args); else throw new Error("Unknown script command: " + command); };
+      const scriptAction = async (command, args) => { const [selector = "", ...parts] = args.split(/\s+/); const targets = scriptTargets(selector); if (command === "open") { const app = findApp(args); if (!app) throw new Error("No program named " + args); openApp(app.id); } else if (command === "close") targets.forEach((entry) => closeApp(entry.app.id)); else if (command === "focus") targets[0] && focusWin(targets[0].app.id); else if (command === "minimize") targets.forEach((entry) => minimizeApp(entry.app.id)); else if (command === "restore") targets.forEach((entry) => restoreApp(entry.app.id)); else if (command === "title") targets.forEach((entry) => { entry.el.querySelector(".bar-title").lastChild.textContent = parts.join(" ").slice(0, 80); }); else if (command === "move") { const [x, y] = parts.map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("Usage: MOVE window x y"); targets.forEach((entry) => { entry.el.style.left = Math.round(x) + "px"; entry.el.style.top = Math.round(y) + "px"; constrainWindow(entry.el); }); } else if (command === "jitter") { const amount = Math.max(1, Math.min(96, Number(parts[0]) || 16)); targets.forEach((entry) => { entry.el.style.left = entry.el.offsetLeft + Math.round((Math.random() * 2 - 1) * amount) + "px"; entry.el.style.top = entry.el.offsetTop + Math.round((Math.random() * 2 - 1) * amount) + "px"; constrainWindow(entry.el); }); } else if (command === "toast") showToast(args); else { const guess = suggest(command, ["open", "close", "focus", "minimize", "restore", "title", "move", "jitter", "toast", "window", "screen", "cls", "pixel", "rect", "box", "line", "circle", "text", "button", "frame", "sound", "caption", "icon", "closewindow", "print", "let", "if", "while", "for", "gosub", "sub", "call", "dim", "input", "sleep"]); throw new Error("Unknown command: " + command + (guess ? ". Did you mean " + guess + "?" : "")); } };
       const demoScript = 'open calculator\nopen notes\nopen files\nlet n = 0\nloop:\ntitle * You are an idiot\njitter * 28\nsleep 90\nlet n = n + 1\nif n < 45 goto loop\ntitle * LUMEN survived\ntoast Harmless chaos complete.';
-      const executeScript = async (source) => { scriptController?.abort(); const controller = new AbortController(); scriptController = controller; try { await runScript(source, { action: scriptAction, output: print, signal: controller.signal }); return "Script complete."; } catch (error) { return error.name === "AbortError" ? "Script stopped." : "Script error: " + error.message; } finally { if (scriptController === controller) scriptController = null; } };
+      const executeScript = async (source) => { scriptController?.abort(); const controller = new AbortController(); scriptController = controller; try { await runScript(source, { action: scriptAction, output: print, signal: controller.signal, host: createScriptHost(() => controller.abort()) }); return "Script complete."; } catch (error) { return error.name === "AbortError" ? "Script stopped." : "Script error: " + error.message; } finally { if (scriptController === controller) scriptController = null; } };
       const runRequested = (event) => { print("C:\\LUMEN>run " + event.detail.name); executeScript(event.detail.content).then(print); }; document.addEventListener("lumen-run-script", runRequested);
       const commands = {
-        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\nrun <file>      run a local Lumen script\nscript help     show the scripting language\nscript demo     run harmless window chaos\nstop            stop a running script\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
+        help: () => "apps            list programs\nopen <app>      start a program\ncalc <sum>      do arithmetic\ntask <text>     add to Checklist\ntasks           show Checklist\nnote <text>     append a line to Notes\nstart <app>     same as open\nrun <file>      run a LUMEN Script program, like run flappy.lsc\nsamples         copy example programs into Files\\Programs\nscript help     show the scripting language\nscript demo     run harmless window chaos\nstop            stop a running script\ndir             list files in C:\\\ntree            show every folder and file\ntype <file>     print a text file\ndate            show the date\ntime            show the time\nwhoami          show who is signed in\nmem             show storage use\ncolor <xy>      set colors, for example color 1f\necho <text>     repeat text\ncls             clear the screen\nver             show the version\nshutdown        turn off LUMEN\nexit            close this window",
         apps: () => apps.filter((app) => !isFolderId(app.id)).map((app) => app.id.padEnd(14) + app.name).join("\n"),
         open: (args) => {
           const app = findApp(args);
-          if (!app) return "No program named " + args + ". Type apps to list them.";
+          if (!app) return "No program named " + args + "." + ((guess) => guess ? " Did you mean " + guess + "?" : " Type apps to list them.")(suggest(args, apps.filter((item) => !isFolderId(item.id) && !item.id.startsWith("script:")).flatMap((item) => [item.id, item.name])));
           openApp(app.id);
           return "Starting " + app.name + "...";
         },
@@ -1534,7 +1593,7 @@ const apps = [
           return "Added to Checklist.";
         },
         tasks: () => data.tasks.length ? data.tasks.map((task) => (task.done ? "[x] " : "[ ] ") + task.text).join("\n") : "No tasks.",
-        run: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? executeScript(file.content) : "The system cannot find the script file."; },
+        run: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? executeScript(file.content) : "The system cannot find the script file." + ((guess) => guess ? " Did you mean " + guess + "?" : " Type samples to get example programs.")(suggest(args, data.files.filter((item) => item.kind === "text").map((item) => item.name))); },
         note: (args) => {
           if (!args) return "Usage: note <text>";
           if (open.has("notes")) return "Close Notes first so its open edits are not overwritten.";
@@ -1543,11 +1602,12 @@ const apps = [
           return "Appended to Notes.";
         },
         start: (args) => commands.open(args),
-        script: (args) => args.toLowerCase() === "demo" ? executeScript(demoScript) : "Lumen Script commands:\nLET name = value\nPRINT value\nlabel:\nIF condition GOTO label\nGOTO label\nSLEEP milliseconds\nOPEN, CLOSE, FOCUS, MINIMIZE, RESTORE window\nTITLE window text\nMOVE window x y\nJITTER window amount\nTOAST text\nEND\n\nUse * for every open window. Separate commands with new lines or semicolons. Save scripts as text files and use RUN <file>. Press Ctrl+C or type STOP to interrupt.",
+        script: (args) => args.toLowerCase() === "demo" ? executeScript(demoScript) : "LUMEN Script 2\nValues: numbers, \"text\", true, false, arrays\nMath: + - * / % ^, comparisons = == != <> < > <= >=, and, or, not\nname = value  or  LET name = value     name[i] = value     DIM grid(100)\nPRINT a, b     INPUT name, \"prompt\"     SLEEP ms\nIF cond THEN statement     IF cond THEN ... ELSE ... END IF\nWHILE cond ... WEND     FOR i = 1 TO 10 STEP 2 ... NEXT\nlabel:  GOTO label   GOSUB label ... RETURN   SUB name ... END SUB, CALL name   END\nFunctions: abs int floor ceil round sqrt sin cos tan atan atan2 pow exp log sign min max clamp\n  rnd(n) random() pi() len str num upper lower mid left right instr chr ord time()\n  array(n) push pop join split rgb(r,g,b) hsv(h,s,v)\nWindows: WINDOW \"Title\", width, height, \"icon\"   CAPTION text   ICON name   CLOSEWINDOW\n  icon can be any program or picture, like files, paint, notes, fortune, or recycle-bin\nDrawing: SCREEN w, h   CLS color   PIXEL x, y, color   RECT x, y, w, h, color   BOX ...\n  LINE x1, y1, x2, y2, color   CIRCLE x, y, r, color, solid   TEXT x, y, value, color, size\n  colors are 0 to 15 or \"#rrggbb\"   FRAME shows the picture and waits one frame\nInput: BUTTON name, \"Label\"   clicked(name)   key(\"space\")   keyhit(\"arrowup\")\n  mousex() mousey() mousedown() mousehit() width() height() getpixel(x, y)   SOUND name\nDesktop: OPEN, CLOSE, FOCUS, MINIMIZE, RESTORE, TITLE, MOVE, JITTER window   TOAST text\nSeparate statements with new lines or semicolons. Ctrl+C or stop ends a program. script demo runs harmless chaos.",
+        samples: async () => { const added = await installScriptSamples(); return (added ? "Copied " + added + " example programs" : "The example programs are already") + " in Files, in the Programs folder.\nTry run flappy.lsc, run snake.lsc, run life.lsc, run mandelbrot.lsc, or run tapemachine.lsc."; },
         stop: () => { if (!scriptController) return "No script is running."; scriptController.abort(); return "Stopping script..."; },
         dir: () => { const top = data.files.filter((item) => !item.parent); return top.length ? " Directory of C:\\\n\n" + top.map((item) => (item.kind === "folder" ? "<DIR>     " : String(item.content.length).padStart(9) + " ") + item.name).join("\n") + "\n\n" + top.length + " item(s)" : " Directory of C:\\\n\nFile Not Found"; },
         tree: () => { const lines = []; const walk = (parent, depth) => data.files.filter((item) => item.parent === parent).forEach((item) => { lines.push("    ".repeat(depth) + (item.kind === "folder" ? "+-- " : "|   ") + item.name); if (item.kind === "folder") walk(item.id, depth + 1); }); walk(null, 0); return "C:\\\n" + (lines.join("\n") || "No subfolders exist"); },
-        type: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? file.content || "(empty)" : "The system cannot find the file specified."; },
+        type: (args) => { const file = data.files.find((item) => item.kind === "text" && item.name.toLowerCase() === args.toLowerCase()); return file ? file.content || "(empty)" : "The system cannot find the file specified." + ((guess) => guess ? " Did you mean " + guess + "?" : "")(suggest(args, data.files.filter((item) => item.kind === "text").map((item) => item.name))); },
         time: () => new Date().toLocaleTimeString(),
         whoami: () => "lumen\\builder",
         mem: () => { let used = 0; try { used = Object.keys(localStorage).reduce((sum, key) => sum + key.length + (localStorage.getItem(key) || "").length, 0); } catch {} return Math.round(used / 1024) + "K of browser storage in use\n" + data.files.length + " files, " + data.tasks.length + " tasks, " + data.logs.length + " log entries"; },
@@ -1575,7 +1635,7 @@ const apps = [
         cursor = history.length;
         const [name, ...rest] = line.split(/\s+/);
         const command = Object.hasOwn(commands, name.toLowerCase()) ? commands[name.toLowerCase()] : null;
-        const output = command ? await command(rest.join(" ")) : "'" + name + "' is not recognized as a command. Type help.";
+        const output = command ? await command(rest.join(" ")) : "'" + name + "' is not recognized as a command." + ((guess) => guess ? " Did you mean " + guess + "?" : " Type help.")(suggest(name, Object.keys(commands)));
         if (output !== null) print(output);
       });
       input.addEventListener("keydown", (event) => {
@@ -1603,7 +1663,7 @@ const apps = [
       root.querySelector("[data-cmd]").addEventListener("click", () => {
         if (!window.getSelection()?.toString()) input.focus();
       });
-      print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands.\n");
+      print("LUMEN [Version 1.04]\nCopyright 1987 Lumen Systems. Type help for commands, or run flappy.lsc to play.\n"); if (!data.samplesInstalled) installScriptSamples().then((added) => { if (added && root.isConnected) print("Example programs were copied to Files, in the Programs folder. Type samples to list them.\n"); });
       return () => { scriptController?.abort(); document.removeEventListener("lumen-run-script", runRequested); };
     },
   },
@@ -2078,7 +2138,7 @@ function openApp(id, geometry) {
     if (id === "focus") paintTimer(existing.el.querySelector(".body"));
     return;
   }
-  if (!geometry) data.launches[id] = (data.launches[id] || 0) + 1;
+  if (!geometry && !id.startsWith("script:")) data.launches[id] = (data.launches[id] || 0) + 1;
   const element = document.createElement("section");
   const offset = (open.size % 8) * 24;
   element.className = "win focus opening";

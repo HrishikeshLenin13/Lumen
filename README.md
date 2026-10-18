@@ -40,6 +40,7 @@ Draw your art in `art/`, one PNG per icon at its current size, then run `node sc
 - Add any program to Quick Launch from its right-click menu, and undo Clear completed in Checklist
 - File modified dates, important tasks, a calculator tape that survives restarts, and an optional weekly hours goal in Ship Log
 - Drop one desktop icon on another to make a folder, drag programs back out of a folder window, drag taskbar and Quick Launch buttons to rearrange them, and resize cursors on window edges
+- LUMEN Script 2 in Command Prompt: a Turing complete language with arrays, loops, subs, and input, plus script windows with any icon, pixel drawing, buttons, keyboard and mouse. Example games and demos land in Files\\Programs, like run flappy.lsc
 - Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
 - Desktop icons you can drag anywhere, with optional align to grid
 - Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch

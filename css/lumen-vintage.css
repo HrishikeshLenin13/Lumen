@@ -1765,3 +1765,8 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .welcome.leaving { animation: welcome-out 320ms ease-out forwards; }
 @keyframes welcome-out { to { opacity: 0; } }
 @media (max-width: 640px) { .welcome__middle { grid-template-columns: 1fr; justify-items: center; gap: 16px; } .welcome__intro { justify-items: center; text-align: center; } .welcome__divider { display: none; } .welcome__user { justify-self: center; } .welcome__band--foot span { display: none; } }
+.body:has(> .script-window) { display: flex; padding: 6px; }
+.script-window { display: flex; flex: 1; flex-direction: column; gap: 6px; min-height: 0; }
+.script-window__bar { display: flex; flex-wrap: wrap; gap: 4px; }
+.script-window__bar[hidden] { display: none; }
+.script-window__canvas { flex: 1; width: 100%; min-height: 0; background: #000; border: 2px solid; border-color: #808080 #fff #fff #808080; image-rendering: pixelated; object-fit: contain; outline: none; }
