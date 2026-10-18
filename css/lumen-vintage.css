@@ -1726,3 +1726,6 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .desk-folder__item.dragging { opacity: 0.5; }
 .icon img, .desk-folder__item img, .task img { -webkit-user-drag: none; user-select: none; }
 .task.reordering, .quick-launch__app.reordering { opacity: 0.6; }
+.desktop { -webkit-user-select: none; user-select: none; }
+.win .body { -webkit-user-select: text; user-select: text; }
+.win .body button, .win .body label, .win .body .tabs, .win .body .desk-folder { -webkit-user-select: none; user-select: none; }
