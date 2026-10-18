@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=8cebd86c01";
+import { makeDefaultData, cloneFiles, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=0e389f35e3";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -2679,7 +2679,7 @@ desk.addEventListener("contextmenu", (event) => {
   if (icon) {
     const id = Array.from(iconButtons).find(([, button]) => button === icon)?.[0];
     selectIcons(new Set([id]));
-    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, null, { label: "Properties", run: () => showProperties(id) }]);
+    return showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => openApp(id) }, pinItem(id), null, { label: "Properties", run: () => showProperties(id) }]);
   }
   showMenu(...toScene(event.clientX, event.clientY), desktopMenu());
 });
@@ -2704,13 +2704,14 @@ startSearch.addEventListener("keydown", (event) => {
   firstMatch.click();
 });
 
+function pinItem(id) { const pinned = data.startPins.includes(id); return { label: pinned ? "Unpin from Start menu" : "Pin to Start menu", run: () => { data.startPins = pinned ? data.startPins.filter((item) => item !== id) : [...data.startPins, id].slice(0, 12); persistData(); renderPinned(); } }; }
 function renderPinned() {
-  const pinned = ["notes", "checklist"];
+  const pinned = data.startPins.filter((id) => apps.some((app) => app.id === id));
   const frequent = Object.entries(data.launches).filter(([id]) => !pinned.includes(id) && apps.some((app) => app.id === id)).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   ["calculator", "paint", "focus", "shiplog", "minesweeper", "files"].forEach((id) => { if (!frequent.includes(id) && !pinned.includes(id)) frequent.push(id); });
   const recent = data.recentFiles.map((id) => data.files.find((item) => item.id === id && item.kind === "text")).filter(Boolean).slice(0, 3);
   startMenu.querySelector("[data-start-recent]").innerHTML = recent.length ? '<div class="start-menu__heading">Recent files</div>' + recent.map((item) => '<button type="button" role="menuitem" data-open-file="' + escapeHtml(item.id) + '"><img class="start-menu__glyph" src="icons/text-file.png?v=466fc6b9b5" alt=""><span>' + escapeHtml(item.name) + "</span></button>").join("") : "";
-  startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + '<div class="menu-separator" role="separator"></div>' + frequent.slice(0, 5).map((id) => startItem(id)).join("");
+  startMenu.querySelector(".start-menu__pinned").innerHTML = pinned.map((id) => startItem(id)).join("") + (pinned.length ? '<div class="menu-separator" role="separator"></div>' : "") + frequent.slice(0, Math.max(2, 7 - pinned.length)).map((id) => startItem(id)).join("");
 }
 function setStartMenu(show) {
   startMenu.classList.toggle("hidden", !show);
@@ -2739,6 +2740,7 @@ startMenu.addEventListener("keydown", (event) => {
   const index = buttons.indexOf(event.target);
   buttons[(index + (event.key === "ArrowDown" ? 1 : buttons.length - 1) + (index < 0 && event.key === "ArrowUp" ? 1 : 0)) % buttons.length]?.focus();
 });
+startMenu.addEventListener("contextmenu", (event) => { const button = event.target.closest("[data-open-app]"); event.preventDefault(); if (!button) return; const id = button.dataset.openApp; showMenu(...toScene(event.clientX, event.clientY), [{ label: "Open", run: () => { setStartMenu(false); openApp(id); } }, pinItem(id), null, { label: "Properties", run: () => { setStartMenu(false); showProperties(id); } }]); });
 startMenu.addEventListener("click", (event) => {
   const appButton = event.target.closest("[data-open-app]");
   if (appButton) {
@@ -2757,7 +2759,7 @@ startMenu.addEventListener("click", (event) => {
   if (event.target.closest("[data-power-off]")) { setStartMenu(false); turnOffDialog(); }
 });
 document.addEventListener("mousedown", (event) => {
-  if (!event.target.closest(".start-wrap")) setStartMenu(false);
+  if (!event.target.closest(".start-wrap, .context-menu")) setStartMenu(false);
 });
 const runAliases = { notepad: "notes", calc: "calculator", mspaint: "paint", cmd: "terminal", command: "terminal", winmine: "minesweeper", explorer: "files", control: "settings", desk: "settings", timedate: "calendar", winver: "about", sol: "busywork", recycler: "recycle" };
 let lastRun = "";
