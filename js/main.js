@@ -2879,6 +2879,17 @@ function tickClock() {
 }
 tickClock();
 document.getElementById("clock").addEventListener("click", () => openApp("calendar"));
+document.querySelector(".tray").addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  showMenu(...toScene(event.clientX, event.clientY), [
+    { label: "Adjust date and time", run: () => openApp("calendar") },
+    { label: (data.clock24 ? "✓ " : "") + "Use 24-hour clock", run: () => { data.clock24 = !data.clock24; persistData(); applyTheme(); writeText(document.querySelector("[data-clock-time]"), clockFormat.format(new Date())); } },
+    { label: (data.sounds ? "" : "✓ ") + "Mute sounds", run: () => { data.sounds = !data.sounds; persistData(); paintVolume(); } },
+    null,
+    { label: "Properties", run: () => openApp("settings") },
+  ]);
+});
 document.getElementById("trayTimer").addEventListener("click", () => openApp("focus"));
 document.querySelector("[data-show-desktop]").addEventListener("click", toggleDesktop);
 function paintVolume() {
