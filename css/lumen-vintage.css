@@ -285,6 +285,7 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
+  contain: layout paint;
   background: var(--window-bg);
   padding: 0 3px 3px;
   border-radius: 8px 8px 0 0;
@@ -1061,6 +1062,7 @@ kbd {
 }
 
 .task {
+  contain: layout;
   display: flex;
   flex: 0 1 160px;
   align-items: center;
