@@ -1475,6 +1475,16 @@ const apps = [
         if (output !== null) print(output);
       });
       input.addEventListener("keydown", (event) => {
+        if (event.key === "Tab" && input.value.trim()) {
+          event.preventDefault();
+          const [word, ...rest] = input.value.split(" ");
+          const pool = rest.length ? (["open", "start"].includes(word.toLowerCase()) ? apps.map((app) => app.id) : ["type"].includes(word.toLowerCase()) ? data.files.filter((item) => item.kind === "text").map((item) => item.name) : []) : Object.keys(commands);
+          const partial = (rest.length ? rest.join(" ") : word).toLowerCase();
+          const matches = pool.filter((option) => option.toLowerCase().startsWith(partial));
+          if (matches.length === 1) input.value = rest.length ? word + " " + matches[0] : matches[0] + " ";
+          else if (matches.length > 1) print(matches.join("  "));
+          return;
+        }
         if (event.key === "ArrowUp" && cursor > 0) {
           event.preventDefault();
           cursor -= 1;
