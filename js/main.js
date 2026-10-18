@@ -2058,7 +2058,7 @@ function openApp(id, geometry) {
   if (geometry) element.style.cssText += "left:" + geometry.left + "px;top:" + geometry.top + "px;width:" + geometry.width + "px;height:" + geometry.height + "px";
   element.innerHTML = '<header class="bar"><span class="bar-title"><img src="' + app.icon + '" alt="">' + escapeHtml(app.name) + '</span><div class="dots"><button type="button" class="m" data-min aria-label="minimize window" title="Minimize"></button><button type="button" class="q" data-max aria-label="maximize window" aria-pressed="false" title="Maximize"></button><button type="button" class="x" data-close aria-label="close window" title="Close"></button></div></header><div class="body">' + app.html() + '</div><span class="win-grip" data-grip aria-hidden="true"></span><span class="win-edge win-edge--n" data-grip="n" aria-hidden="true"></span><span class="win-edge win-edge--s" data-grip="s" aria-hidden="true"></span><span class="win-edge win-edge--e" data-grip="e" aria-hidden="true"></span><span class="win-edge win-edge--w" data-grip="w" aria-hidden="true"></span><span class="win-edge win-edge--nw" data-grip="nw" aria-hidden="true"></span><span class="win-edge win-edge--ne" data-grip="ne" aria-hidden="true"></span><span class="win-edge win-edge--sw" data-grip="sw" aria-hidden="true"></span>';
   wins.append(element);
-  playSound("open");
+  if (!restoringSession) playSound("open");
   const tab = document.createElement("button");
   tab.type = "button";
   tab.className = "task on opening";
@@ -2101,7 +2101,7 @@ function openApp(id, geometry) {
     entry.resizeObserver.observe(element);
   }
   constrainWindow(element);
-  zoomRects(launcherRect(id), element.getBoundingClientRect(), () => paintWindow(element, "opening"));
+  if (restoringSession) element.classList.remove("opening"); else zoomRects(launcherRect(id), element.getBoundingClientRect(), () => paintWindow(element, "opening"));
   focusWin(id);
 }
 
@@ -3076,8 +3076,9 @@ function rememberWindows() {
   });
   persistData();
 }
+let restoringSession = false;
 function restoreWindows() {
-  const saved = data.windows.filter((item) => apps.some((app) => app.id === item.id));
+  restoringSession = true; const saved = data.windows.filter((item) => apps.some((app) => app.id === item.id));
   saved.forEach((item) => {
     openApp(item.id, item);
     const entry = open.get(item.id);
@@ -3103,7 +3104,7 @@ function restoreWindows() {
     activeId = null;
     activateTopWindow();
   }
-  return saved.length > 0;
+  restoringSession = false; return saved.length > 0;
 }
 window.addEventListener("pagehide", rememberWindows);
 document.addEventListener("visibilitychange", () => {
