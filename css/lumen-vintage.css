@@ -1773,4 +1773,6 @@ html[data-autohide="on"] .windows, html[data-autohide="on"] .icons.free { bottom
 .script-window__screen::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, var(--scan)) 0 1px, transparent 1px 3px); }
 .script-window__screen::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, var(--vignette)) 100%); }
 .script-window__canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; outline: none; }
+.script-window__stage { position: absolute; inset: 0; }
+.script-window__text { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .script-window__widget { display: inline-flex; align-items: center; gap: 4px; } .script-window__widget .knob { width: 96px; } .script-window__widget .field { width: 110px; min-height: 21px; margin: 0; }
