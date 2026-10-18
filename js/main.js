@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c79fdc2955";
+import { makeDefaultData, cloneFiles, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=fd6a49c2ff";
 
 const KEY = "lumen-desk-v1";
 const APP_TITLE = "LUMEN - Builder Desk";
@@ -922,7 +922,7 @@ const apps = [
       const list = root.querySelector("[data-task-list]");
       const summary = root.querySelector("[data-task-summary]");
       const clearCompleted = root.querySelector("[data-clear-completed]");
-      const today = () => { const now = new Date(); return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0"); };
+      const today = () => localDay();
       const render = () => {
         const show = root.querySelector("[data-task-show]").value;
         const sort = root.querySelector("[data-task-sort]").value;
@@ -1411,7 +1411,7 @@ const apps = [
       return '<div class="cal"><div class="cal__head"><button type="button" class="btn cal__step" data-cal-step="-1" aria-label="Previous month">◀</button><strong class="cal__title" data-cal-title aria-live="polite"></strong><button type="button" class="btn cal__step" data-cal-step="1" aria-label="Next month">▶</button><button type="button" class="btn" data-cal-today>Today</button></div><div class="cal__grid" data-cal-grid></div><h3 class="section-title" data-cal-selected></h3><ul class="cal__events" data-cal-events></ul><form class="checklist-entry" data-cal-form><input class="field" type="text" maxlength="160" placeholder="Add an event" aria-label="New event" data-cal-input required><input class="field cal__time" type="time" aria-label="Reminder time, optional" title="Optional reminder time" data-cal-time><select class="field cal__repeat-pick" aria-label="Repeat" title="Repeat" data-cal-repeat><option value="">Once</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select><button type="submit" class="btn">Add</button></form><h3 class="cal__upcoming-title">Upcoming</h3><ul class="cal__upcoming" data-cal-upcoming></ul></div>';
     },
     bind(root) {
-      const localDate = (date) => date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+      const localDate = localDay;
       let today = localDate(new Date());
       let year = new Date().getFullYear();
       let month = new Date().getMonth();
@@ -2947,7 +2947,7 @@ window.addEventListener("appinstalled", () => {
 
 function checkReminders() {
   const now = new Date();
-  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const today = localDay(now);
   const minutes = now.getHours() * 60 + now.getMinutes();
   const due = data.events.filter((event) => event.time && event.reminded !== true && event.reminded !== today && eventOn(event, today) && (([hours, mins]) => minutes - (hours * 60 + mins))(event.time.split(":").map(Number)) >= 0);
   if (!due.length) return;
@@ -3147,7 +3147,7 @@ async function boot() {
   if (apps.some((app) => app.id === requestedApp)) openApp(requestedApp);
   else if (!restored) openApp("about");
   const now = new Date();
-  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const today = localDay(now);
   const agenda = data.events.filter((event) => eventOn(event, today));
   const dueTasks = data.tasks.filter((task) => !task.done && task.due && task.due <= today).sort((a, b) => a.due.localeCompare(b.due));
   if (dueTasks.length) window.setTimeout(() => showToast(dueTasks.length === 1 ? "Task due: " + dueTasks[0].text : dueTasks.length + " tasks are due, starting with " + dueTasks[0].text + "."), agenda.length ? 4200 : 900);
