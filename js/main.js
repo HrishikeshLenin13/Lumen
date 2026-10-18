@@ -1673,7 +1673,7 @@ const apps = [
     name: "About",
     icon: "icons/info.png?v=b8b38795ff",
     html() {
-      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Esc</kbd> - close active window</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
+      return '<img class="about-art" src="icons/about-art.png?v=d39928dde5" alt="" width="192" height="96"><h2 class="about-title">LUMEN</h2><p>Notes, tasks, calculations, focus sessions, work logs, and a few gloriously pointless toys in one offline desk.</p><p class="hint">Data stays in this browser unless you export it.</p><h3 class="section-title">Shortcuts</h3><ul class="shortcut-list"><li><kbd>Alt</kbd> + <kbd>1</kbd> - Notes</li><li><kbd>Alt</kbd> + <kbd>2</kbd> - Checklist</li><li><kbd>Alt</kbd> + <kbd>3</kbd> - Calculator</li><li><kbd>Alt</kbd> + <kbd>4</kbd> - Focus</li><li><kbd>Alt</kbd> + <kbd>5</kbd> - Ship Log</li><li><kbd>Alt</kbd> + <kbd>6</kbd> - Files</li><li><kbd>Alt</kbd> + <kbd>7</kbd> - Settings</li><li><kbd>Alt</kbd> + <kbd>8</kbd> - About</li><li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> - Start menu</li><li><kbd>Alt</kbd> + <kbd>Esc</kbd> - switch windows</li><li><kbd>Ctrl</kbd> + <kbd>F</kbd> - find in Notes</li><li><kbd>Esc</kbd> - close menus and dialogs</li><li>Drag across the desktop to select icons, then press <kbd>Enter</kbd> to open them all</li></ul>';
     },
     bind() {},
   },
@@ -1874,6 +1874,7 @@ function openApp(id, geometry) {
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-selected", "true");
   tab.innerHTML = '<img src="' + app.icon + '" alt="">' + escapeHtml(app.name);
+  tab.title = app.name;
   tasks.append(tab);
   onOwnAnimationEnd(tab, () => tab.classList.remove("opening"));
   const entry = { el: element, tab, app, resizeObserver: null };
@@ -2624,6 +2625,12 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.target.closest("input, textarea, select, button, a") && selectedIconIds().length) {
     event.preventDefault();
     selectedIconIds().forEach((id) => openApp(id));
+    return;
+  }
+  if (event.key === "Escape" && event.altKey) {
+    event.preventDefault();
+    const stack = Array.from(open.entries()).filter(([, entry]) => !entry.el.classList.contains("min")).sort((a, b) => Number(a[1].el.style.zIndex) - Number(b[1].el.style.zIndex));
+    if (stack.length > 1) focusWin(stack[0][0]);
     return;
   }
   if (event.key === "Escape" && event.ctrlKey) {
