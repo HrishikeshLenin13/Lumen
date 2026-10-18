@@ -96,7 +96,7 @@ export async function runScript(source, { action, output, signal, host = {} } = 
   const { matches, loopOf, subs, functions } = matchBlocks(program, lineNumbers);
   const globals = new Scope();
   host.globals = globals;
-  const userFunctions = new Map();
+  const userFunctions = new Map(); host.userFunctions = userFunctions;
   const call = (name, args) => { if (host.functions && Object.hasOwn(host.functions, name)) return host.functions[name](...args); const guess = suggest(name, [...Object.keys(builtins), ...Object.keys(host.functions || {}), ...functions.keys()]); throw new Error("Unknown function " + name + "()" + (guess ? ". Did you mean " + guess + "()?" : "")); };
   const makeFrame = (pc, scope) => ({ pc, env: { vars: scope, call, functions: userFunctions }, returns: [], loops: new Map(), warp: 0, inFunction: false });
   const jumpTo = (frame, name) => { if (!labels.has(name)) { const guess = suggest(name, labels.keys()); throw new Error("Unknown label: " + name + (guess ? ". Did you mean " + guess + "?" : "")); } frame.pc = labels.get(name); };
