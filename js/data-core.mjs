@@ -413,3 +413,5 @@ export function logsToCsv(logs) {
   for (const entry of logs) rows.push([entry.at, entry.h, entry.project || "", normalizeTags(entry.tags).join(", "), entry.text]);
   return rows.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
+export function copyName(name, taken) { const names = new Set(taken); if (!names.has(name)) return name; let candidate = "Copy of " + name; for (let count = 2; names.has(candidate); count += 1) candidate = "Copy (" + count + ") of " + name; return candidate.slice(0, 80); }
+export function cloneFiles(files, id, parent, makeId) { const source = files.find((item) => item.id === id); if (!source) return []; const copies = []; const walk = (item, nextParent, name) => { const copy = { ...item, id: makeId(), parent: nextParent, name }; copies.push(copy); files.filter((child) => child.parent === item.id).forEach((child) => walk(child, copy.id, child.name)); }; walk(source, parent, copyName(source.name, files.filter((item) => item.parent === parent).map((item) => item.name))); return copies; }
