@@ -181,7 +181,7 @@ test("fresh installs start with clean workspace data", () => {
   assert.equal(normalizeData({ rockName: "  Sir Pebble the Magnificent and Wise  " }).rockName, "Sir Pebble the Magnifice");
   assert.equal(normalizeData({ sounds: false }).sounds, false);
   assert.equal(normalizeData({ screensaver: false }).screensaver, false);
-  assert.deepEqual(["olive", "royale", "classic", "neon"].map((theme) => normalizeData({ theme }).theme), ["olive", "royale", "classic", "dark"]);
+  assert.deepEqual(["olive", "royale", "zune", "classic", "neon"].map((theme) => normalizeData({ theme }).theme), ["olive", "royale", "zune", "classic", "dark"]);
   assert.deepEqual([normalizeData({ brightness: 999, contrast: 10, clock24: true })].map((d) => [d.brightness, d.contrast, d.clock24])[0], [130, 70, true]);
   assert.deepEqual(normalizeData({ windows: [{ id: "notes", left: -5, width: 50, minimized: 1 }, { nope: 1 }] }).windows, [{ id: "notes", left: 0, top: 0, width: 120, height: 320, minimized: true, maximized: false }]);
   assert.deepEqual(normalizeData({ iconPositions: { notes: { x: -4, y: 30 }, bad: null }, iconGrid: false }).iconPositions, { notes: { x: 0, y: 30 } });
