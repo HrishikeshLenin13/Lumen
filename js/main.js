@@ -1908,6 +1908,7 @@ function openApp(id, geometry) {
   element.addEventListener("mousedown", () => focusWin(id));
   tab.addEventListener("click", () => {
     if (restoreApp(id)) return;
+    if (activeId === id && !element.classList.contains("minimizing")) return minimizeApp(id);
     focusWin(id);
   });
   drag(element);
@@ -2544,6 +2545,20 @@ function setStartMenu(show) {
 }
 
 startBtn.addEventListener("click", () => setStartMenu(startMenu.classList.contains("hidden")));
+startMenu.addEventListener("keydown", (event) => {
+  if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
+  if (event.target === startSearch && (event.key === "ArrowLeft" || event.key === "ArrowRight")) return;
+  const column = event.target.closest(".start-menu__right, .start-menu__foot") || startMenu.querySelector(".start-menu__left");
+  const visible = (scope) => Array.from(scope.querySelectorAll("button")).filter((button) => button.offsetParent !== null);
+  event.preventDefault();
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    const other = column.matches(".start-menu__left") ? startMenu.querySelector(".start-menu__right") : startMenu.querySelector(".start-menu__left");
+    return visible(other)[0]?.focus();
+  }
+  const buttons = visible(column);
+  const index = buttons.indexOf(event.target);
+  buttons[(index + (event.key === "ArrowDown" ? 1 : buttons.length - 1) + (index < 0 && event.key === "ArrowUp" ? 1 : 0)) % buttons.length]?.focus();
+});
 startMenu.addEventListener("click", (event) => {
   const appButton = event.target.closest("[data-open-app]");
   if (appButton) {
