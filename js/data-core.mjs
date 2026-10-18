@@ -354,7 +354,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     breakMin: clampNumber(source.breakMin, 1, 60, defaults.breakMin),
     theme: ["dark", "olive", "light", "royale", "classic"].includes(source.theme) ? source.theme : "dark",
     effects: ["full", "subtle", "grid", "off"].includes(source.effects) ? source.effects : defaults.effects,
-    wallpaper: ["classic", "midnight", "aurora", "graphite", "none"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
+    wallpaper: ["classic", "midnight", "aurora", "graphite", "none", "custom"].includes(source.wallpaper) ? source.wallpaper : defaults.wallpaper,
     rockPets: clampNumber(source.rockPets, 0, 1000000000, defaults.rockPets),
     sounds: source.sounds !== false,
     mineBest: clampNumber(source.mineBest, 0, 999, defaults.mineBest),
