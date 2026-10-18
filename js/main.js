@@ -1,9 +1,8 @@
 import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=c6f913b5f3";
 import { rockLines, rareRockLine } from "./rock-lines.mjs?v=b747b167bd";
-import { atlasMap } from "./atlas-map.mjs?v=d1912f48d1";
-const sprites = await loadSprites();
+const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
-async function loadSprites() { const urls = {}; try { const sheet = new Image(); await new Promise((resolve, reject) => { sheet.onload = resolve; sheet.onerror = reject; sheet.src = "icons/atlas.png?v=c90e3db2e5"; }); const canvas = document.createElement("canvas"); const context = canvas.getContext("2d"); for (const [name, [x, y, width, height]] of Object.entries(atlasMap)) { canvas.width = width; canvas.height = height; context.drawImage(sheet, x, y, width, height, 0, 0, width, height); urls[name] = canvas.toDataURL(); document.documentElement.style.setProperty("--icon-" + name, 'url("' + urls[name] + '")'); } } catch {} return urls; }
+async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
 document.querySelectorAll("img[data-icon]").forEach((image) => { image.src = sprite(image.dataset.icon); });
 
 const KEY = "lumen-desk-v1";
