@@ -2343,11 +2343,12 @@ function closeAllWindows() {
   activeId = null;
 }
 
+const windowImpacts = new WeakMap();
 function impact(node, speed, origin, horizontal) {
   if (speed < 0.15) return;
   const squash = Math.min(0.08, speed * 0.025);
   const scale = horizontal ? "scale(" + (1 - squash) + ", " + (1 + squash / 2) + ")" : "scale(" + (1 + squash / 2) + ", " + (1 - squash) + ")";
-  node.animate([{ transformOrigin: origin, transform: scale }, { transformOrigin: origin, transform: "none" }], { duration: 170, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" });
+  windowImpacts.get(node)?.cancel(); windowImpacts.set(node, node.animate([{ transformOrigin: origin, transform: scale }, { transformOrigin: origin, transform: "none" }], { duration: 170, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" }));
   playSound("thud");
 }
 let flingCount = 0;
@@ -2400,6 +2401,7 @@ function resizeGrip(node) {
     focusWin(node.dataset.appId);
     const pointerId = event.pointerId;
     try { grip.setPointerCapture(pointerId); } catch { return; }
+    delete node.dataset.flinging; windowImpacts.get(node)?.cancel();
     const edge = grip.dataset.grip || "se";
     const [startX, startY] = toScene(event.clientX, event.clientY);
     const start = { left: node.offsetLeft, top: node.offsetTop, width: node.offsetWidth, height: node.offsetHeight };
@@ -2447,7 +2449,7 @@ function drag(node) {
     if (event.button !== 0 || event.target.closest("button") || node.classList.contains("max")) return;
     event.preventDefault();
     focusWin(node.dataset.appId);
-    delete node.dataset.flinging;
+    delete node.dataset.flinging; windowImpacts.get(node)?.cancel();
     const samples = [];
     const pointerId = event.pointerId;
     const [startX, startY] = toScene(event.clientX, event.clientY);
