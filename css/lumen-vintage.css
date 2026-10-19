@@ -163,7 +163,7 @@ select:focus-visible {
 }
 
 .boot-post { position: absolute; top: 32px; left: 32px; margin: 0; color: #c0c0c0; font: 14px/20px var(--mono); white-space: pre; }
-.boot-brand { display: grid; justify-items: center; gap: 10px; }
+.boot-brand { display: grid; justify-items: center; gap: 16px; }
 .start-menu__avatar { flex: 0 0 auto; width: 48px; height: 48px; border: 2px solid #fff; border-radius: 3px; image-rendering: pixelated; }
 .start-menu__who { display: grid; }
 html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contrast(1.05); }
@@ -176,6 +176,7 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
 
 .boot-logo {
   font-size: 42px;
+  line-height: 48px;
   font-style: italic;
   font-weight: 700;
   letter-spacing: -3px;
@@ -185,6 +186,7 @@ html[data-effects="full"] .boot { filter: url("#crt-split") saturate(1.12) contr
 .boot-copy {
   color: #c6c6c6;
   font-size: 11px;
+  line-height: 16px;
 }
 
 .boot-track {
