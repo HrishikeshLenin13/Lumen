@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=7759b7477f";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=3b19aceb41";
 import { runScript, display, suggest, compiledExpression } from "./lumen-script.mjs?v=0db2593a2d";
 import { PixelScreen, parseColor, toHex } from "./lumen-screen.mjs?v=f58703268d";
 import { bindScriptEditor } from "./script-editor.mjs?v=8fee3934bd";
@@ -1736,7 +1736,7 @@ const apps = [
     bind(root) {
       const mood = root.querySelector("[data-rock-mood]");
       const count = root.querySelector("[data-rock-count]");
-      let lastLine = -1; const lines = import("./rock-lines.mjs?v=b747b167bd");
+      const lines = import("./rock-lines.mjs?v=e67b37432f");
       const who = () => data.rockName || "The rock";
       const render = () => {
         count.textContent = data.rockPets === 1 ? "Petted once." : "Petted " + data.rockPets + " times.";
@@ -1746,7 +1746,7 @@ const apps = [
       root.querySelector("[data-rock-pet]").addEventListener("click", () => {
         data.rockPets += 1;
         persistData();
-        lines.then(({ rockLines, rareRockLine }) => { let pick = Math.floor(Math.random() * rockLines.length); if (pick === lastLine) pick = (pick + 1) % rockLines.length; lastLine = pick; mood.textContent = (Math.random() < 1 / 5000 ? rareRockLine : data.rockPets % 100 === 0 ? "The rock has chosen you." : rockLines[pick]).replace(/^The rock/, who()); });
+        lines.then(({ nextRockLine }) => { const next = nextRockLine(data.rockDialogue); data.rockDialogue = next.state; persistData(); mood.textContent = next.line.replace(/^The rock/, who()); });
         render();
       });
       render();
