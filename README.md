@@ -1,106 +1,129 @@
 # LUMEN
-Lumen is an installable offline workspace for notes, task tracking, focus sessions, and work logs.
-Open apps from the desktop, keyboard shortcuts, or the searchable Start menu.
-Drag desktop icons to keep your preferred app order.
-The pixel cursor tilts with the curved CRT surface, and confirmations stay inside LUMEN windows.
-Draw your art in `art/`, one PNG per icon at its current size, then run `node scripts/build-atlas.mjs`. It packs every icon into one generated sheet, `css/sprites.css`, so the page loads one small file instead of dozens of images, and builds `art/lumen-logo.png`, the favicon, and both app icons from the L in `art/l.png` on LUMEN blue, so redrawing the L updates them all. It also saves `art/atlas-preview.png`, a sheet of every sprite for viewing that the app never loads. Cursor hotspots use the top-left pixel.
 
-## Features
+Lumen is a Windows XP-style desktop that runs in your browser. You can keep notes, track work, draw in Paint, play Minesweeper, and write programs in its own scripting language. It can also be installed and used offline after its files have been cached.
 
-- Notes with automatic saving, Markdown outlines, statistics, line trimming, copying, and version history
+The desktop has a curved CRT display, scanlines, system sounds, and a pixel cursor that tilts with the screen. Windows can be moved, resized from any edge, tiled, or cascaded. Display Properties has the theme and monitor settings, including controls to reduce or turn off the CRT effects.
 
-- Checklist with persistent completion state
-- Calculator with a real keypad, keyboard input, live preview, and a result tape
-- Calendar with local events, opened from the taskbar clock
-- Command Prompt that opens apps, does math, and adds tasks and notes
-- Paint with pencil, eraser, fill, airbrush, smudge, picker, undo, a VGA palette, and PNG export
-- Files with folders, autosaved text documents, drag-in import, download, and keyboard navigation; use F2 to rename, Enter to open, and Backspace to go up
-- Minesweeper with a safe first click, flags, and a saved best time
-- Pet Rock, Fortune, Coin Flip, and Busy Work for moments that need no productivity at all
-- Character Map for copying arrows, box drawing, currency, accents, and math symbols
-- A Recycle Bin that keeps deleted files and folders until you restore or empty them
-- A Run dialog that understands classic names like notepad, calc, mspaint, cmd, and winmine
-- Minesweeper difficulty levels, find and replace in Notes, Paint can open pictures, and calculator square root, percent, sign, and reciprocal keys
-- A programmable Command Prompt with local scripts, loops, conditions, and safe window automation
-- Windows resize from any edge, the Start menu learns your most used programs, and a balloon lists today's events at startup
-- Notes word wrap and font choices, and Checklist filtering, sorting, and renaming
-- Calendar reminders at a set time, a tray volume popup, Alt+Esc window switching, and a weekly hours chart in Ship Log
-- Import text files into Files with a button or by dropping them on the Files window or the desk
-- Paint line, rectangle, and ellipse tools, Minesweeper chording, Command Prompt tab completion, and Start menu search that finds files
-- Your own picture or Spectrum Steps as the desk background, selectable pixel/system/crosshair/pointer/wait/text cursors, outline window dragging, an animations switch, upcoming events in Calendar, and a nameable pet rock
-- Recent files in the Start menu, a tray menu for the clock and sound, folder names in the Files title, file sorting, and system details in About
-- Save notes as files, due dates on tasks, calculator copy and paste, recent characters, a Mystify screen saver, and a long break after every fourth focus session
-- Undo after deleting tasks, ship log entries, and events, copy, paste, and duplicate in Files, a full Recycle Bin icon, Ctrl+A on the desk, F1 for help, and the Windows key for Start
-- Repeating calendar events, a Zune color scheme, programs you can pin to the Start menu, and checklist tasks you can drag or Alt+arrow into your own order
-- Auto-hide the taskbar and hide desktop icons from the right-click menus or Display Properties
-- Rename desktop shortcuts with F2, see the caret line and column in Notes, pick a custom Minesweeper field, and find desktop and taskbar options on their own Display Properties tab
-- Name what you are focusing on and finished sessions land in Ship Log, Ctrl+S saves inside LUMEN, and Paint has a Colors picker plus window-wide Ctrl+Z and Ctrl+O
-- A rotating Did you know tip at startup, which you can hide from the Screen Saver tab
-- Log a Ship Log entry again, restore the whole Recycle Bin at once, edit calendar events by double-clicking, and pick recent commands in Run
-- Add any program to Quick Launch from its right-click menu, and undo Clear completed in Checklist
-- File modified dates, important tasks, a calculator tape that survives restarts, and an optional weekly hours goal in Ship Log
-- Drop one desktop icon on another to make a folder, drag programs back out of a folder window, drag taskbar and Quick Launch buttons to rearrange them, and resize cursors on window edges
-- LUMEN Script 3 in Command Prompt: a Turing complete language with functions, recursion, subs, 2D arrays, and warp blocks that skip screen refresh, plus script windows with a fast pixel screen, sharp text, auto sizing, sliders, checkboxes, mouse wheel, sound, file access, screen effects, and custom pixel shaders written in LUMEN Script. Eighteen examples land in Files\\Programs, including Breakout, an orbital gravity sandbox, a sorting race, a 3D raycaster, a Mandelbrot explorer, plasma, fireworks, a synth, Flappy LUMEN, and Snake
-- Luna Blue, Olive Green, Silver, Royale, and Windows Classic themes that preview as you pick them
-- Desktop icons you can drag anywhere, with optional align to grid
-- Display options for font size, icon size, wallpaper position, background color, screen saver style and wait, and taskbar clock and Quick Launch
-- Monitor brightness and contrast knobs and a 12 or 24-hour clock
-- An XP-style two-column Start menu with Log Off and Turn Off Computer, which fades the desk to gray before the tube collapses
+## Run it locally
 
-- Focus and break timers with notifications and session history
-- Ship Log with projects, tags, filtering, bulk actions, and CSV export
-
-## Run locally
-Serve the repository with any static HTTP server so the service worker and ES modules can load correctly.
+From the repository folder, start a static HTTP server:
 
 ```sh
-
 python3 -m http.server 8000
-
 ```
-## Install
 
-Open LUMEN in a supported browser, choose LUMEN on the taskbar, then select **Install LUMEN...**.
+Then open [localhost:8000](http://localhost:8000). Use an HTTP server instead of opening `index.html` directly, since Lumen uses ES modules and a service worker.
 
-## Privacy and storage
-Notes, tasks, settings, timer state, and work logs stay in browser storage. Settings can export or restore a JSON backup.
+To install it, open the LUMEN menu on the taskbar and choose Install LUMEN... in a browser that supports installation.
+
+## Apps
+
+- Notes saves as you type and keeps version history. It also has a Markdown outline, word counts, find and replace, and font and word-wrap settings.
+- Checklist supports due dates, important tasks, filtering, and sorting. Drag tasks to reorder them, or use Alt and the arrow keys.
+- Focus has work and break timers, with a longer break after every fourth work session. Give a session a name and it gets added to Ship Log when you finish. Ship Log supports projects, tags, a weekly hours goal, and CSV export.
+- Paint has brushes, an eraser, fill, shapes, an airbrush, smudge, and undo. You can open a picture, pick colors, and export the result as a PNG.
+- Files has folders and an autosaving text editor. Import or drop in text files, copy and move them between folders, and download them when you're done. Deleted files go to the Recycle Bin.
+- Calendar keeps local events, repeating events, and timed reminders. Clicking the taskbar clock opens it.
+- Calculator works with its keypad or your keyboard and keeps a result tape between visits.
+- Character Map has 35 character sets, including world scripts, math symbols, box drawing, and musical notation. It remembers your five most recent characters.
+- Minesweeper has difficulty levels, custom fields, saved best times, and a safe first click. Pet Rock has over 2,000 possible dialogues and works through a saved cycle before repeating a line.
+
+There's also Fortune, Coin Flip, and Busy Work. You can give the rock a name, too.
+
+You can search for apps and files from Start, pin programs there or in Quick Launch, and drag one desktop icon onto another to make a folder. Right-click the desktop or taskbar for layout options. The Run dialog accepts familiar names like `notepad`, `calc`, `mspaint`, and `cmd`.
+
+## Your data
+
+Notes, files, settings, timers, and work logs are saved in the browser you're using. There are no accounts or automatic syncing between devices.
+
+Export a JSON backup from Settings if you want to move your desk to another browser or keep a separate copy. Clearing the browser's site data removes the local copy of your work, so export anything you want to keep first.
+
+## Writing programs
+
+LUMEN Script 3 is a BASIC-style language with loops, functions, recursion, subs, and 2D arrays. Programs can create windows, draw to a pixel screen, add controls, play sound, and read or write Lumen files. They can also move, rename, minimize, and close other Lumen windows.
+
+Open Files and choose New script for a starter program. The editor has syntax colors, line numbers, and error messages that take you to the relevant line. Double-click a `.lsc` file to run it. You can also right-click a `.txt` file and run it in Command Prompt.
+
+To copy the example programs into the Programs folder, enter this in Lumen's Command Prompt:
+
+```text
+samples
+run breakout.lsc
+```
+
+There are 18 examples. A few to start with:
+
+- `breakout.lsc` has changing brick layouts, mouse or keyboard controls, and saved best scores.
+- `orbits.lsc` lets you launch bodies by dragging and watch their orbits, or switch to a binary system.
+- `sorting.lsc` races three sorting algorithms on the same input and counts their comparisons and writes.
+- `raycaster.lsc` is a textured 3D maze with eight orbs to collect. Shift sprints, M shows the map, P pauses, and R restarts.
+- `explorer.lsc` lets you zoom and pan through the Mandelbrot set.
+- `synth.lsc` records a tune, changes its waveform, and saves it to `synth-tune.txt`.
+- `life.lsc` lets you paint cells, seed a glider gun, and step through generations.
+- `sketch.lsc` has mirror and rainbow brushes, plus stroke undo.
+
+In the editor:
+
+- `F5` saves and runs. `Shift+F5` stops the program.
+- `F6` checks syntax without running it. Click an error to select its source line.
+- `Ctrl+S` saves, `Ctrl+F` opens find and replace, and `Ctrl+G` goes to a line.
+- `Tab` and `Shift+Tab` indent or outdent a selection. Enter continues the current block's indentation.
+- `Ctrl+D` duplicates a line. `Ctrl+Z` and `Ctrl+Y` undo and redo edits.
+- Press `Escape`, then `Tab` to move keyboard focus out of the editor.
+
+Runtime errors open the matching file at the reported line. If you change an example program, later sample updates leave your version alone.
+
+Command Prompt's `script help` explains the language. Use `eval` to run a single statement directly, or `stop` to end a running program.
+
+## System files
+
+The System folder in Files contains live configuration files. Editing these changes the state Lumen uses, and changes made through the apps appear in the files too.
+
+`display.json` controls the theme, CRT effects, and other display options. `sound.json` contains sound and volume settings. `rock.json` stores the rock's name, pet count, and dialogue cycle. There are also files for focus sessions, the screen saver, desktop layout, and history.
+
+For example, this command replaces Character Map's recent characters:
+
+```text
+eval writefile "System/recent-characters.txt", "★→♥✓♫"
+```
+
+JSON edits can contain only the settings you want to change. If an edit is invalid, the draft stays in Files and the last working settings remain active. Check `System/status.txt` for errors or `System/README.txt` for the full list of files and examples.
+
+These files belong to Lumen's virtual filesystem. Scripts can access them, but they don't get access to files elsewhere on your computer.
+
+## Art
+
+Editable PNGs live in `art/`. Keep each icon at its current dimensions, then rebuild the generated assets:
+
+```sh
+node scripts/build-atlas.mjs
+```
+
+The script bundles the icons into `css/sprites.css` and creates `art/atlas-preview.png` so you can check them together. The app doesn't load the preview. It also builds `art/lumen-logo.png`, the favicon, and the install icons from `art/l.png`, so changing the L updates all of those. Cursor hotspots use the top-left pixel.
 
 ## Sounds
-System sounds live in `sounds/` as MP3 files: open, close, minimize, restore, thud, win, boom, degauss, timer, and flip. Replace any file with your own MP3 of the same name and reload. Sounds always load fresh when online and stay cached for offline use.
 
-## Credits
-Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are human-made.
+The MP3s in `sounds/` are named `open`, `close`, `minimize`, `restore`, `thud`, `win`, `boom`, `degauss`, `timer`, and `flip`. Replace one with an MP3 of the same name to change that sound. Sounds refresh when online and are cached for offline use.
 
 ## Development
 
-- `js/main.js` contains the desktop, window manager, and app bindings.
-- `js/data-core.mjs` contains normalized storage and reusable data operations.
-- `sw.js` manages the versioned offline app shell.
-- Run `node scripts/build-atlas.mjs` after changing anything in `art/`. It also refreshes the cache stamps.
-- Run `node scripts/stamp-cache.mjs` after changing cached files to refresh content-hash cache stamps.
-- Run tests with `node --test tests/*.test.mjs`.
+The app runs as static HTML, CSS, and JavaScript. `js/main.js` handles the desktop, window manager, and app bindings; `js/data-core.mjs` handles stored data and shared data operations.
 
-## Writing LUMEN programs
+The scripting runtime is in `js/lumen-script.mjs`, its graphics code is in `js/lumen-screen.mjs`, and the editor is in `js/script-editor.mjs`. `js/system-files.mjs` handles the live System folder, while `js/character-map.mjs` contains the character sets. The service worker is `sw.js`.
 
-Choose **New script** in Files for a runnable starter, or select an existing file in **Programs** to edit it. Double-clicking a .lsc file runs it. The editor keeps your work in this browser and shows syntax colors, line numbers, and parser diagnostics.
+After changing cached code or assets, refresh the content hashes so installed copies can pick up the changes:
 
-- **F5** saves and runs the current program. **Shift+F5** stops execution.
-- **F6** checks syntax without running the program. Click an error to select its source line.
-- **Ctrl+S** saves, **Ctrl+F** opens find and replace, and **Ctrl+G** goes to a line.
-- **Tab / Shift+Tab** indent or outdent a selection. Enter continues block indentation.
-- Press **Escape**, then **Tab** to move keyboard focus out of the editor.
-- **Ctrl+D** duplicates a line. **Ctrl+Z / Ctrl+Y** undo and redo editing.
-- Runtime errors open the matching file at the reported line. Modified example files are preserved when stock samples update.
+```sh
+node scripts/stamp-cache.mjs
+```
 
-Try these showcases with Run in the editor or `run <filename>` in Command Prompt:
+The art build runs that step for you. To check the project:
 
-| Program | What to try |
-| --- | --- |
-| `breakout.lsc` | Clear changing brick layouts with mouse or keyboard control, particles, saved best scores, and pause/restart controls. |
-| `orbits.lsc` | Launch bodies by dragging, switch to a binary system, and explore mutual gravity, adjustable time, and orbit trails. |
-| `sorting.lsc` | Race bubble, insertion, and selection sort on identical inputs, with comparison/write counts and adjustable playback speed. |
-| `raycaster.lsc` | Collect eight orbs in a textured 3D maze. Shift sprints, M toggles the map, P pauses, and R starts a new expedition. |
-| `explorer.lsc` | Zoom and pan the Mandelbrot set, or use Interesting location for preset destinations. |
-| `synth.lsc` | Record a tune, change its waveform, and save or load `synth-tune.txt`. |
-| `life.lsc` | Paint cells, seed a glider gun, pause, and advance one generation at a time. |
-| `sketch.lsc` | Try mirror and rainbow brushes, then undo the last stroke. |
+```sh
+node --test tests/*.test.mjs
+git diff --check
+```
+
+## Credits
+
+Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are human-made.
