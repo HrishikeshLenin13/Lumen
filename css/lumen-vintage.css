@@ -973,7 +973,7 @@ select.field { height: 23px; }
 .cmd__line { display: flex; }
 .cmd__prompt { white-space: pre; }
 .cmd__input { flex: 1; min-width: 0; padding: 0; color: inherit; background: transparent; border: 0; outline: none; font: inherit; caret-color: #c0c0c0; }
-.about-art { display: block; width: 192px; height: 96px; margin: 0 0 12px; image-rendering: pixelated; }
+.about-art { display: block; width: 147px; height: 48px; margin: 0 0 12px; image-rendering: pixelated; }
 .toy { display: grid; justify-items: center; gap: 12px; padding: 8px 0; text-align: center; }
 .toy__art { width: 96px; height: 96px; image-rendering: pixelated; }
 .toy__line { min-height: 18px; margin: 0; }
