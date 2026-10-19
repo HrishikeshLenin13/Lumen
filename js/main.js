@@ -1,7 +1,8 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=3b19aceb41";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=3264ce2990";
 import { runScript, display, suggest, compiledExpression } from "./lumen-script.mjs?v=0db2593a2d";
 import { PixelScreen, parseColor, toHex } from "./lumen-screen.mjs?v=f58703268d";
 import { bindScriptEditor } from "./script-editor.mjs?v=8fee3934bd";
+import { characterSets, characterGroups, rememberCharacter } from "./character-map.mjs?v=569255b407";
 const sprites = await readSprites();
 function sprite(name) { return sprites[name] || ""; }
 async function readSprites() { const link = document.querySelector('link[href*="sprites.css"]'); const rule = () => [...document.styleSheets].find((sheet) => sheet.href?.includes("sprites.css"))?.cssRules[0]; if (!rule() && link) await new Promise((resolve) => { link.addEventListener("load", resolve, { once: true }); link.addEventListener("error", resolve, { once: true }); }); const urls = {}; const style = rule()?.style; if (style) for (const property of style) if (property.startsWith("--icon-")) urls[property.slice(7)] = style.getPropertyValue(property).trim().replace(/^url\("?|"?\)$/g, ""); return urls; }
@@ -1875,21 +1876,21 @@ const apps = [
     icon: sprite("charmap"),
     size: [430, 312],
     html() {
-      return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set><option value="symbols">Symbols</option><option value="arrows">Arrows</option><option value="math">Math</option><option value="currency">Currency</option><option value="box">Box drawing</option><option value="accents">Accents</option><option value="greek">Greek</option></select></label><div class="charmap__recent" data-charmap-recent></div><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
+      return '<div class="charmap"><label class="form-label charmap__set">Character set<select class="field" data-charmap-set>' + characterGroups.map((group) => '<optgroup label="' + escapeHtml(group) + '">' + Object.entries(characterSets).filter(([, set]) => set.group === group).map(([id, set]) => '<option value="' + id + '">' + escapeHtml(set.label) + '</option>').join('') + '</optgroup>').join('') + '</select></label><div class="charmap__recent" data-charmap-recent></div><div class="charmap__body"><div class="charmap__grid" data-charmap-grid aria-label="Characters"></div><div class="charmap__side"><div class="charmap__zoom" data-charmap-zoom aria-live="polite"></div><span class="hint hint--flush" data-charmap-code></span></div></div><div class="row"><input class="field charmap__text" data-charmap-text dir="auto" aria-label="Characters to copy" placeholder="Click characters to collect them"><button type="button" class="btn" data-charmap-clear>Clear</button><button type="button" class="btn primary" data-charmap-copy>Copy</button></div></div>';
     },
     bind(root) {
-      const sets = { symbols: "§¶†‡•…‰′″‹›«»©®™°±·¿¡♠♣♥♦♪♫☺☻☼★☆✓✗※", arrows: "←↑→↓↔↕↖↗↘↙⇐⇑⇒⇓⇔↩↪↺↻⇄⇅➔➜▲▼◀▶△▽◁▷", math: "±×÷√∛∞≈≠≡≤≥∑∏∫∂∆∇∈∉∩∪⊂⊃∧∨¬∀∃∅πµ½⅓¼¾²³", currency: "$¢£¤¥€₹₽₩₪₫₱₿ƒ₴₺", box: "─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬░▒▓█▄▀▌▐■□▪▫", accents: "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ", greek: "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω" };
+      const sets = characterSets;
       const pick = root.querySelector("[data-charmap-set]");
       const grid = root.querySelector("[data-charmap-grid]");
       const zoom = root.querySelector("[data-charmap-zoom]");
       const code = root.querySelector("[data-charmap-code]");
       const text = root.querySelector("[data-charmap-text]");
       const show = (char) => { zoom.textContent = char; code.textContent = "U+" + char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"); };
-      const render = () => { const chars = [...sets[pick.value]]; grid.innerHTML = chars.map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join(""); show(chars[0]); };
+      const render = () => { const chars = [...sets[pick.value].characters]; grid.innerHTML = chars.map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join(""); show(chars[0]); };
       const recentRow = root.querySelector("[data-charmap-recent]");
       const paintRecent = () => { recentRow.innerHTML = data.recentChars ? '<span class="hint hint--flush">Recent</span>' + [...data.recentChars].map((char) => '<button type="button" class="charmap__cell" data-char="' + escapeHtml(char) + '">' + escapeHtml(char) + "</button>").join("") : ""; };
-      const remember = (char) => { data.recentChars = [char, ...[...data.recentChars].filter((item) => item !== char)].slice(0, 16).join(""); persistData(); paintRecent(); };
-      recentRow.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); });
+      const remember = (char) => { data.recentChars = rememberCharacter(data.recentChars, char); persistData(); paintRecent(); };
+      recentRow.addEventListener("click", (event) => { const cell = event.target.closest("[data-char]"); if (!cell) return; text.value += cell.dataset.char; show(cell.dataset.char); remember(cell.dataset.char); });
       paintRecent();
       pick.addEventListener("change", render);
       grid.addEventListener("focusin", (event) => { if (event.target.dataset.char) show(event.target.dataset.char); });

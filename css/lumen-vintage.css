@@ -1472,15 +1472,16 @@ html[data-effects="grid"] body::before { opacity: 0.6; background: repeating-lin
     transition: none;
   }
 }
-.charmap { display: grid; gap: 8px; }
-.charmap__set { max-width: 200px; }
-.charmap__body { display: grid; grid-template-columns: 1fr 88px; gap: 8px; }
-.charmap__grid { display: grid; grid-template-columns: repeat(auto-fill, 24px); align-content: start; max-height: 184px; overflow: auto; background: #fff; border: 1px solid #7f9db9; }
+.charmap { display: grid; grid-template-rows: auto auto minmax(88px, 1fr) auto; height: 100%; min-height: 216px; gap: 8px; }
+.charmap__set { max-width: 272px; }
+.charmap__body { display: grid; grid-template-columns: minmax(0, 1fr) 88px; min-height: 0; gap: 8px; }
+.charmap__grid { display: grid; grid-template-columns: repeat(auto-fill, 24px); align-content: start; min-height: 0; overflow: auto; background: #fff; border: 1px solid #7f9db9; }
 .charmap__cell { width: 24px; height: 24px; padding: 0; color: #000; font: 15px/22px "Lucida Sans Unicode", "Segoe UI Symbol", var(--font); background: #fff; border: 0; box-shadow: inset -1px -1px #d4d0c8; }
 .charmap__cell:focus-visible, .charmap__cell.scene-hover { color: #fff; background: #316ac5; outline: 0; }
 .charmap__side { display: grid; justify-items: center; align-content: start; gap: 6px; }
 .charmap__zoom { display: grid; place-items: center; width: 88px; height: 88px; color: #000; font: 52px/1 "Lucida Sans Unicode", "Segoe UI Symbol", var(--font); background: #fff; border: 1px solid #7f9db9; box-shadow: 2px 2px rgba(0, 0, 0, 0.25); }
 .charmap__text { flex: 1 1 0; width: auto; min-width: 0; margin: 0; }
+.charmap > .row { margin-bottom: 0; }
 html[data-theme="light"] .bar { color: #000; text-shadow: 1px 1px rgba(255, 255, 255, 0.7); }
 html[data-theme="light"] .win:not(.focus) .bar { color: #7d7f8c; text-shadow: none; }
 html[data-theme="light"] .dots button, html[data-theme="light"] .dots .x { background: linear-gradient(180deg, #fff, #e6e7ee 45%, #c9cad6); border-color: #fff; box-shadow: inset -1px -1px #a3a5b4, 0 0 0 1px #6f7387; }

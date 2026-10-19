@@ -418,7 +418,7 @@ export function normalizeData(value, makeId = () => `${Date.now()}-${Math.random
     deskFolders: cleanDeskFolders(source.deskFolders),
     iconGrid: source.iconGrid !== false,
     volume: clampNumber(source.volume, 0, 100, defaults.volume),
-    recentChars: typeof source.recentChars === "string" ? [...new Set([...source.recentChars])].slice(0, 16).join("") : "",
+    recentChars: typeof source.recentChars === "string" ? [...new Set([...source.recentChars])].slice(0, 5).join("") : "",
     recentFiles: Array.isArray(source.recentFiles) ? [...new Set(source.recentFiles.filter((id) => typeof id === "string" && id).map((id) => id.slice(0, 80)))].slice(0, 10) : [],
     dragContents: source.dragContents !== false,
     transitions: source.transitions !== false,
