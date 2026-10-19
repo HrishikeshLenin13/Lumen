@@ -31,7 +31,7 @@ test("recent characters retain only five unique Unicode characters in most-recen
 });
 const source = readFileSync(new URL("../js/main.js", import.meta.url), "utf8");
 const start = source.indexOf('    id: "charmap",');
-const application = (data, persistData = () => {}) => vm.runInNewContext("({" + source.slice(start, source.indexOf("\n  },", start)) + "})", { characterSets, characterGroups, rememberCharacter, data, persistData, sprite: () => "", escapeHtml: (value) => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;") });
+const application = (data, persistData = () => {}) => vm.runInNewContext("({" + source.slice(start, source.indexOf("\n  },", start)) + "})", { document: { addEventListener() {}, removeEventListener() {} }, characterSets, characterGroups, rememberCharacter, data, persistData, sprite: () => "", escapeHtml: (value) => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;") });
 test("the app lists every set in native optgroups and escapes selectable punctuation", () => {
   const html = application({}).html();
   assert.equal([...html.matchAll(/<option /g)].length, 35);
