@@ -208,8 +208,8 @@ export function restoreTimerState(savedTimer, focusMinutes, now = Date.now()) {
     ? Math.max(0, Math.ceil((Number(savedTimer.endAt) - now) / 1000))
     : Number(savedTimer?.secondsLeft);
   return {
-    mode: savedTimer?.mode || "focus",
-    secondsLeft: Number.isFinite(remaining) ? remaining : focusMinutes * 60,
+    mode: ["focus", "break"].includes(savedTimer?.mode) ? savedTimer.mode : "focus",
+    secondsLeft: Number.isFinite(remaining) ? Math.max(0, Math.ceil(remaining)) : clampNumber(focusMinutes, 1, 180, 25) * 60,
     running,
     finished: Boolean(savedTimer?.finished),
     endAt: running ? Number(savedTimer.endAt) : null,
