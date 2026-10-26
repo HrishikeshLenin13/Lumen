@@ -321,8 +321,11 @@ export function linePoints(x0, y0, x1, y1) {
   }
 }
 export function monthGrid(year, month) {
-  const anchor = new Date(Date.UTC(year, month, 1));
-  const start = Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1 - anchor.getUTCDay());
+  if (!Number.isInteger(year) || year < 1 || year > 9999 || !Number.isSafeInteger(month)) throw new RangeError('Use a year from 1 to 9999 and an integer month offset.');
+  const anchor = new Date(0); anchor.setUTCFullYear(year,month,1);anchor.setUTCHours(0,0,0,0);
+  if (!Number.isFinite(anchor.getTime()) || anchor.getUTCFullYear() < 1 || anchor.getUTCFullYear() > 9999) throw new RangeError('Calendar month is outside supported years.');
+  const first = new Date(anchor);first.setUTCDate(1-anchor.getUTCDay());
+  const start = first.getTime();
   return Array.from({ length: 42 }, (_, index) => {
     const day = new Date(start + index * 86400000);
     return { date: day.toISOString().slice(0, 10), day: day.getUTCDate(), inMonth: day.getUTCMonth() === anchor.getUTCMonth() };

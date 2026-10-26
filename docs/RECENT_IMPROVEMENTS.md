@@ -35,3 +35,7 @@ Run from the repository root:
 node --test tests/*.test.mjs && node scripts/stamp-cache.mjs --check
 ```
 
+
+## File and calendar robustness
+
+Copy names are collision-checked after their 80-character bound is applied. Folder cloning indexes children once, traverses iteratively for deep trees, and rejects cycles or colliding generated IDs without mutating source files. Calendar grids validate year/month coordinates and retain years 1–99 instead of silently mapping them into the twentieth century. These helpers retain stable pre-order file output.
