@@ -140,9 +140,10 @@ export function calculateExpression(value) {
 export function normalizeTags(value) {
   const input = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
   const unique = new Set();
+  const folded = new Set();
   for (const tag of input) {
     const clean = String(tag).trim().replace(/\s+/g, " ").slice(0, 24);
-    if (clean) unique.add(clean);
+    if (clean && !folded.has(clean.toLocaleLowerCase())) { unique.add(clean); folded.add(clean.toLocaleLowerCase()); }
     if (unique.size === 8) break;
   }
   return [...unique];
