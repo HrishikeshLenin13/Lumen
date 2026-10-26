@@ -129,3 +129,7 @@ const r=api.appendCompletedSession(Array(60).fill({minutes:1}),'focus',25,'now')
 test("completed-focus-duration-is-clamped", () => {
 assert.equal(api.appendCompletedSession([],'focus',999)[0].minutes,180);assert.equal(api.appendCompletedSession([],'focus',0)[0].minutes,1);
 });
+
+test("corner-neighbors-do-not-wrap-around-the-board", () => {
+assert.deepEqual(api.neighbors(0,3,3).sort((a,b)=>a-b),[1,3,4]);
+});
