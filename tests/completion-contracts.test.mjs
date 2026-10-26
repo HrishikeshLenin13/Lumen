@@ -21,3 +21,7 @@ assert.equal(api.noteStats('🚀').characters,1);assert.equal(api.noteStats('a\n
 test("blank-revisions-do-not-fill-history", () => {
 assert.deepEqual(api.appendNoteRevision([],'   '),[]);
 });
+
+test("duplicate-head-revisions-do-not-repeat-snapshots", () => {
+const h=api.appendNoteRevision([],'same','now','a');assert.equal(api.appendNoteRevision(h,'same','later','b').length,1);
+});
