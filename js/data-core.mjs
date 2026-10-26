@@ -473,13 +473,17 @@ export function cloneFiles(files, id, parent, makeId) {
     if (!children.has(item.parent)) children.set(item.parent, []);
     children.get(item.parent).push(item);
   }
-  const copies = [];
-  const walk = (item, nextParent, name) => {
-    const copy = {...item, id:makeId(), parent:nextParent, name};
+  const copies = [], visited = new Set();
+  const stack = [{item:source,parent,name:copyName(source.name,(children.get(parent)||[]).map(item=>item.name))}];
+  while (stack.length) {
+    const current = stack.pop(), item = current.item;
+    if (visited.has(item.id)) throw new RangeError('Folder graph contains duplicate or cyclic IDs.');
+    visited.add(item.id);
+    const copy = {...item,id:makeId(),parent:current.parent,name:current.name};
     copies.push(copy);
-    for (const child of children.get(item.id) || []) walk(child,copy.id,child.name);
-  };
-  walk(source,parent,copyName(source.name,(children.get(parent)||[]).map(item=>item.name)));
+    const nested=children.get(item.id)||[];
+    for(let i=nested.length-1;i>=0;i--) stack.push({item:nested[i],parent:copy.id,name:nested[i].name});
+  }
   return copies;
 }
 export function isCalendarDate(value) {
