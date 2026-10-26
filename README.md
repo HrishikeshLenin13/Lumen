@@ -137,3 +137,4 @@ Calendar recurrence also handles leap-day reminders across non-leap centuries. R
 ## Developer resources
 
 - [Feature usage and API contracts](docs/RECENT_IMPROVEMENTS.md)
+- [Troubleshooting and recovery](docs/TROUBLESHOOTING.md)
