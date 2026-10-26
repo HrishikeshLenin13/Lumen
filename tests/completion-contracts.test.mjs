@@ -173,3 +173,7 @@ assert.ok(api.monthGrid(42,1).some(x=>x.date==='0042-02-01'&&x.inMonth));
 test("copy-names-are-collision-checked-after-bounding", () => {
 const base='x'.repeat(80),taken=[base,'Copy of '+'x'.repeat(72)];const name=api.copyName(base,taken);assert.equal(name.length,80);assert.ok(!taken.includes(name));
 });
+
+test("file-cloning-does-not-alias-source-records", () => {
+const files=[{id:'a',name:'A',parent:null,content:'old'}];const copies=api.cloneFiles(files,'a',null,()=> 'new');copies[0].content='changed';assert.equal(files[0].content,'old');
+});
