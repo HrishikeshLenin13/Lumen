@@ -1,4 +1,4 @@
-import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=5c6ed3c146";
+import { makeDefaultData, cloneFiles, newFolderName, localDay, caretPosition, mineCustomField, eventOn, nextOccurrence, clampNumber, normalizeData, normalizeTags, extractNoteHeadings, noteReadingMinutes, noteStats, appendNoteRevision, restoreNoteRevision, validateLogEntry, filterLogs, restoreTimerState, appendCompletedSession, logsToCsv, calculateExpression, createMinefield, neighbors, revealArea, floodFill, linePoints, shapePoints, monthGrid, cursorSurfaceMatrix, smudgePixels } from "./data-core.mjs?v=0ce750cb87";
 import { runScript, display, suggest, compiledExpression } from "./lumen-script.mjs?v=0db2593a2d";
 import { PixelScreen, parseColor, toHex } from "./lumen-screen.mjs?v=f58703268d";
 import { bindScriptEditor } from "./script-editor.mjs?v=8fee3934bd";
@@ -393,7 +393,7 @@ function renderNoteHistory(container) {
 function renderNoteStats(element, notes) {
   if (!element) return;
   const stats = noteStats(notes);
-  writeText(element, stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines");
+  writeText(element, stats.words + " words · " + stats.characters + " characters · " + stats.lines + " lines · ~" + noteReadingMinutes(notes) + " min read");
 }
 function filteredLogs() {
   const days = shipDateRange === "7" || shipDateRange === "30" ? Number(shipDateRange) : 0;

@@ -67,6 +67,11 @@ export function makeDefaultData() {
   };
 }
 
+/** Estimate reading time at 200 words/minute; an empty note takes zero minutes. */
+export function noteReadingMinutes(value) {
+  return Math.ceil(noteStats(value).words / 200);
+}
+
 export function noteStats(value) {
   const text = String(value ?? "");
   const words = text.trim() ? text.trim().split(/\s+/u).length : 0;
