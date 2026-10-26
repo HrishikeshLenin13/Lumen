@@ -49,3 +49,7 @@ assert.deepEqual(api.normalizeTags(['Design','design','DESIGN']),['Design']);
 test("tag-normalization-collapses-internal-whitespace", () => {
 assert.deepEqual(api.normalizeTags('a   b, a b'),['a b']);
 });
+
+test("tag-normalization-bounds-count-and-length", () => {
+const tags=api.normalizeTags(Array.from({length:20},(_,i)=>String(i)+'x'.repeat(40)));assert.equal(tags.length,8);assert.ok(tags.every(x=>x.length<=24));
+});
