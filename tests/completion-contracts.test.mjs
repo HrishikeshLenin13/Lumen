@@ -29,3 +29,7 @@ const h=api.appendNoteRevision([],'same','now','a');assert.equal(api.appendNoteR
 test("note-history-is-bounded-to-twenty-revisions", () => {
 let h=[];for(let i=0;i<25;i++)h=api.appendNoteRevision(h,'text'+i,'now',String(i));assert.equal(h.length,20);assert.equal(h[0].id,'24');
 });
+
+test("oversized-revisions-do-not-enter-history", () => {
+assert.deepEqual(api.appendNoteRevision([],'x'.repeat(100001)),[]);
+});
