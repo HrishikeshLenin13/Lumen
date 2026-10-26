@@ -149,3 +149,7 @@ assert.equal(api.revealArea([{mine:false,count:0}],1,1,0,new Set(),new Set([0]))
 test("paint-fill-does-not-repaint-an-identical-color", () => {
 const pixels=new Uint8ClampedArray([1,2,3,4]);assert.equal(api.floodFill(pixels,1,1,0,0,[1,2,3,4]),0);assert.deepEqual([...pixels],[1,2,3,4]);
 });
+
+test("paint-fill-does-not-cross-color-boundaries", () => {
+const p=new Uint8ClampedArray([1,1,1,255,2,2,2,255]);assert.equal(api.floodFill(p,2,1,0,0,[3,3,3,255]),1);assert.equal(p[4],2);
+});
