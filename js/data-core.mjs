@@ -465,7 +465,23 @@ export function copyName(name, taken) {
     if (!names.has(candidate)) return candidate;
   }
 }
-export function cloneFiles(files, id, parent, makeId) { const source = files.find((item) => item.id === id); if (!source) return []; const copies = []; const walk = (item, nextParent, name) => { const copy = { ...item, id: makeId(), parent: nextParent, name }; copies.push(copy); files.filter((child) => child.parent === item.id).forEach((child) => walk(child, copy.id, child.name)); }; walk(source, parent, copyName(source.name, files.filter((item) => item.parent === parent).map((item) => item.name))); return copies; }
+export function cloneFiles(files, id, parent, makeId) {
+  const source = files.find(item => item.id === id);
+  if (!source) return [];
+  const children = new Map();
+  for (const item of files) {
+    if (!children.has(item.parent)) children.set(item.parent, []);
+    children.get(item.parent).push(item);
+  }
+  const copies = [];
+  const walk = (item, nextParent, name) => {
+    const copy = {...item, id:makeId(), parent:nextParent, name};
+    copies.push(copy);
+    for (const child of children.get(item.id) || []) walk(child,copy.id,child.name);
+  };
+  walk(source,parent,copyName(source.name,(children.get(parent)||[]).map(item=>item.name)));
+  return copies;
+}
 export function isCalendarDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const at = new Date(value + "T00:00:00Z");
