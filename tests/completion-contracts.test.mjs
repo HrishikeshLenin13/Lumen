@@ -85,3 +85,7 @@ const logs=[{at:'2026-01-01',text:'work',h:1,project:'Alpha',tags:['Research']}]
 test("unfiltered-log-results-are-detached-arrays", () => {
 const rows=[];assert.notEqual(api.filterLogs(rows),rows);assert.deepEqual(api.filterLogs(rows),rows);
 });
+
+test("date-filter-excludes-malformed-log-timestamps", () => {
+assert.equal(api.filterLogs([{at:'bad',text:'x',h:1}],{days:1,now:Date.parse('2026-01-02')}).length,0);
+});
