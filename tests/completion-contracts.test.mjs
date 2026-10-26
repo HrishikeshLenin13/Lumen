@@ -93,3 +93,7 @@ assert.equal(api.filterLogs([{at:'bad',text:'x',h:1}],{days:1,now:Date.parse('20
 test("csv-escapes-description-quotes-and-newlines", () => {
 assert.ok(api.logsToCsv([{at:'now',h:1,text:'A"B\nC',tags:[]}]).includes('A""B\nC'));
 });
+
+test("csv-neutralizes-leading-spreadsheet-formulas", () => {
+assert.ok(api.logsToCsv([{at:'now',h:1,text:'=1+1',tags:[]}]).includes("'=1+1"));
+});
