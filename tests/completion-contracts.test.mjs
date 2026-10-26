@@ -113,3 +113,7 @@ assert.equal(api.restoreTimerState({running:true,endAt:10},25,1000).secondsLeft,
 test("paused-timer-restore-keeps-explicit-remaining-time", () => {
 const r=api.restoreTimerState({running:false,secondsLeft:12,mode:'break'},25);assert.equal(r.secondsLeft,12);assert.equal(r.mode,'break');
 });
+
+test("unknown-timer-modes-default-to-focus", () => {
+assert.equal(api.restoreTimerState({mode:'unknown'},25).mode,'focus');
+});
