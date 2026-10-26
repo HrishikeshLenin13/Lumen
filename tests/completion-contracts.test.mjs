@@ -157,3 +157,7 @@ const p=new Uint8ClampedArray([1,1,1,255,2,2,2,255]);assert.equal(api.floodFill(
 test("invalid-paint-coordinates-do-not-mutate-pixels", () => {
 const p=new Uint8ClampedArray(4);assert.equal(api.floodFill(p,1,1,-1,0,[1,2,3,255]),0);assert.deepEqual([...p],[0,0,0,0]);
 });
+
+test("calendar-validation-follows-gregorian-century-rules", () => {
+assert.equal(api.isCalendarDate('2000-02-29'),true);assert.equal(api.isCalendarDate('1900-02-29'),false);
+});
