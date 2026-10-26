@@ -121,3 +121,7 @@ assert.equal(api.restoreTimerState({mode:'unknown'},25).mode,'focus');
 test("completed-breaks-do-not-create-focus-sessions", () => {
 assert.deepEqual(api.appendCompletedSession([],'break',5),[]);
 });
+
+test("completed-focus-history-is-bounded", () => {
+const r=api.appendCompletedSession(Array(60).fill({minutes:1}),'focus',25,'now');assert.equal(r.length,50);assert.equal(r[0].at,'now');
+});
