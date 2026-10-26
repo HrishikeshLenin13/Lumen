@@ -17,3 +17,7 @@ for(const pace of [0,-1,NaN,Infinity])assert.throws(()=>api.noteReadingMinutes('
 test("note-statistics-count-unicode-code-points", () => {
 assert.equal(api.noteStats('🚀').characters,1);assert.equal(api.noteStats('a\nb').lines,2);
 });
+
+test("blank-revisions-do-not-fill-history", () => {
+assert.deepEqual(api.appendNoteRevision([],'   '),[]);
+});
