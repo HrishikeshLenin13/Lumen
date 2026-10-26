@@ -45,3 +45,7 @@ const h=api.appendNoteRevision([],'old','now','old'),r=api.restoreNoteRevision(h
 test("tag-normalization-preserves-first-case-spelling", () => {
 assert.deepEqual(api.normalizeTags(['Design','design','DESIGN']),['Design']);
 });
+
+test("tag-normalization-collapses-internal-whitespace", () => {
+assert.deepEqual(api.normalizeTags('a   b, a b'),['a b']);
+});
