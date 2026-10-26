@@ -13,3 +13,7 @@ assert.equal(api.noteReadingMinutes('',200),0);
 test("reading-pace-rejects-nonpositive-and-nonfinite-values", () => {
 for(const pace of [0,-1,NaN,Infinity])assert.throws(()=>api.noteReadingMinutes('text',pace));
 });
+
+test("note-statistics-count-unicode-code-points", () => {
+assert.equal(api.noteStats('🚀').characters,1);assert.equal(api.noteStats('a\nb').lines,2);
+});
