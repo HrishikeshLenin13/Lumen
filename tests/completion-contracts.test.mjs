@@ -97,3 +97,7 @@ assert.ok(api.logsToCsv([{at:'now',h:1,text:'A"B\nC',tags:[]}]).includes('A""B\n
 test("csv-neutralizes-leading-spreadsheet-formulas", () => {
 assert.ok(api.logsToCsv([{at:'now',h:1,text:'=1+1',tags:[]}]).includes("'=1+1"));
 });
+
+test("timer-restore-does-not-resume-invalid-end-times", () => {
+const r=api.restoreTimerState({running:true,endAt:NaN,secondsLeft:12},25,100);assert.equal(r.running,false);assert.equal(r.endAt,null);
+});
