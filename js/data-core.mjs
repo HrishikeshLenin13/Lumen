@@ -263,6 +263,7 @@ export function revealArea(field, width, height, start, revealed = new Set(), fl
   return next;
 }
 export function floodFill(pixels, width, height, x, y, color) {
+  if (![width,height,x,y].every(Number.isSafeInteger) || width <= 0 || height <= 0 || pixels.length !== width*height*4 || !color || color.length !== 4 || !Array.from(color).every(v => Number.isInteger(v) && v >= 0 && v <= 255)) return 0;
   if (x < 0 || y < 0 || x >= width || y >= height) return 0;
   const start = (y * width + x) * 4;
   const target = Array.from(pixels.slice(start, start + 4));
