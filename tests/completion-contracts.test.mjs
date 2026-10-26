@@ -37,3 +37,7 @@ assert.deepEqual(api.appendNoteRevision([],'x'.repeat(100001)),[]);
 test("missing-revision-restore-preserves-current-note", () => {
 const r=api.restoreNoteRevision([],'current','missing');assert.equal(r.ok,false);assert.equal(r.text,'current');
 });
+
+test("restoring-an-old-revision-preserves-current-work", () => {
+const h=api.appendNoteRevision([],'old','now','old'),r=api.restoreNoteRevision(h,'current','old','later','new');assert.equal(r.ok,true);assert.equal(r.text,'old');assert.equal(r.history[0].text,'current');
+});
