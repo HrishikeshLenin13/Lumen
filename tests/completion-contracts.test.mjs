@@ -145,3 +145,7 @@ const field=Array.from({length:9},()=>({mine:false,count:0}));assert.equal(api.r
 test("flagged-start-cells-are-not-revealed", () => {
 assert.equal(api.revealArea([{mine:false,count:0}],1,1,0,new Set(),new Set([0])).size,0);
 });
+
+test("paint-fill-does-not-repaint-an-identical-color", () => {
+const pixels=new Uint8ClampedArray([1,2,3,4]);assert.equal(api.floodFill(pixels,1,1,0,0,[1,2,3,4]),0);assert.deepEqual([...pixels],[1,2,3,4]);
+});
