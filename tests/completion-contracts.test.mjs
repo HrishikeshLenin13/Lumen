@@ -65,3 +65,7 @@ assert.equal(api.validateLogEntry({hours:1.25,description:'work'}).ok,true);
 test("new-log-entry-validation-rejects-fractional-steps", () => {
 assert.equal(api.validateLogEntry({hours:1.1,description:'work'}).ok,false);
 });
+
+test("log-validation-retains-unchanged-legacy-hour-values", () => {
+assert.equal(api.validateLogEntry({hours:1.1,existingHours:1.1,description:'work'}).ok,true);
+});
