@@ -105,3 +105,7 @@ const r=api.restoreTimerState({running:true,endAt:NaN,secondsLeft:12},25,100);as
 test("timer-restore-rounds-running-seconds-up", () => {
 assert.equal(api.restoreTimerState({running:true,endAt:2501},25,1000).secondsLeft,2);
 });
+
+test("expired-running-timers-have-no-negative-seconds", () => {
+assert.equal(api.restoreTimerState({running:true,endAt:10},25,1000).secondsLeft,0);
+});
