@@ -81,3 +81,7 @@ assert.equal(api.validateLogEntry({hours:1,description:'x'.repeat(241)}).ok,fals
 test("log-filter-searches-project-and-tags", () => {
 const logs=[{at:'2026-01-01',text:'work',h:1,project:'Alpha',tags:['Research']}];assert.equal(api.filterLogs(logs,{query:'research'}).length,1);assert.equal(api.filterLogs(logs,{query:'alpha'}).length,1);
 });
+
+test("unfiltered-log-results-are-detached-arrays", () => {
+const rows=[];assert.notEqual(api.filterLogs(rows),rows);assert.deepEqual(api.filterLogs(rows),rows);
+});
