@@ -28,3 +28,7 @@ node --test tests/*.test.mjs && node scripts/stamp-cache.mjs --check
 ## Recovery
 
 Keep a copy of input data before experimenting. Revert the individual source change with Git and rerun the same fixture; a source revert does not automatically reverse browser storage, downloaded files, or external service state. Do not delete a lockfile or weaken a validation gate to make a failure disappear.
+
+## Atlas checks differ across Node or operating-system versions
+
+PNG compression bytes can vary with the runtime's zlib implementation. Check mode compares decoded dimensions and RGBA pixels for PNGs and embedded sprite images while preserving all other CSS text. A changed pixel, sprite name, or declaration still fails. Normal build mode continues to write byte-reproducible assets for the current runtime. Run `node scripts/build-atlas.mjs --check` directly to see which assets differ; do not rebuild artwork merely to silence a compression-only mismatch.
