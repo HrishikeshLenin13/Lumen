@@ -57,3 +57,7 @@ const tags=api.normalizeTags(Array.from({length:20},(_,i)=>String(i)+'x'.repeat(
 test("blank-tags-do-not-become-search-metadata", () => {
 assert.deepEqual(api.normalizeTags(' , , '),[]);
 });
+
+test("log-entry-validation-accepts-quarter-hour-steps", () => {
+assert.equal(api.validateLogEntry({hours:1.25,description:'work'}).ok,true);
+});
