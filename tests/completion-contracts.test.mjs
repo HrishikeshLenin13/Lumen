@@ -141,3 +141,7 @@ const n=api.neighbors(4,3,3);assert.equal(n.length,8);assert.equal(new Set(n).si
 test("empty-mine-boards-reveal-every-safe-cell", () => {
 const field=Array.from({length:9},()=>({mine:false,count:0}));assert.equal(api.revealArea(field,3,3,0).size,9);
 });
+
+test("flagged-start-cells-are-not-revealed", () => {
+assert.equal(api.revealArea([{mine:false,count:0}],1,1,0,new Set(),new Set([0])).size,0);
+});
