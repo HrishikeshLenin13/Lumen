@@ -33,3 +33,7 @@ let h=[];for(let i=0;i<25;i++)h=api.appendNoteRevision(h,'text'+i,'now',String(i
 test("oversized-revisions-do-not-enter-history", () => {
 assert.deepEqual(api.appendNoteRevision([],'x'.repeat(100001)),[]);
 });
+
+test("missing-revision-restore-preserves-current-note", () => {
+const r=api.restoreNoteRevision([],'current','missing');assert.equal(r.ok,false);assert.equal(r.text,'current');
+});
