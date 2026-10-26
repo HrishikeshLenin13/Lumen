@@ -117,3 +117,7 @@ const r=api.restoreTimerState({running:false,secondsLeft:12,mode:'break'},25);as
 test("unknown-timer-modes-default-to-focus", () => {
 assert.equal(api.restoreTimerState({mode:'unknown'},25).mode,'focus');
 });
+
+test("completed-breaks-do-not-create-focus-sessions", () => {
+assert.deepEqual(api.appendCompletedSession([],'break',5),[]);
+});
