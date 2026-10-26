@@ -153,3 +153,7 @@ const pixels=new Uint8ClampedArray([1,2,3,4]);assert.equal(api.floodFill(pixels,
 test("paint-fill-does-not-cross-color-boundaries", () => {
 const p=new Uint8ClampedArray([1,1,1,255,2,2,2,255]);assert.equal(api.floodFill(p,2,1,0,0,[3,3,3,255]),1);assert.equal(p[4],2);
 });
+
+test("invalid-paint-coordinates-do-not-mutate-pixels", () => {
+const p=new Uint8ClampedArray(4);assert.equal(api.floodFill(p,1,1,-1,0,[1,2,3,255]),0);assert.deepEqual([...p],[0,0,0,0]);
+});
