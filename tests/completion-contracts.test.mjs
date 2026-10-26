@@ -25,3 +25,7 @@ assert.deepEqual(api.appendNoteRevision([],'   '),[]);
 test("duplicate-head-revisions-do-not-repeat-snapshots", () => {
 const h=api.appendNoteRevision([],'same','now','a');assert.equal(api.appendNoteRevision(h,'same','later','b').length,1);
 });
+
+test("note-history-is-bounded-to-twenty-revisions", () => {
+let h=[];for(let i=0;i<25;i++)h=api.appendNoteRevision(h,'text'+i,'now',String(i));assert.equal(h.length,20);assert.equal(h[0].id,'24');
+});
