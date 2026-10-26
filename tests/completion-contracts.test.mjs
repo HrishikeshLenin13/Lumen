@@ -165,3 +165,7 @@ assert.equal(api.isCalendarDate('2000-02-29'),true);assert.equal(api.isCalendarD
 test("calendar-grids-preserve-month-overflow-navigation", () => {
 assert.ok(api.monthGrid(2026,12).some(x=>x.date==='2027-01-01'&&x.inMonth));
 });
+
+test("calendar-grids-retain-early-years", () => {
+assert.ok(api.monthGrid(42,1).some(x=>x.date==='0042-02-01'&&x.inMonth));
+});
