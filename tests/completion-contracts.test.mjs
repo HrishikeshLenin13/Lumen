@@ -109,3 +109,7 @@ assert.equal(api.restoreTimerState({running:true,endAt:2501},25,1000).secondsLef
 test("expired-running-timers-have-no-negative-seconds", () => {
 assert.equal(api.restoreTimerState({running:true,endAt:10},25,1000).secondsLeft,0);
 });
+
+test("paused-timer-restore-keeps-explicit-remaining-time", () => {
+const r=api.restoreTimerState({running:false,secondsLeft:12,mode:'break'},25);assert.equal(r.secondsLeft,12);assert.equal(r.mode,'break');
+});
