@@ -61,3 +61,7 @@ assert.deepEqual(api.normalizeTags(' , , '),[]);
 test("log-entry-validation-accepts-quarter-hour-steps", () => {
 assert.equal(api.validateLogEntry({hours:1.25,description:'work'}).ok,true);
 });
+
+test("new-log-entry-validation-rejects-fractional-steps", () => {
+assert.equal(api.validateLogEntry({hours:1.1,description:'work'}).ok,false);
+});
