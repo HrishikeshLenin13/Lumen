@@ -133,3 +133,7 @@ Created by Hrishikesh Lenin and Sandeep Shenoy. Art and creative direction are h
 The Notes status line includes an approximate reading time at **200 words per minute**, alongside word, character, and line counts. An empty note shows zero minutes. This is a simple pacing estimate, not a reading-speed measurement.
 
 Calendar recurrence also handles leap-day reminders across non-leap centuries. Restored focus timers normalize invalid modes and negative or non-finite saved durations. These behaviors are covered by the standard Node test suite above.
+
+## Developer resources
+
+- [Feature usage and API contracts](docs/RECENT_IMPROVEMENTS.md)
