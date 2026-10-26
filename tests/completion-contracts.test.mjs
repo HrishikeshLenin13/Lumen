@@ -133,3 +133,7 @@ assert.equal(api.appendCompletedSession([],'focus',999)[0].minutes,180);assert.e
 test("corner-neighbors-do-not-wrap-around-the-board", () => {
 assert.deepEqual(api.neighbors(0,3,3).sort((a,b)=>a-b),[1,3,4]);
 });
+
+test("center-neighbors-cover-eight-distinct-cells", () => {
+const n=api.neighbors(4,3,3);assert.equal(n.length,8);assert.equal(new Set(n).size,8);assert.ok(!n.includes(4));
+});
