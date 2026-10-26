@@ -73,3 +73,7 @@ assert.equal(api.validateLogEntry({hours:1.1,existingHours:1.1,description:'work
 test("log-validation-rejects-empty-descriptions", () => {
 assert.equal(api.validateLogEntry({hours:1,description:'   '}).ok,false);
 });
+
+test("log-validation-bounds-description-and-project-fields", () => {
+assert.equal(api.validateLogEntry({hours:1,description:'x'.repeat(241)}).ok,false);assert.equal(api.validateLogEntry({hours:1,description:'work',project:'x'.repeat(60)}).value.project.length,48);
+});
