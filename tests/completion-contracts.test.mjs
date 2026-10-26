@@ -161,3 +161,7 @@ const p=new Uint8ClampedArray(4);assert.equal(api.floodFill(p,1,1,-1,0,[1,2,3,25
 test("calendar-validation-follows-gregorian-century-rules", () => {
 assert.equal(api.isCalendarDate('2000-02-29'),true);assert.equal(api.isCalendarDate('1900-02-29'),false);
 });
+
+test("calendar-grids-preserve-month-overflow-navigation", () => {
+assert.ok(api.monthGrid(2026,12).some(x=>x.date==='2027-01-01'&&x.inMonth));
+});
