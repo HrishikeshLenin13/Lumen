@@ -253,6 +253,7 @@ export function createMinefield(width, height, mines, safeIndex, random = Math.r
 }
 export function revealArea(field, width, height, start, revealed = new Set(), flags = new Set()) {
   const next = new Set(revealed);
+  if (![width,height,start].every(Number.isSafeInteger) || width <= 0 || height <= 0 || field.length !== width*height || start < 0 || start >= field.length) return next;
   const queue = [start];
   while (queue.length) {
     const index = queue.pop();
