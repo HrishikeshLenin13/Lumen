@@ -89,3 +89,7 @@ const rows=[];assert.notEqual(api.filterLogs(rows),rows);assert.deepEqual(api.fi
 test("date-filter-excludes-malformed-log-timestamps", () => {
 assert.equal(api.filterLogs([{at:'bad',text:'x',h:1}],{days:1,now:Date.parse('2026-01-02')}).length,0);
 });
+
+test("csv-escapes-description-quotes-and-newlines", () => {
+assert.ok(api.logsToCsv([{at:'now',h:1,text:'A"B\nC',tags:[]}]).includes('A""B\nC'));
+});
