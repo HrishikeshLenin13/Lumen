@@ -177,3 +177,7 @@ const base='x'.repeat(80),taken=[base,'Copy of '+'x'.repeat(72)];const name=api.
 test("file-cloning-does-not-alias-source-records", () => {
 const files=[{id:'a',name:'A',parent:null,content:'old'}];const copies=api.cloneFiles(files,'a',null,()=> 'new');copies[0].content='changed';assert.equal(files[0].content,'old');
 });
+
+test("file-cloning-rejects-colliding-generated-identifiers", () => {
+assert.throws(()=>api.cloneFiles([{id:'a',name:'A',parent:null}],'a',null,()=> 'a'),RangeError);
+});
