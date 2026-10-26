@@ -68,8 +68,9 @@ export function makeDefaultData() {
 }
 
 /** Estimate reading time at 200 words/minute; an empty note takes zero minutes. */
-export function noteReadingMinutes(value) {
-  return Math.ceil(noteStats(value).words / 200);
+export function noteReadingMinutes(value, wordsPerMinute = 200) {
+  if (!Number.isFinite(wordsPerMinute) || wordsPerMinute <= 0) throw new RangeError("Use a positive reading speed.");
+  return Math.ceil(noteStats(value).words / wordsPerMinute);
 }
 
 export function noteStats(value) {
