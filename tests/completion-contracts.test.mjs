@@ -137,3 +137,7 @@ assert.deepEqual(api.neighbors(0,3,3).sort((a,b)=>a-b),[1,3,4]);
 test("center-neighbors-cover-eight-distinct-cells", () => {
 const n=api.neighbors(4,3,3);assert.equal(n.length,8);assert.equal(new Set(n).size,8);assert.ok(!n.includes(4));
 });
+
+test("empty-mine-boards-reveal-every-safe-cell", () => {
+const field=Array.from({length:9},()=>({mine:false,count:0}));assert.equal(api.revealArea(field,3,3,0).size,9);
+});
