@@ -33,3 +33,7 @@ const grid=api.monthGrid(2000,1);assert.equal(grid.length,42);assert.equal(grid.
 test("month-grid-2024-1", () => {
 const grid=api.monthGrid(2024,1);assert.equal(grid.length,42);assert.equal(grid.filter(x=>x.inMonth).length,29);assert.equal(grid.find(x=>x.inMonth).date,"2024-02-01");for(let i=1;i<grid.length;i++)assert.equal(Date.parse(grid[i].date+'T00:00Z')-Date.parse(grid[i-1].date+'T00:00Z'),86400000);
 });
+
+test("month-grid-2100-1", () => {
+const grid=api.monthGrid(2100,1);assert.equal(grid.length,42);assert.equal(grid.filter(x=>x.inMonth).length,28);assert.equal(grid.find(x=>x.inMonth).date,"2100-02-01");for(let i=1;i<grid.length;i++)assert.equal(Date.parse(grid[i].date+'T00:00Z')-Date.parse(grid[i-1].date+'T00:00Z'),86400000);
+});
