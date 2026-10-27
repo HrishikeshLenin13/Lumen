@@ -73,3 +73,7 @@ assert.deepEqual(api.noteStats("   "),{words:0,characters:3,lines:1});assert.equ
 test("note-unicode-statistics-newline", () => {
 assert.deepEqual(api.noteStats("\n"),{words:0,characters:1,lines:2});assert.equal(api.noteReadingMinutes("\n",2),0);
 });
+
+test("note-unicode-statistics-one", () => {
+assert.deepEqual(api.noteStats("hello"),{words:1,characters:5,lines:1});assert.equal(api.noteReadingMinutes("hello",2),1);
+});
