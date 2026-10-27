@@ -65,3 +65,7 @@ const grid=api.monthGrid(9998,11);assert.equal(grid.length,42);assert.equal(grid
 test("note-unicode-statistics-empty", () => {
 assert.deepEqual(api.noteStats(""),{words:0,characters:0,lines:0});assert.equal(api.noteReadingMinutes("",2),0);
 });
+
+test("note-unicode-statistics-spaces", () => {
+assert.deepEqual(api.noteStats("   "),{words:0,characters:3,lines:1});assert.equal(api.noteReadingMinutes("   ",2),0);
+});
