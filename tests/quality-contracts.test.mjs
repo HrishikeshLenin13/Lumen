@@ -189,3 +189,7 @@ const points=api.linePoints(0,0,0,0);assert.deepEqual(points[0],[0,0]);assert.de
 test("raster-line-connectivity-east", () => {
 const points=api.linePoints(0,0,5,0);assert.deepEqual(points[0],[0,0]);assert.deepEqual(points.at(-1),[5,0]);assert.equal(points.length,6);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
 });
+
+test("raster-line-connectivity-west", () => {
+const points=api.linePoints(5,0,0,0);assert.deepEqual(points[0],[5,0]);assert.deepEqual(points.at(-1),[0,0]);assert.equal(points.length,6);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
+});
