@@ -233,3 +233,7 @@ const points=api.linePoints(7,2,0,0);assert.deepEqual(points[0],[7,2]);assert.de
 test("raster-line-connectivity-negative-slope", () => {
 const points=api.linePoints(0,5,5,0);assert.deepEqual(points[0],[0,5]);assert.deepEqual(points.at(-1),[5,0]);assert.equal(points.length,6);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
 });
+
+test("raster-line-connectivity-vertical-offset", () => {
+const points=api.linePoints(4,-3,4,2);assert.deepEqual(points[0],[4,-3]);assert.deepEqual(points.at(-1),[4,2]);assert.equal(points.length,6);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
+});
