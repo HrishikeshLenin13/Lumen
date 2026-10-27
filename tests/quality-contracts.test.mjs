@@ -21,3 +21,7 @@ const grid=api.monthGrid(100,1);assert.equal(grid.length,42);assert.equal(grid.f
 test("month-grid-400-1", () => {
 const grid=api.monthGrid(400,1);assert.equal(grid.length,42);assert.equal(grid.filter(x=>x.inMonth).length,29);assert.equal(grid.find(x=>x.inMonth).date,"0400-02-01");for(let i=1;i<grid.length;i++)assert.equal(Date.parse(grid[i].date+'T00:00Z')-Date.parse(grid[i-1].date+'T00:00Z'),86400000);
 });
+
+test("month-grid-1900-1", () => {
+const grid=api.monthGrid(1900,1);assert.equal(grid.length,42);assert.equal(grid.filter(x=>x.inMonth).length,28);assert.equal(grid.find(x=>x.inMonth).date,"1900-02-01");for(let i=1;i<grid.length;i++)assert.equal(Date.parse(grid[i].date+'T00:00Z')-Date.parse(grid[i-1].date+'T00:00Z'),86400000);
+});
