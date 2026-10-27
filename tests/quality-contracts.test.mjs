@@ -173,3 +173,7 @@ const actual=api.neighbors(5,5,2).sort((a,b)=>a-b);const reference=[];for(let in
 test("neighbor-grid-5x2-9", () => {
 const actual=api.neighbors(9,5,2).sort((a,b)=>a-b);const reference=[];for(let index=0;index<10;index++)if(index!==9&&Math.abs(index%5-4)<=1&&Math.abs(Math.floor(index/5)-1)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
 });
+
+test("neighbor-grid-7x7-24", () => {
+const actual=api.neighbors(24,7,7).sort((a,b)=>a-b);const reference=[];for(let index=0;index<49;index++)if(index!==24&&Math.abs(index%7-3)<=1&&Math.abs(Math.floor(index/7)-3)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
+});
