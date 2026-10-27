@@ -105,3 +105,7 @@ assert.deepEqual(api.noteStats("a\u00a0b"),{words:2,characters:3,lines:1});asser
 test("note-unicode-statistics-multiline", () => {
 assert.deepEqual(api.noteStats("a\nb\nc"),{words:3,characters:5,lines:3});assert.equal(api.noteReadingMinutes("a\nb\nc",2),2);
 });
+
+test("note-unicode-statistics-punctuation", () => {
+assert.deepEqual(api.noteStats("one-two"),{words:1,characters:7,lines:1});assert.equal(api.noteReadingMinutes("one-two",2),1);
+});
