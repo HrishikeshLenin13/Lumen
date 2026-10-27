@@ -241,3 +241,7 @@ const points=api.linePoints(4,-3,4,2);assert.deepEqual(points[0],[4,-3]);assert.
 test("raster-line-connectivity-horizontal-offset", () => {
 const points=api.linePoints(-3,4,2,4);assert.deepEqual(points[0],[-3,4]);assert.deepEqual(points.at(-1),[2,4]);assert.equal(points.length,6);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
 });
+
+test("flood-fill-connected-region-1", () => {
+const pixels=new Uint8ClampedArray(4);for(let i=3;i<pixels.length;i+=4)pixels[i]=255;assert.equal(api.floodFill(pixels,1,1,0,0,[10,20,30,255]),1);for(let i=0;i<pixels.length;i+=4)assert.deepEqual([...pixels.slice(i,i+4)],[10,20,30,255]);const snapshot=pixels.slice();assert.equal(api.floodFill(pixels,1,1,0,0,[10,20,30,255]),0);assert.deepEqual(pixels,snapshot);
+});
