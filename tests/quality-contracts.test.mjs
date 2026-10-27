@@ -181,3 +181,7 @@ const actual=api.neighbors(24,7,7).sort((a,b)=>a-b);const reference=[];for(let i
 test("neighbor-grid-8x6-47", () => {
 const actual=api.neighbors(47,8,6).sort((a,b)=>a-b);const reference=[];for(let index=0;index<48;index++)if(index!==47&&Math.abs(index%8-7)<=1&&Math.abs(Math.floor(index/8)-5)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
 });
+
+test("raster-line-connectivity-point", () => {
+const points=api.linePoints(0,0,0,0);assert.deepEqual(points[0],[0,0]);assert.deepEqual(points.at(-1),[0,0]);assert.equal(points.length,1);for(let i=1;i<points.length;i++){assert.ok(Math.abs(points[i][0]-points[i-1][0])<=1);assert.ok(Math.abs(points[i][1]-points[i-1][1])<=1);assert.notDeepEqual(points[i],points[i-1]);}
+});
