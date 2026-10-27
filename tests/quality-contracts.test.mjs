@@ -297,3 +297,7 @@ const pixels=new Uint8ClampedArray(60);for(let i=3;i<pixels.length;i+=4)pixels[i
 test("flood-fill-connected-region-14", () => {
 const pixels=new Uint8ClampedArray(60);for(let i=3;i<pixels.length;i+=4)pixels[i]=255;assert.equal(api.floodFill(pixels,3,5,2,3,[10,20,30,255]),15);for(let i=0;i<pixels.length;i+=4)assert.deepEqual([...pixels.slice(i,i+4)],[10,20,30,255]);const snapshot=pixels.slice();assert.equal(api.floodFill(pixels,3,5,2,3,[10,20,30,255]),0);assert.deepEqual(pixels,snapshot);
 });
+
+test("flood-fill-connected-region-15", () => {
+const pixels=new Uint8ClampedArray(144);for(let i=3;i<pixels.length;i+=4)pixels[i]=255;assert.equal(api.floodFill(pixels,6,6,5,5,[10,20,30,255]),36);for(let i=0;i<pixels.length;i+=4)assert.deepEqual([...pixels.slice(i,i+4)],[10,20,30,255]);const snapshot=pixels.slice();assert.equal(api.floodFill(pixels,6,6,5,5,[10,20,30,255]),0);assert.deepEqual(pixels,snapshot);
+});
