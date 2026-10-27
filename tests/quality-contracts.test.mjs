@@ -113,3 +113,7 @@ assert.deepEqual(api.noteStats("one-two"),{words:1,characters:7,lines:1});assert
 test("note-unicode-statistics-leading", () => {
 assert.deepEqual(api.noteStats("  a"),{words:1,characters:3,lines:1});assert.equal(api.noteReadingMinutes("  a",2),1);
 });
+
+test("note-unicode-statistics-trailing", () => {
+assert.deepEqual(api.noteStats("a  "),{words:1,characters:3,lines:1});assert.equal(api.noteReadingMinutes("a  ",2),1);
+});
