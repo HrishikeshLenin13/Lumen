@@ -153,3 +153,7 @@ const actual=api.neighbors(1,4,3).sort((a,b)=>a-b);const reference=[];for(let in
 test("neighbor-grid-4x3-5", () => {
 const actual=api.neighbors(5,4,3).sort((a,b)=>a-b);const reference=[];for(let index=0;index<12;index++)if(index!==5&&Math.abs(index%4-1)<=1&&Math.abs(Math.floor(index/4)-1)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
 });
+
+test("neighbor-grid-4x3-11", () => {
+const actual=api.neighbors(11,4,3).sort((a,b)=>a-b);const reference=[];for(let index=0;index<12;index++)if(index!==11&&Math.abs(index%4-3)<=1&&Math.abs(Math.floor(index/4)-2)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
+});
