@@ -77,3 +77,7 @@ assert.deepEqual(api.noteStats("\n"),{words:0,characters:1,lines:2});assert.equa
 test("note-unicode-statistics-one", () => {
 assert.deepEqual(api.noteStats("hello"),{words:1,characters:5,lines:1});assert.equal(api.noteReadingMinutes("hello",2),1);
 });
+
+test("note-unicode-statistics-emoji", () => {
+assert.deepEqual(api.noteStats("\ud83d\udcda"),{words:1,characters:1,lines:1});assert.equal(api.noteReadingMinutes("\ud83d\udcda",2),1);
+});
