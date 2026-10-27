@@ -97,3 +97,7 @@ assert.deepEqual(api.noteStats("one\ttwo"),{words:2,characters:7,lines:1});asser
 test("note-unicode-statistics-crlf", () => {
 assert.deepEqual(api.noteStats("a\r\nb"),{words:2,characters:4,lines:2});assert.equal(api.noteReadingMinutes("a\r\nb",2),1);
 });
+
+test("note-unicode-statistics-unicode-space", () => {
+assert.deepEqual(api.noteStats("a\u00a0b"),{words:2,characters:3,lines:1});assert.equal(api.noteReadingMinutes("a\u00a0b",2),1);
+});
