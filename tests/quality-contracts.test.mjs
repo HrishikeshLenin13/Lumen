@@ -117,3 +117,7 @@ assert.deepEqual(api.noteStats("  a"),{words:1,characters:3,lines:1});assert.equ
 test("note-unicode-statistics-trailing", () => {
 assert.deepEqual(api.noteStats("a  "),{words:1,characters:3,lines:1});assert.equal(api.noteReadingMinutes("a  ",2),1);
 });
+
+test("note-unicode-statistics-blank-lines", () => {
+assert.deepEqual(api.noteStats("a\n\nb"),{words:2,characters:4,lines:3});assert.equal(api.noteReadingMinutes("a\n\nb",2),1);
+});
