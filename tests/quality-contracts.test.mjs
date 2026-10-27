@@ -109,3 +109,7 @@ assert.deepEqual(api.noteStats("a\nb\nc"),{words:3,characters:5,lines:3});assert
 test("note-unicode-statistics-punctuation", () => {
 assert.deepEqual(api.noteStats("one-two"),{words:1,characters:7,lines:1});assert.equal(api.noteReadingMinutes("one-two",2),1);
 });
+
+test("note-unicode-statistics-leading", () => {
+assert.deepEqual(api.noteStats("  a"),{words:1,characters:3,lines:1});assert.equal(api.noteReadingMinutes("  a",2),1);
+});
