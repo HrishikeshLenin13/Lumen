@@ -121,3 +121,7 @@ assert.deepEqual(api.noteStats("a  "),{words:1,characters:3,lines:1});assert.equ
 test("note-unicode-statistics-blank-lines", () => {
 assert.deepEqual(api.noteStats("a\n\nb"),{words:2,characters:4,lines:3});assert.equal(api.noteReadingMinutes("a\n\nb",2),1);
 });
+
+test("neighbor-grid-1x1-0", () => {
+const actual=api.neighbors(0,1,1).sort((a,b)=>a-b);const reference=[];for(let index=0;index<1;index++)if(index!==0&&Math.abs(index%1-0)<=1&&Math.abs(Math.floor(index/1)-0)<=1)reference.push(index);assert.deepEqual(actual,reference);assert.equal(new Set(actual).size,actual.length);
+});
